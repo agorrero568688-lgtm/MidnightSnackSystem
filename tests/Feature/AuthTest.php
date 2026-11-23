@@ -69,9 +69,11 @@ class AuthTest extends TestCase
         $this->actingAs($admin)->get('/pos')->assertOk();
     }
 
-    public function test_root_redirects_according_to_role(): void
+    public function test_root_shows_the_public_storefront_to_everyone(): void
     {
-        $this->actingAs(User::factory()->admin()->create())->get('/')->assertRedirect('/dashboard');
-        $this->actingAs(User::factory()->create())->get('/')->assertRedirect('/pos');
+        $this->get('/')->assertOk()->assertSee("Diding's Midnight Snack");
+
+        $this->actingAs(User::factory()->admin()->create())->get('/')->assertOk();
+        $this->actingAs(User::factory()->create())->get('/')->assertOk();
     }
 }

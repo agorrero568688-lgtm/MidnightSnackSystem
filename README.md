@@ -1,10 +1,18 @@
-# Diding's Midnight Snack — POS & Inventory
+# Diding's Midnight Snack — POS, Inventory & Online Ordering
 
-A web-based point of sale and stock system for a small snack store, built with
-Laravel 12, Livewire 4, Tailwind CSS 4 and PostgreSQL (Supabase).
+A web-based point of sale, stock system and public ordering website for a small
+fast-food store, built with Laravel 12, Livewire 4, Tailwind CSS 4 and
+PostgreSQL (Supabase).
 
 ## What it does
 
+- **Online storefront** — a public menu at `/` with a cart, delivery or pickup,
+  GCash or cash payment, a per-order tracking link, and order lookup by
+  reference + phone.
+- **Order board** — staff see new orders on a live kanban at `/orders`, confirm
+  them, move them through preparation, record payment, and close them into a
+  normal sale. New orders beep and raise a browser notification, and can also
+  reach a Telegram staff group.
 - **Till** — barcode scanning, instant local cart, cash / GCash / Maya / bank
   payment, change due, senior & PWD 20% discounts with ID capture, parked
   sales, thermal receipt printing (58 mm or 80 mm).
@@ -44,8 +52,15 @@ Fill in the Supabase connection values in `.env` (see *Database* below), then:
 
 ```bash
 php artisan migrate --seed
+php artisan storage:link
 npm run build
 php artisan serve
+```
+
+Online ordering sends Telegram alerts through the queue, so run a worker too:
+
+```bash
+php artisan queue:work
 ```
 
 Seeded accounts (change the passwords after first login):
@@ -103,6 +118,59 @@ The production deployment should still point at Supabase.
 - Money is stored as `numeric(12,2)` but all arithmetic runs on integer centavos
   through `App\Support\Money`, so totals never drift.
 
+## Online ordering
+
+| URL | What it is |
+|---|---|
+| `/` | Public menu (no login) |
+| `/order` | Cart checkout |
+| `/track/{token}` | Private order status page |
+| `/track` | Find an order by reference + phone |
+| `/login` | Staff login |
+| `/orders` | Staff order board (admin and cashier) |
+
+The flow:
+
+1. A guest builds a cart in the browser. Prices there are **display-only**.
+2. `POST /orders` re-reads every price and locks the product rows, then reserves
+   stock with a `stock_movements` row of type `online_order`. Nothing is deducted
+   twice: when the staff completes the order, those movements are re-pointed at
+   the resulting sale.
+3. GCash orders start as *awaiting verification* when a reference is supplied;
+   COD and cash-at-pickup start *unpaid*. Staff verify the money and mark the
+   order paid.
+4. Staff confirm → prepare → ready → (dispatch) → complete. Completing creates a
+   normal `sales` row with `channel = online` and the delivery fee, and the
+   receipt works exactly like a walk-in sale.
+5. Cancelling returns the reserved stock; a cancelled paid order can be marked
+   refunded.
+
+Senior/PWD discounts are **never** self-applied online. Staff verify the
+OSCA/PWD ID on the board before the total is locked by payment.
+
+### Availability, fees and payment details
+
+Settings → *Online ordering* controls whether ordering is open, a temporary
+pause, delivery/pickup availability, the fixed delivery fee, an optional free
+delivery threshold, a minimum order, and the estimates shown to customers.
+Product → *Show on the online menu* controls what appears in the menu; stock and
+the sold-out badge come from the normal inventory.
+
+### Alerts
+
+The board polls every 15 seconds. When a new order appears it beeps and, if the
+browser has permission, shows a notification. Telegram is optional: put a bot
+token and the staff group chat ID in Settings → *Order alerts* (or in `.env`) and
+run a queue worker. The Telegram message contains the reference, type, payment
+status and a link to the board — not the customer's address.
+
+### Deployment
+
+Public ordering needs a real hostname with HTTPS. `localhost` is not reachable
+from a customer's phone, and GCash references/images should not travel over
+plain HTTP. Set `APP_URL` to the public address, keep a queue worker running,
+and run `php artisan storage:link` so menu photos and the GCash QR load.
+
 ## Receipts
 
 Receipts are HTML rendered at a fixed 58 mm or 80 mm width and printed through
@@ -117,26 +185,36 @@ php artisan test
 ```
 
 Covers login and roles, checkout maths, discounts, overselling, voids, shift
-cash expectations, the Livewire terminal actions, CSV export, and a smoke test
-that renders every screen.
+cash expectations, the Livewire terminal actions, CSV export, online order
+placement (stock reservation, delivery fees, GCash/COD, lookup), the staff order
+board lifecycle and sale conversion, and a smoke test that renders every screen.
 
 ## Project layout
 
 ```
 app/
-  Enums/           Role, PaymentMethod, DiscountType, SaleStatus, stock types
-  Livewire/        Pos, Products, Categories, Inventory, Sales, Shifts, Reports, Users, Settings
-  Models/          User, Category, Product, StockMovement, Sale, SaleItem, Shift, Setting
-  Services/        CheckoutService, SaleService, StockService, ShiftService
+  Enums/           Role, PaymentMethod, DiscountType, SaleStatus, SalesChannel,
+                   OrderStatus, OrderType, OrderPaymentMethod, PaymentStatus
+  Livewire/        Pos, Orders, Products, Categories, Inventory, Sales, Shifts,
+                   Reports, Users, Settings
+  Models/          User, Category, Product, StockMovement, Sale, SaleItem, Shift,
+                   Setting, Order, OrderItem
+  Services/        CheckoutService, SaleService, StockService, ShiftService,
+                   OrderService, StorefrontService, OrderNotifier
+  Jobs/            SendOrderTelegramAlert
   Support/         Money, PosCatalog
   Http/Middleware/ EnsureRole
-resources/views/   layouts, livewire components, receipts
+resources/views/   layouts, storefront, orders, livewire components, receipts
+resources/js/      pos.js, order.js (public cart), orders.js (staff alerts)
 ```
 
 ## Not included (next steps)
 
+- Automatic GCash (PayMongo/Xendit) instead of manual reference verification.
 - Partial refunds (voids currently reverse the whole sale).
+- Rider assignment and live map tracking; riders are coordinated by phone.
+- Recipe/ingredient-level inventory; online orders use product stock.
 - Suppliers and purchase orders; stock-in is manual.
-- Multi-branch support (`branch_id` would need to be added to products, sales and
-  shifts).
-- Barcode label printing and product images.
+- Multi-branch support (`branch_id` would need to be added to products, sales,
+  orders and shifts).
+- Barcode label printing.

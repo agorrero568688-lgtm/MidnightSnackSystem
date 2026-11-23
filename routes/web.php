@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\OrderingController;
+use App\Http\Controllers\OrderProofController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\ReportExportController;
 use App\Livewire\Categories\Index as CategoriesIndex;
 use App\Livewire\Dashboard;
 use App\Livewire\Inventory\Index as InventoryIndex;
+use App\Livewire\Orders\Board as OrdersBoard;
 use App\Livewire\Pos\Terminal;
 use App\Livewire\Products\Form as ProductForm;
 use App\Livewire\Products\Index as ProductsIndex;
@@ -16,13 +19,27 @@ use App\Livewire\Shifts\Index as ShiftsIndex;
 use App\Livewire\Users\Index as UsersIndex;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    if (! auth()->check()) {
-        return redirect()->route('login');
-    }
+/*
+|--------------------------------------------------------------------------
+| Public storefront and online ordering
+|--------------------------------------------------------------------------
+*/
+Route::get('/', [OrderingController::class, 'index'])->name('storefront');
+Route::get('order', [OrderingController::class, 'checkout'])->name('orders.checkout');
 
-    return redirect()->route(auth()->user()->homeRoute());
-});
+Route::post('orders', [OrderingController::class, 'store'])
+    ->middleware('throttle:12,1')
+    ->name('orders.store');
+
+Route::get('track', [OrderingController::class, 'lookupForm'])->name('orders.lookup');
+Route::post('track', [OrderingController::class, 'lookup'])
+    ->middleware('throttle:20,1')
+    ->name('orders.lookup.submit');
+
+Route::get('track/{token}', [OrderingController::class, 'track'])->name('orders.track');
+Route::post('track/{token}/payment', [OrderingController::class, 'updatePayment'])
+    ->middleware('throttle:12,1')
+    ->name('orders.payment');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
@@ -39,6 +56,9 @@ Route::post('logout', [LoginController::class, 'destroy'])
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin,cashier'])->group(function () {
+    Route::get('orders', OrdersBoard::class)->name('orders.index');
+    Route::get('orders/{order}/proof', [OrderProofController::class, 'show'])->name('orders.proof');
+
     Route::get('pos', Terminal::class)->name('pos');
     Route::get('sales/{sale}/receipt', [ReceiptController::class, 'show'])->name('sales.receipt');
 });

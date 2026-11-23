@@ -50,6 +50,7 @@
                         <th>Cashier</th>
                         <th class="text-right">Items</th>
                         <th>Payment</th>
+                        <th>Channel</th>
                         <th>Discount</th>
                         <th class="text-right">Total</th>
                         <th>Status</th>
@@ -64,6 +65,7 @@
                             <td class="text-slate-600">{{ $sale->user?->name }}</td>
                             <td class="text-right">{{ (int) $sale->items_sum_qty }}</td>
                             <td><span class="badge badge-slate">{{ $sale->payment_method->label() }}</span></td>
+                            <td><span class="badge badge-{{ $sale->channel->color() }}">{{ $sale->channel->label() }}</span></td>
                             <td class="text-xs">
                                 @if ($sale->discount_amount > 0)
                                     <span class="badge badge-violet">{{ $sale->discount_type->label() }}</span>
@@ -91,7 +93,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="empty-state">No sales in this range.</td></tr>
+                        <tr><td colspan="10" class="empty-state">No sales in this range.</td></tr>
                     @endforelse
                 </tbody>
             </table>

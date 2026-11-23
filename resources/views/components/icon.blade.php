@@ -107,6 +107,40 @@
             <circle cx="12" cy="12" r="2.5" />
             <path d="M6 10v4M18 10v4" />
             @break
+        @case('truck')
+            <path d="M3 7h11v10H3z" />
+            <path d="M14 10h4l3 3v4h-7z" />
+            <circle cx="7" cy="18.5" r="1.5" />
+            <circle cx="17" cy="18.5" r="1.5" />
+            @break
+        @case('store')
+            <path d="M4 10v9h16v-9" />
+            <path d="M3 10l2-6h14l2 6" />
+            <path d="M3 10a3 3 0 0 0 5 2 3 3 0 0 0 4 0 3 3 0 0 0 4 0 3 3 0 0 0 5-2" />
+            <path d="M9 19v-5h6v5" />
+            @break
+        @case('phone')
+            <path d="M5 3h4l2 5-2.5 1.5a12 12 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z" />
+            @break
+        @case('map-pin')
+            <path d="M12 21s7-5.5 7-12a7 7 0 1 0-14 0c0 6.5 7 12 7 12z" />
+            <circle cx="12" cy="9" r="2.5" />
+            @break
+        @case('bell')
+            <path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7" />
+            <path d="M10 20a2 2 0 0 0 4 0" />
+            @break
+        @case('copy')
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M5 15V5a2 2 0 0 1 2-2h8" />
+            @break
+        @case('refresh')
+            <path d="M20 11a8 8 0 1 0-2.3 5.7" />
+            <path d="M20 4v7h-7" />
+            @break
+        @case('arrow-right')
+            <path d="M5 12h14M13 6l6 6-6 6" />
+            @break
         @default
             <circle cx="12" cy="12" r="9" />
     @endswitch

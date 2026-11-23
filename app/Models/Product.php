@@ -17,6 +17,8 @@ class Product extends Model
         'sku',
         'barcode',
         'name',
+        'description',
+        'image_path',
         'unit',
         'cost_price',
         'selling_price',
@@ -24,6 +26,8 @@ class Product extends Model
         'low_stock_threshold',
         'track_stock',
         'is_active',
+        'is_online',
+        'sort_order',
     ];
 
     protected $attributes = [
@@ -34,6 +38,8 @@ class Product extends Model
         'low_stock_threshold' => 5,
         'track_stock' => true,
         'is_active' => true,
+        'is_online' => true,
+        'sort_order' => 0,
     ];
 
     protected function casts(): array
@@ -45,6 +51,8 @@ class Product extends Model
             'low_stock_threshold' => 'integer',
             'track_stock' => 'boolean',
             'is_active' => 'boolean',
+            'is_online' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 
@@ -64,6 +72,12 @@ class Product extends Model
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
+    }
+
+    /** @param Builder<Product> $query */
+    public function scopeOnline(Builder $query): void
+    {
+        $query->where('is_active', true)->where('is_online', true);
     }
 
     /** @param Builder<Product> $query */

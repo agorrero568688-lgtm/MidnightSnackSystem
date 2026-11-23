@@ -10,17 +10,21 @@
 <body class="h-full font-sans text-slate-900 antialiased">
     @php
         $nav = [
-            ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid'],
-            ['route' => 'pos', 'label' => 'POS Terminal', 'icon' => 'cart'],
-            ['route' => 'products.index', 'label' => 'Products', 'icon' => 'cube'],
-            ['route' => 'categories.index', 'label' => 'Categories', 'icon' => 'tag'],
-            ['route' => 'inventory.index', 'label' => 'Inventory', 'icon' => 'archive'],
-            ['route' => 'sales.index', 'label' => 'Sales', 'icon' => 'receipt'],
-            ['route' => 'shifts.index', 'label' => 'Shifts', 'icon' => 'clock'],
-            ['route' => 'reports.daily', 'label' => 'Reports', 'icon' => 'chart'],
-            ['route' => 'users.index', 'label' => 'Users', 'icon' => 'users'],
-            ['route' => 'settings.edit', 'label' => 'Settings', 'icon' => 'settings'],
+            ['route' => 'orders.index', 'label' => 'Online orders', 'icon' => 'bell', 'roles' => ['admin', 'cashier']],
+            ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid', 'roles' => ['admin']],
+            ['route' => 'pos', 'label' => 'POS Terminal', 'icon' => 'cart', 'roles' => ['admin', 'cashier']],
+            ['route' => 'products.index', 'label' => 'Products', 'icon' => 'cube', 'roles' => ['admin']],
+            ['route' => 'categories.index', 'label' => 'Categories', 'icon' => 'tag', 'roles' => ['admin']],
+            ['route' => 'inventory.index', 'label' => 'Inventory', 'icon' => 'archive', 'roles' => ['admin']],
+            ['route' => 'sales.index', 'label' => 'Sales', 'icon' => 'receipt', 'roles' => ['admin']],
+            ['route' => 'shifts.index', 'label' => 'Shifts', 'icon' => 'clock', 'roles' => ['admin']],
+            ['route' => 'reports.daily', 'label' => 'Reports', 'icon' => 'chart', 'roles' => ['admin']],
+            ['route' => 'users.index', 'label' => 'Users', 'icon' => 'users', 'roles' => ['admin']],
+            ['route' => 'settings.edit', 'label' => 'Settings', 'icon' => 'settings', 'roles' => ['admin']],
         ];
+
+        $role = auth()->user()->role->value;
+        $nav = array_values(array_filter($nav, fn (array $item) => in_array($role, $item['roles'], true)));
     @endphp
 
     <div x-data="{ sidebar: false }" class="min-h-full">

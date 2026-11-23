@@ -18,6 +18,22 @@ class SettingsSeeder extends Seeder
             'allow_negative_stock' => '0',
             'low_stock_default' => '5',
             'require_shift' => '1',
+            'online_ordering_enabled' => '1',
+            'orders_paused' => '0',
+            'store_hours' => '6:00 PM – 2:00 AM, daily',
+            'delivery_enabled' => '1',
+            'pickup_enabled' => '1',
+            'delivery_fee' => '39.00',
+            'free_delivery_threshold' => '0',
+            'minimum_order_total' => '0',
+            'delivery_estimate' => '30–45 min',
+            'pickup_estimate' => '15–20 min',
+            'gcash_name' => '',
+            'gcash_number' => '',
+            'gcash_qr_path' => '',
+            'order_alerts_enabled' => '1',
+            'telegram_bot_token' => '',
+            'telegram_chat_id' => '',
         ];
 
         foreach ($defaults as $key => $value) {

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\DiscountType;
 use App\Enums\PaymentMethod;
+use App\Enums\SalesChannel;
 use App\Enums\SaleStatus;
 use App\Enums\StockMovementType;
 use App\Models\Product;
@@ -127,6 +128,8 @@ class CheckoutService
                 'amount_tendered' => Money::decimal($tenderedCents),
                 'change_due' => Money::decimal($tenderedCents - $totalCents),
                 'payment_method' => $paymentMethod,
+                'channel' => SalesChannel::Pos,
+                'delivery_fee' => Money::decimal(0),
                 'status' => SaleStatus::Completed,
                 'customer_name' => $discountType->requiresCustomer() ? $customerName : null,
                 'discount_id_number' => $discountType->requiresCustomer() ? $discountIdNumber : null,

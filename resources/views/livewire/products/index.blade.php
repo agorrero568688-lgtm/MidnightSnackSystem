@@ -80,6 +80,9 @@
                                 @else
                                     <span class="badge badge-slate">Hidden</span>
                                 @endif
+                                @if ($product->is_online)
+                                    <span class="badge badge-sky">Online</span>
+                                @endif
                             </td>
                             <td>
                                 <div class="flex items-center justify-end gap-1">

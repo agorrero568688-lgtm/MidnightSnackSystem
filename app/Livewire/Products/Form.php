@@ -6,14 +6,20 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\StockService;
 use App\Support\PosCatalog;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Form extends Component
 {
+    use WithFileUploads;
+
     public ?Product $product = null;
 
     public string $name = '';
+
+    public string $description = '';
 
     public string $sku = '';
 
@@ -35,6 +41,14 @@ class Form extends Component
 
     public bool $is_active = true;
 
+    public bool $is_online = true;
+
+    public string $sort_order = '0';
+
+    public $image = null;
+
+    public ?string $existingImagePath = null;
+
     /** @var array<int, array{id: int, name: string}> */
     public array $categories = [];
 
@@ -48,6 +62,7 @@ class Form extends Component
             $this->product = $product;
             $this->fill([
                 'name' => $product->name,
+                'description' => (string) $product->description,
                 'sku' => $product->sku,
                 'barcode' => $product->barcode,
                 'unit' => $product->unit,
@@ -57,7 +72,11 @@ class Form extends Component
                 'low_stock_threshold' => $product->low_stock_threshold,
                 'track_stock' => $product->track_stock,
                 'is_active' => $product->is_active,
+                'is_online' => $product->is_online,
+                'sort_order' => (string) $product->sort_order,
             ]);
+
+            $this->existingImagePath = $product->image_path;
         }
     }
 
@@ -65,6 +84,7 @@ class Form extends Component
     {
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:150'],
+            'description' => ['nullable', 'string', 'max:500'],
             'sku' => ['required', 'string', 'max:50', Rule::unique('products', 'sku')->ignore($this->product?->id)],
             'barcode' => ['nullable', 'string', 'max:50', Rule::unique('products', 'barcode')->ignore($this->product?->id)],
             'unit' => ['required', 'string', 'max:20'],
@@ -75,10 +95,25 @@ class Form extends Component
             'low_stock_threshold' => ['required', 'integer', 'min:0'],
             'track_stock' => ['boolean'],
             'is_active' => ['boolean'],
+            'is_online' => ['boolean'],
+            'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
+            'image' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        $imagePath = $this->existingImagePath;
+
+        if ($this->image) {
+            if ($imagePath) {
+                Storage::disk('public')->delete($imagePath);
+            }
+
+            $imagePath = $this->image->store('products', 'public');
+        }
 
         $payload = [
             'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'image_path' => $imagePath,
             'sku' => mb_strtoupper($validated['sku']),
             'barcode' => $validated['barcode'] ?? null,
             'unit' => $validated['unit'],
@@ -88,6 +123,8 @@ class Form extends Component
             'low_stock_threshold' => $validated['low_stock_threshold'],
             'track_stock' => $this->track_stock,
             'is_active' => $this->is_active,
+            'is_online' => $this->is_online,
+            'sort_order' => (int) $this->sort_order,
         ];
 
         if ($this->product) {
@@ -107,6 +144,7 @@ class Form extends Component
 
         PosCatalog::flush();
 
+        $this->image = null;
         session()->flash('status', $message);
 
         $this->redirect(route('products.index'));

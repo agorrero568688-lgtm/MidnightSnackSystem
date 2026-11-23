@@ -73,6 +73,12 @@
             @endif
         @endif
 
+        @if ($sale->delivery_fee > 0)
+            <div class="row">
+                <span>Delivery fee</span><span>{{ \App\Support\Money::format($sale->delivery_fee) }}</span>
+            </div>
+        @endif
+
         <div class="row total">
             <span>TOTAL</span><span>{{ \App\Support\Money::format($sale->total) }}</span>
         </div>

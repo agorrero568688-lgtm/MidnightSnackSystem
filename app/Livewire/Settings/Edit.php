@@ -3,10 +3,16 @@
 namespace App\Livewire\Settings;
 
 use App\Models\Setting;
+use App\Services\OrderNotifier;
+use App\Support\Money;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Edit extends Component
 {
+    use WithFileUploads;
+
     public string $storeName = '';
 
     public string $storeAddress = '';
@@ -23,6 +29,44 @@ class Edit extends Component
 
     public string $lowStockDefault = '5';
 
+    public bool $onlineOrderingEnabled = true;
+
+    public bool $ordersPaused = false;
+
+    public string $storeHours = '';
+
+    public bool $deliveryEnabled = true;
+
+    public bool $pickupEnabled = true;
+
+    public string $deliveryFee = '0.00';
+
+    public string $freeDeliveryThreshold = '0.00';
+
+    public string $minimumOrderTotal = '0.00';
+
+    public string $deliveryEstimate = '';
+
+    public string $pickupEstimate = '';
+
+    public string $gcashName = '';
+
+    public string $gcashNumber = '';
+
+    public $gcashQr = null;
+
+    public ?string $existingGcashQrPath = null;
+
+    public bool $orderAlertsEnabled = true;
+
+    public string $telegramBotToken = '';
+
+    public string $telegramChatId = '';
+
+    public string $notice = '';
+
+    public string $telegramStatus = '';
+
     public function mount(): void
     {
         $this->storeName = (string) Setting::get('store_name');
@@ -33,6 +77,23 @@ class Edit extends Component
         $this->requireShift = Setting::get('require_shift') === '1';
         $this->allowNegativeStock = Setting::bool('allow_negative_stock');
         $this->lowStockDefault = (string) Setting::get('low_stock_default', '5');
+
+        $this->onlineOrderingEnabled = Setting::bool('online_ordering_enabled');
+        $this->ordersPaused = Setting::bool('orders_paused');
+        $this->storeHours = (string) Setting::get('store_hours');
+        $this->deliveryEnabled = Setting::bool('delivery_enabled');
+        $this->pickupEnabled = Setting::bool('pickup_enabled');
+        $this->deliveryFee = (string) Setting::get('delivery_fee', '0.00');
+        $this->freeDeliveryThreshold = (string) Setting::get('free_delivery_threshold', '0.00');
+        $this->minimumOrderTotal = (string) Setting::get('minimum_order_total', '0.00');
+        $this->deliveryEstimate = (string) Setting::get('delivery_estimate');
+        $this->pickupEstimate = (string) Setting::get('pickup_estimate');
+        $this->gcashName = (string) Setting::get('gcash_name');
+        $this->gcashNumber = (string) Setting::get('gcash_number');
+        $this->existingGcashQrPath = Setting::get('gcash_qr_path') ?: null;
+        $this->orderAlertsEnabled = Setting::bool('order_alerts_enabled');
+        $this->telegramBotToken = (string) Setting::get('telegram_bot_token');
+        $this->telegramChatId = (string) Setting::get('telegram_chat_id');
     }
 
     public function save(): void
@@ -44,7 +105,26 @@ class Edit extends Component
             'receiptFooter' => ['nullable', 'string', 'max:200'],
             'receiptWidth' => ['required', 'in:58,80'],
             'lowStockDefault' => ['required', 'integer', 'min:0', 'max:9999'],
+            'storeHours' => ['nullable', 'string', 'max:100'],
+            'deliveryFee' => ['required', 'numeric', 'min:0', 'max:99999'],
+            'freeDeliveryThreshold' => ['required', 'numeric', 'min:0', 'max:99999'],
+            'minimumOrderTotal' => ['required', 'numeric', 'min:0', 'max:99999'],
+            'deliveryEstimate' => ['nullable', 'string', 'max:50'],
+            'pickupEstimate' => ['nullable', 'string', 'max:50'],
+            'gcashName' => ['nullable', 'string', 'max:100'],
+            'gcashNumber' => ['nullable', 'string', 'max:30'],
+            'gcashQr' => ['nullable', 'image', 'max:2048'],
+            'telegramBotToken' => ['nullable', 'string', 'max:200'],
+            'telegramChatId' => ['nullable', 'string', 'max:100'],
         ]);
+
+        if ($this->gcashQr) {
+            if ($this->existingGcashQrPath) {
+                Storage::disk('public')->delete($this->existingGcashQrPath);
+            }
+
+            $this->existingGcashQrPath = $this->gcashQr->store('store-settings', 'public');
+        }
 
         Setting::setMany([
             'store_name' => $validated['storeName'],
@@ -55,14 +135,57 @@ class Edit extends Component
             'require_shift' => $this->requireShift ? '1' : '0',
             'allow_negative_stock' => $this->allowNegativeStock ? '1' : '0',
             'low_stock_default' => $validated['lowStockDefault'],
+
+            'online_ordering_enabled' => $this->onlineOrderingEnabled ? '1' : '0',
+            'orders_paused' => $this->ordersPaused ? '1' : '0',
+            'store_hours' => $validated['storeHours'] ?? '',
+            'delivery_enabled' => $this->deliveryEnabled ? '1' : '0',
+            'pickup_enabled' => $this->pickupEnabled ? '1' : '0',
+            'delivery_fee' => Money::decimal(Money::cents($validated['deliveryFee'])),
+            'free_delivery_threshold' => Money::decimal(Money::cents($validated['freeDeliveryThreshold'])),
+            'minimum_order_total' => Money::decimal(Money::cents($validated['minimumOrderTotal'])),
+            'delivery_estimate' => $validated['deliveryEstimate'] ?? '',
+            'pickup_estimate' => $validated['pickupEstimate'] ?? '',
+            'gcash_name' => $validated['gcashName'] ?? '',
+            'gcash_number' => $validated['gcashNumber'] ?? '',
+            'gcash_qr_path' => $this->existingGcashQrPath ?? '',
+            'order_alerts_enabled' => $this->orderAlertsEnabled ? '1' : '0',
+            'telegram_bot_token' => trim((string) ($validated['telegramBotToken'] ?? '')),
+            'telegram_chat_id' => trim((string) ($validated['telegramChatId'] ?? '')),
         ]);
 
+        $this->gcashQr = null;
+        $this->notice = 'Store settings saved.';
+        $this->telegramStatus = '';
+
         session()->flash('status', 'Store settings saved.');
+    }
+
+    public function removeGcashQr(): void
+    {
+        if ($this->existingGcashQrPath) {
+            Storage::disk('public')->delete($this->existingGcashQrPath);
+        }
+
+        $this->existingGcashQrPath = null;
+        $this->gcashQr = null;
+        Setting::set('gcash_qr_path', '');
+
+        $this->notice = 'GCash QR image removed.';
+    }
+
+    public function testTelegram(OrderNotifier $notifier): void
+    {
+        $sent = $notifier->sendTest(trim($this->telegramBotToken), trim($this->telegramChatId));
+
+        $this->telegramStatus = $sent
+            ? 'Test message sent. Check the staff group.'
+            : 'Could not send. Check the bot token and chat ID, and make sure the bot is in the group.';
     }
 
     public function render()
     {
         return view('livewire.settings.edit')
-            ->layout('layouts.app', ['title' => 'Settings', 'subtitle' => 'Store details and till behaviour']);
+            ->layout('layouts.app', ['title' => 'Settings', 'subtitle' => 'Store details, online ordering and alerting']);
     }
 }

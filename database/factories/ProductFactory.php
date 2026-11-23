@@ -29,6 +29,8 @@ class ProductFactory extends Factory
             'low_stock_threshold' => 5,
             'track_stock' => true,
             'is_active' => true,
+            'is_online' => true,
+            'sort_order' => 0,
         ];
     }
 
