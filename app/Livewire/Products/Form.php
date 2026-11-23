@@ -1,0 +1,124 @@
+<?php
+
+namespace App\Livewire\Products;
+
+use App\Models\Category;
+use App\Models\Product;
+use App\Services\StockService;
+use App\Support\PosCatalog;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
+
+class Form extends Component
+{
+    public ?Product $product = null;
+
+    public string $name = '';
+
+    public string $sku = '';
+
+    public ?string $barcode = null;
+
+    public string $unit = 'pc';
+
+    public $category_id = '';
+
+    public $cost_price = '0.00';
+
+    public $selling_price = '0.00';
+
+    public $stock_qty = '0';
+
+    public $low_stock_threshold = '5';
+
+    public bool $track_stock = true;
+
+    public bool $is_active = true;
+
+    /** @var array<int, array{id: int, name: string}> */
+    public array $categories = [];
+
+    public function mount(?Product $product = null): void
+    {
+        $this->categories = Category::query()->orderBy('name')->get(['id', 'name'])
+            ->map(fn (Category $category) => ['id' => $category->id, 'name' => $category->name])
+            ->all();
+
+        if ($product && $product->exists) {
+            $this->product = $product;
+            $this->fill([
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'barcode' => $product->barcode,
+                'unit' => $product->unit,
+                'category_id' => $product->category_id ?? '',
+                'cost_price' => $product->cost_price,
+                'selling_price' => $product->selling_price,
+                'low_stock_threshold' => $product->low_stock_threshold,
+                'track_stock' => $product->track_stock,
+                'is_active' => $product->is_active,
+            ]);
+        }
+    }
+
+    public function save(StockService $stock): void
+    {
+        $validated = $this->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'sku' => ['required', 'string', 'max:50', Rule::unique('products', 'sku')->ignore($this->product?->id)],
+            'barcode' => ['nullable', 'string', 'max:50', Rule::unique('products', 'barcode')->ignore($this->product?->id)],
+            'unit' => ['required', 'string', 'max:20'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'cost_price' => ['required', 'numeric', 'min:0'],
+            'selling_price' => ['required', 'numeric', 'min:0'],
+            'stock_qty' => [$this->product ? 'nullable' : 'required', 'integer', 'min:0'],
+            'low_stock_threshold' => ['required', 'integer', 'min:0'],
+            'track_stock' => ['boolean'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $payload = [
+            'name' => $validated['name'],
+            'sku' => mb_strtoupper($validated['sku']),
+            'barcode' => $validated['barcode'] ?? null,
+            'unit' => $validated['unit'],
+            'category_id' => $validated['category_id'] ?: null,
+            'cost_price' => $validated['cost_price'],
+            'selling_price' => $validated['selling_price'],
+            'low_stock_threshold' => $validated['low_stock_threshold'],
+            'track_stock' => $this->track_stock,
+            'is_active' => $this->is_active,
+        ];
+
+        if ($this->product) {
+            $this->product->update($payload);
+            $message = "\"{$this->product->name}\" was updated.";
+        } else {
+            $product = Product::create($payload + ['stock_qty' => 0]);
+
+            $opening = max(0, (int) $this->stock_qty);
+
+            if ($opening > 0 && $product->track_stock) {
+                $stock->receive($product, $opening, auth()->user(), 'Opening stock');
+            }
+
+            $message = "\"{$product->name}\" was added to the catalogue.";
+        }
+
+        PosCatalog::flush();
+
+        session()->flash('status', $message);
+
+        $this->redirect(route('products.index'));
+    }
+
+    public function render()
+    {
+        return view('livewire.products.form', [
+            'editing' => $this->product !== null,
+        ])->layout('layouts.app', [
+            'title' => $this->product ? 'Edit product' : 'New product',
+            'subtitle' => $this->product ? $this->product->name : 'Add an item to the catalogue',
+        ]);
+    }
+}

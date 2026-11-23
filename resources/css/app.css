@@ -1,0 +1,128 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+        'Noto Sans', sans-serif;
+    --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+}
+
+@layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+
+    html {
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+
+@layer components {
+    .card {
+        @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+    }
+
+    .card-header {
+        @apply flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4;
+    }
+
+    .card-body {
+        @apply p-5;
+    }
+
+    .btn {
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40;
+    }
+
+    .btn-primary {
+        @apply bg-amber-500 text-slate-950 shadow-sm hover:bg-amber-400 active:bg-amber-500;
+    }
+
+    .btn-secondary {
+        @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+    }
+
+    .btn-dark {
+        @apply bg-slate-900 text-white hover:bg-slate-800;
+    }
+
+    .btn-danger {
+        @apply bg-rose-600 text-white hover:bg-rose-500;
+    }
+
+    .btn-ghost {
+        @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+    }
+
+    .btn-sm {
+        @apply rounded-lg px-2.5 py-1.5 text-xs;
+    }
+
+    .input {
+        @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none;
+    }
+
+    .input-sm {
+        @apply rounded-lg px-2.5 py-1.5 text-xs;
+    }
+
+    .label {
+        @apply mb-1.5 block text-xs font-semibold tracking-wide text-slate-600 uppercase;
+    }
+
+    .badge {
+        @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap;
+    }
+
+    .badge-green {
+        @apply bg-emerald-100 text-emerald-800;
+    }
+
+    .badge-red {
+        @apply bg-rose-100 text-rose-700;
+    }
+
+    .badge-amber {
+        @apply bg-amber-100 text-amber-800;
+    }
+
+    .badge-slate {
+        @apply bg-slate-100 text-slate-600;
+    }
+
+    .badge-sky {
+        @apply bg-sky-100 text-sky-800;
+    }
+
+    .badge-violet {
+        @apply bg-violet-100 text-violet-800;
+    }
+
+    .data-table {
+        @apply w-full text-left text-sm;
+    }
+
+    .data-table thead {
+        @apply bg-slate-50 text-[11px] tracking-wider text-slate-500 uppercase;
+    }
+
+    .data-table th {
+        @apply px-4 py-3 font-semibold whitespace-nowrap;
+    }
+
+    .data-table td {
+        @apply border-t border-slate-100 px-4 py-3 align-middle;
+    }
+
+    .data-table tbody tr:hover {
+        @apply bg-amber-50/50;
+    }
+
+    .empty-state {
+        @apply px-6 py-12 text-center text-sm text-slate-500;
+    }
+}
