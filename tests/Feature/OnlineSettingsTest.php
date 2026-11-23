@@ -73,4 +73,29 @@ class OnlineSettingsTest extends TestCase
             ->call('testTelegram')
             ->assertSet('telegramStatus', 'Could not send. Check the bot token and chat ID, and make sure the bot is in the group.');
     }
+
+    public function test_admin_can_save_the_sms_settings(): void
+    {
+        Http::fake();
+
+        $admin = User::factory()->admin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Edit::class)
+            ->set('smsEnabled', true)
+            ->set('smsGatewayUrl', 'https://api.gateway.com/sms')
+            ->set('smsGatewayKey', 'secret-key')
+            ->set('smsSenderName', 'Diding SMS')
+            ->set('smsReminderMinutes', '20')
+            ->set('smsFeedbackEveryN', '2')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('1', Setting::get('sms_enabled'));
+        $this->assertSame('https://api.gateway.com/sms', Setting::get('sms_gateway_url'));
+        $this->assertSame('secret-key', Setting::get('sms_gateway_key'));
+        $this->assertSame('Diding SMS', Setting::get('sms_sender_name'));
+        $this->assertSame('20', Setting::get('sms_reminder_minutes'));
+        $this->assertSame('2', Setting::get('sms_feedback_every_n'));
+    }
 }

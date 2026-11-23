@@ -30,6 +30,21 @@ window.orderCart = function () {
         formError: '',
         submitting: false,
         copied: false,
+        suggestions: [],
+
+        async fetchSuggestions() {
+            this.suggestions = [];
+            const phone = (this.customerPhone || '').replace(/[^0-9]/g, '');
+            if (phone.length < 7) {
+                return;
+            }
+            try {
+                const response = await fetch('/suggestions?phone=' + encodeURIComponent(phone));
+                this.suggestions = response.ok ? await response.json() : [];
+            } catch (error) {
+                this.suggestions = [];
+            }
+        },
 
         init() {
             const node = document.getElementById('order-bootstrap');

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\OrderingController;
 use App\Http\Controllers\OrderProofController;
 use App\Http\Controllers\ReceiptController;
@@ -40,6 +41,11 @@ Route::get('track/{token}', [OrderingController::class, 'track'])->name('orders.
 Route::post('track/{token}/payment', [OrderingController::class, 'updatePayment'])
     ->middleware('throttle:12,1')
     ->name('orders.payment');
+
+Route::get('suggestions', [OrderingController::class, 'suggestions'])->name('suggestions');
+
+Route::get('feedback/{token}', [FeedbackController::class, 'show'])->name('feedback.show');
+Route::post('feedback/{token}', [FeedbackController::class, 'update'])->name('feedback.update');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');

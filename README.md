@@ -13,6 +13,10 @@ PostgreSQL (Supabase).
   them, move them through preparation, record payment, and close them into a
   normal sale. New orders beep and raise a browser notification, and can also
   reach a Telegram staff group.
+- **Customer SMS** — when SMS is configured, the customer gets one message when
+  the snack is ready, feedback questions after completion, and a nudge when a
+  GCash payment is still pending. Plus repeat-customer product suggestions on
+  checkout. See [SMS & feedback](#sms--feedback).
 - **Till** — barcode scanning, instant local cart, cash / GCash / Maya / bank
   payment, change due, senior & PWD 20% discounts with ID capture, parked
   sales, thermal receipt printing (58 mm or 80 mm).
@@ -166,6 +170,27 @@ token and the staff group chat ID in Settings → *Order alerts* (or in `.env`) 
 run a queue worker. The Telegram message contains the reference, type, payment
 status and a link to the board — not the customer's address.
 
+### SMS & feedback
+
+An SMS gateway gives the customer a phone-first experience. The customer types
+their phone at checkout, and if that phone placed two or more orders before,
+they get repeat-customer suggestions in their cart.
+
+When SMS is enabled, the customer gets:
+
+- **"Snack is ready"** — a text when the order is marked ready.
+- **"Still waiting"** — a nudge for abandoned GCash payments after N minutes.
+- **Feedback request** — after the order completes, a link to `/feedback/{token}`
+  with 5 star ratings; replies are stored in `customer_feedbacks`.
+
+Configure it in Settings → *SMS for customers* (gateway URL + API key, sender
+name, reminder wait, feedback rate). The gateway must be a POST endpoint that
+accepts `to`, `message`, `sender` JSON. SMS is disabled by default; the admin
+phone can test it from the same page.
+
+Repeat customers: after a customer returns, their usual items are suggested in
+the checkout — `GET /suggestions?phone=09171234567`.
+
 ### Deployment
 
 Public ordering needs a real hostname with HTTPS. `localhost` is not reachable
@@ -189,7 +214,9 @@ php artisan test
 Covers login and roles, checkout maths, discounts, overselling, voids, shift
 cash expectations, the Livewire terminal actions, CSV export, online order
 placement (stock reservation, delivery fees, GCash/COD, lookup), the staff order
-board lifecycle and sale conversion, and a smoke test that renders every screen.
+board lifecycle and sale conversion, SMS gateway sends (ready, abandoned,
+feedback, suggestions), repeat customers, the feedback page and route, the
+abandoned-order scheduler, and a smoke test that renders every screen.
 
 ## Project layout
 

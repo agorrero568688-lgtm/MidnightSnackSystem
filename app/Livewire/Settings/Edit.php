@@ -4,6 +4,7 @@ namespace App\Livewire\Settings;
 
 use App\Models\Setting;
 use App\Services\OrderNotifier;
+use App\Services\SmsGateway;
 use App\Support\Money;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
@@ -59,6 +60,20 @@ class Edit extends Component
 
     public string $telegramChatId = '';
 
+    public bool $smsEnabled = false;
+
+    public string $smsGatewayUrl = '';
+
+    public string $smsGatewayKey = '';
+
+    public string $smsSenderName = 'Diding SMS';
+
+    public string $smsReminderMinutes = '15';
+
+    public string $smsFeedbackEveryN = '1';
+
+    public string $smsStatus = '';
+
     public string $notice = '';
 
     public string $telegramStatus = '';
@@ -88,6 +103,12 @@ class Edit extends Component
         $this->orderAlertsEnabled = Setting::bool('order_alerts_enabled');
         $this->telegramBotToken = (string) Setting::get('telegram_bot_token');
         $this->telegramChatId = (string) Setting::get('telegram_chat_id');
+        $this->smsEnabled = Setting::bool('sms_enabled');
+        $this->smsGatewayUrl = (string) Setting::get('sms_gateway_url');
+        $this->smsGatewayKey = (string) Setting::get('sms_gateway_key');
+        $this->smsSenderName = (string) Setting::get('sms_sender_name', 'Diding SMS');
+        $this->smsReminderMinutes = (string) Setting::get('sms_reminder_minutes', '15');
+        $this->smsFeedbackEveryN = (string) Setting::get('sms_feedback_every_n', '1');
     }
 
     public function save(): void
@@ -108,6 +129,11 @@ class Edit extends Component
             'gcashQr' => ['nullable', 'image', 'max:2048'],
             'telegramBotToken' => ['nullable', 'string', 'max:200'],
             'telegramChatId' => ['nullable', 'string', 'max:100'],
+            'smsGatewayUrl' => ['nullable', 'url', 'max:200'],
+            'smsGatewayKey' => ['nullable', 'string', 'max:100'],
+            'smsSenderName' => ['required', 'string', 'max:12'],
+            'smsReminderMinutes' => ['required', 'integer', 'min:5,max:120'],
+            'smsFeedbackEveryN' => ['required', 'integer', 'min:1,max:10'],
         ]);
 
         if ($this->gcashQr) {
@@ -142,6 +168,12 @@ class Edit extends Component
             'order_alerts_enabled' => $this->orderAlertsEnabled ? '1' : '0',
             'telegram_bot_token' => trim((string) ($validated['telegramBotToken'] ?? '')),
             'telegram_chat_id' => trim((string) ($validated['telegramChatId'] ?? '')),
+            'sms_enabled' => $this->smsEnabled ? '1' : '0',
+            'sms_gateway_url' => trim((string) $validated['smsGatewayUrl']),
+            'sms_gateway_key' => trim((string) ($validated['smsGatewayKey'] ?? '')),
+            'sms_sender_name' => $validated['smsSenderName'],
+            'sms_reminder_minutes' => $validated['smsReminderMinutes'],
+            'sms_feedback_every_n' => $validated['smsFeedbackEveryN'],
         ]);
 
         $this->gcashQr = null;
@@ -171,6 +203,23 @@ class Edit extends Component
         $this->telegramStatus = $sent
             ? 'Test message sent. Check the staff group.'
             : 'Could not send. Check the bot token and chat ID, and make sure the bot is in the group.';
+    }
+
+    public function testSms(SmsGateway $sms): void
+    {
+        $phone = preg_replace('/[^0-9]/', '', (string) Setting::get('store_phone', ''));
+
+        if (blank($phone)) {
+            $this->smsStatus = 'Set the store phone first, then try again.';
+
+            return;
+        }
+
+        $sent = $sms->send($phone, "[{$this->smsSenderName}] — This is a test message. Is your SMS setup working?");
+
+        $this->smsStatus = $sent
+            ? 'Test SMS sent to the store phone.'
+            : 'Could not send. Check the gateway URL, API key and that SMS is enabled.';
     }
 
     public function render()

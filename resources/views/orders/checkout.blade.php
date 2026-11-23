@@ -94,9 +94,25 @@
                         <div class="sm:col-span-1">
                             <label class="label">Mobile number</label>
                             <input x-model="customerPhone" type="tel" autocomplete="tel" maxlength="30" placeholder="0917 123 4567"
-                                class="input" :class="error('customer_phone') && 'border-rose-400'">
+                                class="input" :class="error('customer_phone') && 'border-rose-400'"
+                                x-on:input.debounce.600="fetchSuggestions">
                             <p class="mt-1 text-xs text-rose-600" x-text="error('customer_phone')"></p>
                             <p class="mt-1 text-[11px] text-slate-500">The rider or cashier will call this number.</p>
+                        </div>
+
+                        <div x-show="suggestions.length > 0" x-cloak class="mt-3 sm:col-span-2">
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                <p class="text-sm font-bold text-amber-900">You've ordered from us before — want to repeat?</p>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <template x-for="s in suggestions" :key="s.id">
+                                        <button type="button" @click="addToCart(s.id)"
+                                            class="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-900 transition hover:bg-amber-100">
+                                            <span x-text="s.name"></span>
+                                            <span class="ml-1 font-mono text-slate-500" x-text="money(s.price_cents)"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="sm:col-span-2" x-show="orderType === 'delivery'" x-cloak>

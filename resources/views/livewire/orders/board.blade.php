@@ -30,6 +30,12 @@
 
             <button type="button" @click="testAlert()" class="btn btn-ghost btn-sm">Test alert</button>
             <a href="{{ route('storefront') }}" target="_blank" class="btn btn-ghost btn-sm">Storefront ↗</a>
+            @if ($selected)
+                <span class="mx-3 h-6 border-r border-slate-200"></span>
+                <span class="text-xs text-slate-400">
+                    Feedback: <a href="{{ route('feedback.show', $selected->public_token) }}" class="font-semibold text-amber-600 hover:text-amber-500">view</a>
+                </span>
+            @endif
         </div>
     </div>
 

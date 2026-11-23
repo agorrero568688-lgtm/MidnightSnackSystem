@@ -37,6 +37,14 @@ class Setting extends Model
         'order_alerts_enabled' => '1',
         'telegram_bot_token' => '',
         'telegram_chat_id' => '',
+
+        // SMS for customers
+        'sms_enabled' => '0',
+        'sms_gateway_url' => '',
+        'sms_gateway_key' => '',
+        'sms_sender_name' => 'Diding SMS',
+        'sms_reminder_minutes' => '15',
+        'sms_feedback_every_n' => '1',
     ];
 
     public static function get(string $key, ?string $default = null): ?string

@@ -204,11 +204,13 @@ class Board extends Component
 
         if (trim($this->search) !== '') {
             $term = '%'.mb_strtolower(trim($this->search)).'%';
+            // Stored phones are digit-only, so search by the digit form too.
+            $phoneTerm = '%'.preg_replace('/[^0-9]/', '', trim($this->search)).'%';
 
-            $query->where(function ($builder) use ($term) {
+            $query->where(function ($builder) use ($term, $phoneTerm) {
                 $builder->whereRaw('lower(reference_no) like ?', [$term])
                     ->orWhereRaw('lower(customer_name) like ?', [$term])
-                    ->orWhereRaw('lower(customer_phone) like ?', [$term]);
+                    ->orWhereRaw('lower(customer_phone) like ?', [$phoneTerm]);
             });
         }
 

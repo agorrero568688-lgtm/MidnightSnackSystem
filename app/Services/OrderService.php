@@ -10,6 +10,9 @@ use App\Enums\PaymentStatus;
 use App\Enums\SalesChannel;
 use App\Enums\SaleStatus;
 use App\Enums\StockMovementType;
+use App\Jobs\SendAbandonedOrderReminderJob;
+use App\Jobs\SendFeedbackSmsJob;
+use App\Jobs\SendOrderReadySmsJob;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Sale;
@@ -162,7 +165,7 @@ class OrderService
                 'payment_method' => $method,
                 'order_type' => $type,
                 'customer_name' => trim((string) $data['customer_name']),
-                'customer_phone' => trim((string) $data['customer_phone']),
+                'customer_phone' => $this->normalizePhone(trim((string) $data['customer_phone'])),
                 'customer_email' => filled($data['customer_email'] ?? null) ? trim((string) $data['customer_email']) : null,
                 'delivery_address' => $type === OrderType::Delivery ? trim((string) ($data['delivery_address'] ?? '')) : null,
                 'notes' => filled($data['notes'] ?? null) ? trim((string) $data['notes']) : null,
@@ -237,10 +240,14 @@ class OrderService
 
     public function markReady(Order $order, User $staff): Order
     {
-        return $this->transition($order, $staff, OrderStatus::Preparing, [
+        $locked = $this->transition($order, $staff, OrderStatus::Preparing, [
             'status' => OrderStatus::Ready,
             'ready_at' => now(),
         ], 'Start preparing the order first.');
+
+        SendOrderReadySmsJob::dispatch($order->id);
+
+        return $locked->load('items');
     }
 
     public function dispatchDelivery(Order $order, User $staff): Order
@@ -378,6 +385,8 @@ class OrderService
         }, 3);
 
         PosCatalog::flush();
+
+        SendFeedbackSmsJob::dispatch($order->id);
 
         return $sale;
     }
@@ -526,6 +535,73 @@ class OrderService
         ])->save();
 
         return $order;
+    }
+
+    /**
+     * Send abandoned-order reminders to customers still waiting to be
+     * confirmed. Returns the number of reminders queued.
+     */
+    public function sendAbandonedReminders(): int
+    {
+        $minutes = max(5, (int) Setting::get('sms_reminder_minutes', '15'));
+
+        $orders = Order::query()
+            ->where('status', OrderStatus::Pending->value)
+            ->where('placed_at', '<=', now()->subMinutes($minutes))
+            ->get();
+
+        foreach ($orders as $order) {
+            SendAbandonedOrderReminderJob::dispatch($order->id);
+        }
+
+        return $orders->count();
+    }
+
+    /**
+     * Suggest the products a repeat customer has ordered most. Returns at
+     * least two orders before suggesting, so brand-new phones get nothing.
+     *
+     * @return Collection<int, Product>
+     */
+    public function suggestionsForPhone(string $phone): Collection
+    {
+        $phone = preg_replace('/[^0-9]/', '', $phone) ?? '';
+
+        if ($phone === '') {
+            return collect();
+        }
+
+        $counts = Order::query()
+            ->whereRaw('lower(customer_phone) = ?', [$phone])
+            ->get()
+            ->flatMap(fn (Order $order) => $order->items->pluck('product_id'))
+            ->countBy();
+
+        if ($counts->sum() < 2) {
+            return collect();
+        }
+
+        $products = Product::query()
+            ->whereIn('id', $counts->keys()->all())
+            ->where('is_active', true)
+            ->where('is_online', true)
+            ->get()
+            ->keyBy('id');
+
+        return $counts
+            ->sortByDesc(fn (int $count, int $id): int => $count)
+            ->map(fn (int $count, int $id): ?Product => $products[$id] ?? null)
+            ->filter()
+            ->values()
+            ->take(4);
+    }
+
+    /**
+     * Normalize customer phone digits for storage and lookups.
+     */
+    private function normalizePhone(string $phone): string
+    {
+        return preg_replace('/[^0-9]/', '', $phone) ?? '';
     }
 
     /** @param array<string, mixed> $changes */

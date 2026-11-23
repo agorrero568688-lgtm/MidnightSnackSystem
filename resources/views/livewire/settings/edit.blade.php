@@ -234,6 +234,58 @@
                     </p>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-header"><h2 class="text-sm font-bold">SMS for customers</h2></div>
+                <div class="card-body space-y-4">
+                    <label class="flex items-start gap-3">
+                        <input wire:model="smsEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500">
+                        <span>
+                            <span class="block text-sm font-medium">Send SMS updates to customers</span>
+                            <span class="block text-xs text-slate-500">Ready, abandoned-order reminders and feedback requests.</span>
+                        </span>
+                    </label>
+
+                    <div class="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                        <div>
+                            <label class="label">Gateway URL</label>
+                            <input wire:model="smsGatewayUrl" type="url" placeholder="https://api.gateway.com/sms" class="input">
+                            @error('smsGatewayUrl') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="label">API key</label>
+                            <input wire:model="smsGatewayKey" type="password" class="input" autocomplete="off">
+                            @error('smsGatewayKey') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="label">Sender name</label>
+                            <input wire:model="smsSenderName" type="text" maxlength="12" class="input">
+                            @error('smsSenderName') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="label">Reminder wait (minutes)</label>
+                            <input wire:model="smsReminderMinutes" type="number" min="5" max="120" class="input w-24">
+                            @error('smsReminderMinutes') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="label">Feedback every N orders</label>
+                            <input wire:model="smsFeedbackEveryN" type="number" min="1" max="10" class="input w-24">
+                            @error('smsFeedbackEveryN') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button type="button" wire:click="testSms" wire:loading.attr="disabled" class="btn btn-secondary btn-sm">Send test SMS</button>
+                        @if ($smsStatus)
+                            <p class="text-xs font-semibold {{ str_contains($smsStatus, 'sent') ? 'text-emerald-700' : 'text-rose-700' }}">{{ $smsStatus }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="space-y-5">

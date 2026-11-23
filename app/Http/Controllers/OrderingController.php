@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PlaceOrderRequest;
 use App\Models\Order;
+use App\Models\Product;
 use App\Services\OrderService;
 use App\Services\StorefrontService;
+use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -75,6 +77,25 @@ class OrderingController extends Controller
         return view('orders.lookup', [
             'config' => $this->storefront->storeConfig(),
         ]);
+    }
+
+    /**
+     * Repeat customers: the items they have ordered most, to re-offer in the cart.
+     *
+     * @return JsonResponse
+     */
+    public function suggestions()
+    {
+        $products = app(OrderService::class)->suggestionsForPhone(trim((string) request('phone', '')));
+
+        $data = $products->map(fn (Product $product) => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'price_cents' => Money::cents($product->selling_price),
+            'description' => $product->description,
+        ])->values();
+
+        return response()->json($data);
     }
 
     public function lookup(Request $request): RedirectResponse
