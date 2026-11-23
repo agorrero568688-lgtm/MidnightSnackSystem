@@ -206,15 +206,13 @@ app/
   Jobs/            SendOrderTelegramAlert
   Support/         Money, PosCatalog
   Http/Middleware/ EnsureRole
-  Http/Controllers/DataDestructionController (admin-only data reset)
-resources/views/   layouts, storefront, orders, livewire components, receipts, admin
+resources/views/   layouts, storefront, orders, livewire components, receipts
 resources/js/      pos.js, order.js (public cart), orders.js (staff alerts)
 ```
 
 ## Not included (next steps)
 
 - Automatic GCash (PayMongo/Xendit) instead of manual reference verification.
-- Permanent destructive wipe — admins only, gated by typing the exact phrase.
 - Partial refunds (voids currently reverse the whole sale).
 - Rider assignment and live map tracking; riders are coordinated by phone.
 - Recipe/ingredient-level inventory; online orders use product stock.
