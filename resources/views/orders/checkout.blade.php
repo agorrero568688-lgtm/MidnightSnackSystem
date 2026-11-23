@@ -54,12 +54,11 @@
                             <button type="button" @click="setOrderType('delivery')"
                                 :class="orderType === 'delivery' ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-200' : 'border-slate-200 bg-white hover:border-slate-300'"
                                 class="rounded-xl border p-4 text-left transition">
-                                <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
                                     <x-icon name="truck" class="h-5 w-5 text-amber-600" />
-                                    <span class="text-[11px] font-semibold text-slate-500">{{ $config['delivery_estimate'] }}</span>
+                                    <p class="mt-2 font-bold">Delivery</p>
                                 </div>
-                                <p class="mt-2 font-bold">Delivery</p>
-                                <p class="text-xs text-slate-500">To your door. Fee is shown before you pay.</p>
+                                <p class="mt-1 text-xs text-slate-500">To your door. Fee is shown before you pay.</p>
                             </button>
                         @endif
 
@@ -67,12 +66,11 @@
                             <button type="button" @click="setOrderType('pickup')"
                                 :class="orderType === 'pickup' ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-200' : 'border-slate-200 bg-white hover:border-slate-300'"
                                 class="rounded-xl border p-4 text-left transition">
-                                <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
                                     <x-icon name="store" class="h-5 w-5 text-amber-600" />
-                                    <span class="text-[11px] font-semibold text-slate-500">{{ $config['pickup_estimate'] }}</span>
+                                    <p class="mt-2 font-bold">Pickup</p>
                                 </div>
-                                <p class="mt-2 font-bold">Pickup</p>
-                                <p class="text-xs text-slate-500">Collect at the counter. No delivery fee.</p>
+                                <p class="mt-1 text-xs text-slate-500">Collect at the counter. No delivery fee.</p>
                             </button>
                         @endif
                     </div>

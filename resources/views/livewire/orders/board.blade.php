@@ -251,6 +251,9 @@
                             @if ($selected->confirmedBy)
                                 <span class="text-[11px] text-slate-500">Confirmed by {{ $selected->confirmedBy->name }}</span>
                             @endif
+                            @if ($selected->ready_at)
+                                <span class="text-[11px] text-slate-500">Ready since {{ $selected->ready_at->format('M d, h:i A') }}</span>
+                            @endif
                         </div>
 
                         <div class="mt-3 flex flex-wrap gap-2">

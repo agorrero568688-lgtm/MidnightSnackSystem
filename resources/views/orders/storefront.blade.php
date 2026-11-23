@@ -22,16 +22,6 @@
                 </p>
 
                 <div class="mt-6 flex flex-wrap gap-2 text-sm">
-                    @if ($config['delivery_enabled'])
-                        <span class="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 font-medium">
-                            <x-icon name="truck" class="h-4 w-4 text-amber-300" /> Delivery {{ $config['delivery_estimate'] }}
-                        </span>
-                    @endif
-                    @if ($config['pickup_enabled'])
-                        <span class="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 font-medium">
-                            <x-icon name="store" class="h-4 w-4 text-amber-300" /> Pickup {{ $config['pickup_estimate'] }}
-                        </span>
-                    @endif
                     @if ($config['store_hours'])
                         <span class="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 font-medium">
                             <x-icon name="clock" class="h-4 w-4 text-amber-300" /> {{ $config['store_hours'] }}

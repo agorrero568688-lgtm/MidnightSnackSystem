@@ -93,10 +93,8 @@
             <p class="mt-4 text-xs text-slate-500">
                 @if ($order->status === \App\Enums\OrderStatus::Completed)
                     Salamat po! We hope you enjoyed it.
-                @elseif ($order->isDelivery())
-                    Estimated delivery: {{ $config['delivery_estimate'] ?: 'as soon as possible' }}. Keep your phone nearby.
                 @else
-                    Estimated pickup: {{ $config['pickup_estimate'] ?: 'as soon as possible' }}. Wait for the “Ready” update before heading over.
+                    We'll call you when your order is ready{{ $order->isDelivery() ? ', so the rider can pick you up' : '' }}.
                 @endif
             </p>
         </div>

@@ -45,10 +45,6 @@ class Edit extends Component
 
     public string $minimumOrderTotal = '0.00';
 
-    public string $deliveryEstimate = '';
-
-    public string $pickupEstimate = '';
-
     public string $gcashName = '';
 
     public string $gcashNumber = '';
@@ -86,8 +82,6 @@ class Edit extends Component
         $this->deliveryFee = (string) Setting::get('delivery_fee', '0.00');
         $this->freeDeliveryThreshold = (string) Setting::get('free_delivery_threshold', '0.00');
         $this->minimumOrderTotal = (string) Setting::get('minimum_order_total', '0.00');
-        $this->deliveryEstimate = (string) Setting::get('delivery_estimate');
-        $this->pickupEstimate = (string) Setting::get('pickup_estimate');
         $this->gcashName = (string) Setting::get('gcash_name');
         $this->gcashNumber = (string) Setting::get('gcash_number');
         $this->existingGcashQrPath = Setting::get('gcash_qr_path') ?: null;
@@ -109,8 +103,6 @@ class Edit extends Component
             'deliveryFee' => ['required', 'numeric', 'min:0', 'max:99999'],
             'freeDeliveryThreshold' => ['required', 'numeric', 'min:0', 'max:99999'],
             'minimumOrderTotal' => ['required', 'numeric', 'min:0', 'max:99999'],
-            'deliveryEstimate' => ['nullable', 'string', 'max:50'],
-            'pickupEstimate' => ['nullable', 'string', 'max:50'],
             'gcashName' => ['nullable', 'string', 'max:100'],
             'gcashNumber' => ['nullable', 'string', 'max:30'],
             'gcashQr' => ['nullable', 'image', 'max:2048'],
@@ -144,8 +136,6 @@ class Edit extends Component
             'delivery_fee' => Money::decimal(Money::cents($validated['deliveryFee'])),
             'free_delivery_threshold' => Money::decimal(Money::cents($validated['freeDeliveryThreshold'])),
             'minimum_order_total' => Money::decimal(Money::cents($validated['minimumOrderTotal'])),
-            'delivery_estimate' => $validated['deliveryEstimate'] ?? '',
-            'pickup_estimate' => $validated['pickupEstimate'] ?? '',
             'gcash_name' => $validated['gcashName'] ?? '',
             'gcash_number' => $validated['gcashNumber'] ?? '',
             'gcash_qr_path' => $this->existingGcashQrPath ?? '',

@@ -92,8 +92,6 @@ class StorefrontService
             'delivery_fee_cents' => Money::cents(Setting::get('delivery_fee', '0')),
             'free_delivery_threshold_cents' => Money::cents(Setting::get('free_delivery_threshold', '0')),
             'minimum_order_cents' => Money::cents(Setting::get('minimum_order_total', '0')),
-            'delivery_estimate' => Setting::get('delivery_estimate'),
-            'pickup_estimate' => Setting::get('pickup_estimate'),
             'gcash_name' => Setting::get('gcash_name'),
             'gcash_number' => Setting::get('gcash_number'),
             'gcash_qr_url' => $this->gcashQrUrl(),

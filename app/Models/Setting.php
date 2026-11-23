@@ -31,8 +31,6 @@ class Setting extends Model
         'delivery_fee' => '39.00',
         'free_delivery_threshold' => '0',
         'minimum_order_total' => '0',
-        'delivery_estimate' => '30–45 min',
-        'pickup_estimate' => '15–20 min',
         'gcash_name' => '',
         'gcash_number' => '',
         'gcash_qr_path' => '',

@@ -152,7 +152,9 @@ OSCA/PWD ID on the board before the total is locked by payment.
 
 Settings → *Online ordering* controls whether ordering is open, a temporary
 pause, delivery/pickup availability, the fixed delivery fee, an optional free
-delivery threshold, a minimum order, and the estimates shown to customers.
+delivery threshold, a minimum order, and the store hours shown to customers.
+Public timing estimates are not shown; we instead tell customers we'll call them
+when the order is ready.
 Product → *Show on the online menu* controls what appears in the menu; stock and
 the sold-out badge come from the normal inventory.
 

@@ -100,7 +100,7 @@
                     <div class="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
                         <div class="sm:col-span-2">
                             <label class="label">Store hours shown to customers</label>
-                            <input wire:model="storeHours" type="text" class="input" placeholder="6:00 PM – 2:00 AM, daily">
+                            <input wire:model="storeHours" type="text" class="input" placeholder="Open 24/7">
                             @error('storeHours') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                         </div>
 
@@ -131,18 +131,6 @@
                             </div>
                             <p class="mt-1 text-[11px] text-slate-500">Based on the item subtotal, before delivery.</p>
                             @error('minimumOrderTotal') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div>
-                            <label class="label">Delivery estimate</label>
-                            <input wire:model="deliveryEstimate" type="text" class="input" placeholder="30–45 min">
-                            @error('deliveryEstimate') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div>
-                            <label class="label">Pickup estimate</label>
-                            <input wire:model="pickupEstimate" type="text" class="input" placeholder="15–20 min">
-                            @error('pickupEstimate') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                         </div>
                     </div>
 
