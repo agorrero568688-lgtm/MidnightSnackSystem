@@ -20,6 +20,7 @@
             ['route' => 'shifts.index', 'label' => 'Shifts', 'icon' => 'clock', 'roles' => ['admin']],
             ['route' => 'reports.daily', 'label' => 'Reports', 'icon' => 'chart', 'roles' => ['admin']],
             ['route' => 'users.index', 'label' => 'Users', 'icon' => 'users', 'roles' => ['admin']],
+            ['route' => 'data.destruct', 'label' => 'Data', 'icon' => 'trash', 'roles' => ['admin']],
             ['route' => 'settings.edit', 'label' => 'Settings', 'icon' => 'settings', 'roles' => ['admin']],
         ];
 

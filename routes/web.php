@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DataDestructionController;
 use App\Http\Controllers\OrderingController;
 use App\Http\Controllers\OrderProofController;
 use App\Http\Controllers\ReceiptController;
@@ -85,5 +86,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('reports/daily/export', [ReportExportController::class, 'daily'])->name('reports.daily.export');
 
     Route::get('users', UsersIndex::class)->name('users.index');
+    Route::get('data/destruct', [DataDestructionController::class, 'index'])->name('data.destruct');
+    Route::post('data/destruct', [DataDestructionController::class, 'destroy'])->name('data.destruct.store');
     Route::get('settings', SettingsEdit::class)->name('settings.edit');
 });
