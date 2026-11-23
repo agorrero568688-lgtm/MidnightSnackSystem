@@ -79,7 +79,7 @@
                     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($section['products'] as $product)
                             @php
-                                $image = $product->image_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) : null;
+                                $image = $product->image_path ? \Illuminate\Support\Facades\Storage::disk('public')->url ($product->image_path) : null;
                             @endphp
 
                             <article x-show="productVisible({{ $product->id }})"

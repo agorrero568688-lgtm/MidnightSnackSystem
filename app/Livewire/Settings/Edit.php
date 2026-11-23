@@ -76,7 +76,7 @@ class Edit extends Component
 
         $this->onlineOrderingEnabled = Setting::bool('online_ordering_enabled');
         $this->ordersPaused = Setting::bool('orders_paused');
-        $this->storeHours = (string) Setting::get('store_hours');
+        $this->storeHours = (string) (Setting::get('store_hours') ?: 'Open 24/7, daily');
         $this->deliveryEnabled = Setting::bool('delivery_enabled');
         $this->pickupEnabled = Setting::bool('pickup_enabled');
         $this->deliveryFee = (string) Setting::get('delivery_fee', '0.00');

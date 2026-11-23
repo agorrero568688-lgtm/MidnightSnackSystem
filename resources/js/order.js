@@ -163,6 +163,11 @@ window.orderCart = function () {
             this.items = this.items.filter((item) => item.id !== id);
         },
 
+        clearAll() {
+            this.items = [];
+            this.notify('Cart cleared');
+        },
+
         qty(id) {
             const line = this.items.find((item) => item.id === id);
 

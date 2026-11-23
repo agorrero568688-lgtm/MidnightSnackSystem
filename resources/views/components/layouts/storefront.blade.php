@@ -63,7 +63,7 @@
             </div>
             <div class="text-sm">
                 <p class="mb-2 text-[11px] font-bold tracking-wider text-amber-300 uppercase">Hours</p>
-                <p>{{ $storeHours ?: 'See you tonight!' }}</p>
+                <p>{{ $storeHours ?: 'Open 24/7, daily' }}</p>
                 @if ($storePhone)
                     <p class="mt-2">{{ $storePhone }}</p>
                 @endif
@@ -161,6 +161,9 @@
 
                     <p x-show="belowMinimum" x-cloak class="mt-2 text-xs font-semibold text-rose-600"
                         x-text="'Minimum order is ' + money(config.minimum_order_cents) + '.'"></p>
+
+                    <button type="button" @click="clearAll()" x-show="items.length > 0"
+                        class="btn btn-danger w-full mt-3">Clear cart</button>
 
                     <a href="{{ route('orders.checkout') }}" @click="closeCart()"
                         class="btn btn-primary mt-3 w-full" :class="items.length === 0 && 'pointer-events-none opacity-40'">

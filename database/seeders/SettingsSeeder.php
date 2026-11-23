@@ -20,7 +20,7 @@ class SettingsSeeder extends Seeder
             'require_shift' => '1',
             'online_ordering_enabled' => '1',
             'orders_paused' => '0',
-            'store_hours' => '6:00 PM – 2:00 AM, daily',
+            'store_hours' => 'Open 24/7, daily',
             'delivery_enabled' => '1',
             'pickup_enabled' => '1',
             'delivery_fee' => '39.00',
