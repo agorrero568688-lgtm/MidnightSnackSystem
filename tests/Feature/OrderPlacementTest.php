@@ -31,7 +31,7 @@ class OrderPlacementTest extends TestCase
             'orders_paused' => '0',
             'delivery_enabled' => '1',
             'pickup_enabled' => '1',
-            'delivery_fee' => '39.00',
+            'delivery_fee' => '20.00',
             'free_delivery_threshold' => '0',
             'minimum_order_total' => '0',
             'allow_negative_stock' => '0',
@@ -94,8 +94,8 @@ class OrderPlacementTest extends TestCase
         $this->assertSame(OrderType::Delivery, $order->order_type);
         $this->assertSame(OrderPaymentMethod::CashOnDelivery, $order->payment_method);
         $this->assertSame('100.00', $order->subtotal);
-        $this->assertSame('39.00', $order->delivery_fee);
-        $this->assertSame('139.00', $order->total);
+        $this->assertSame('20.00', $order->delivery_fee);
+        $this->assertSame('120.00', $order->total);
         $this->assertStringStartsWith('ORD-', $order->reference_no);
         $this->assertCount(1, $order->items);
         $this->assertSame('No onions', $order->items->first()->note);
@@ -159,6 +159,75 @@ class OrderPlacementTest extends TestCase
 
         $this->assertSame('0.00', $order->delivery_fee);
         $this->assertSame('120.00', $order->total);
+    }
+
+    public function test_free_delivery_barangays_are_free(): void
+    {
+        $product = $this->product();
+
+        $this->postJson('/orders', $this->deliveryPayload($product, 2, [
+            'delivery_address' => '#5, Purok 3, Magosilom, Cantilan Proper',
+        ]))->assertOk();
+
+        $order = Order::query()->sole();
+
+        $this->assertSame('0.00', $order->delivery_fee);
+        $this->assertSame('100.00', $order->total);
+    }
+
+    public function test_lininti_an_is_free_too(): void
+    {
+        $product = $this->product();
+
+        $this->postJson('/orders', $this->deliveryPayload($product, 1, [
+            'delivery_address' => '#12 Lininti-an, Cantilan Proper',
+        ]))->assertOk();
+
+        $order = Order::query()->sole();
+
+        $this->assertSame('0.00', $order->delivery_fee);
+    }
+
+    public function test_other_barangays_pay_the_fee(): void
+    {
+        $product = $this->product();
+
+        $this->postJson('/orders', $this->deliveryPayload($product, 1, [
+            'delivery_address' => 'Brgy. Bugsukan, Cantilan Proper',
+        ]))->assertOk();
+
+        $order = Order::query()->sole();
+
+        $this->assertSame('20.00', $order->delivery_fee);
+        $this->assertSame('70.00', $order->total);
+    }
+
+    public function test_the_free_zone_match_is_case_and_punctuation_insensitive(): void
+    {
+        Setting::set('delivery_free_barangays', 'Cabangahan');
+
+        $product = $this->product();
+
+        $this->postJson('/orders', $this->deliveryPayload($product, 1, [
+            'delivery_address' => '4th St., BRGY. Cabangahan, Cantilan',
+        ]))->assertOk();
+
+        $order = Order::query()->sole();
+
+        $this->assertSame('0.00', $order->delivery_fee);
+    }
+
+    public function test_an_address_without_the_barangay_name_charges_the_fee(): void
+    {
+        $product = $this->product();
+
+        $this->postJson('/orders', $this->deliveryPayload($product, 1, [
+            'delivery_address' => '#1 North Road, Consuelo, Cantilan Proper',
+        ]))->assertOk();
+
+        $order = Order::query()->sole();
+
+        $this->assertSame('20.00', $order->delivery_fee);
     }
 
     public function test_gcash_reference_puts_the_order_awaiting_verification(): void

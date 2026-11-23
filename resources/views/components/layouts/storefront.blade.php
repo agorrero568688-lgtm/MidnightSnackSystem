@@ -152,7 +152,7 @@
                         </div>
                         <div class="flex justify-between text-slate-600">
                             <span>Delivery fee</span>
-                            <span x-text="orderType === 'pickup' ? 'Pickup' : (deliveryFeeCents === 0 ? 'Free' : money(deliveryFeeCents))"></span>
+                            <span x-text="orderType === 'pickup' ? 'Pickup' : (deliveryFeeCents === 0 ? 'Free delivery' : money(deliveryFeeCents))"></span>
                         </div>
                         <div class="flex justify-between border-t border-slate-200 pt-2 text-base font-black">
                             <span>Total</span><span x-text="money(totalCents)"></span>

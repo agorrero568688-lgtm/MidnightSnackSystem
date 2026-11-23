@@ -38,7 +38,7 @@ class OrderBoardTest extends TestCase
             'orders_paused' => '0',
             'delivery_enabled' => '1',
             'pickup_enabled' => '1',
-            'delivery_fee' => '39.00',
+            'delivery_fee' => '20.00',
             'free_delivery_threshold' => '0',
             'minimum_order_total' => '0',
             'allow_negative_stock' => '0',
@@ -103,8 +103,8 @@ class OrderBoardTest extends TestCase
         $this->assertSame(SalesChannel::Online, $sale->channel);
         $this->assertSame(SaleStatus::Completed, $sale->status);
         $this->assertSame('100.00', $sale->subtotal);
-        $this->assertSame('39.00', $sale->delivery_fee);
-        $this->assertSame('139.00', $sale->total);
+        $this->assertSame('20.00', $sale->delivery_fee);
+        $this->assertSame('120.00', $sale->total);
         $this->assertSame($cashier->id, $sale->user_id);
         $this->assertStringStartsWith('DMS-', $sale->reference_no);
         $this->assertCount(1, $sale->items);
@@ -190,7 +190,7 @@ class OrderBoardTest extends TestCase
         $this->assertSame(DiscountType::Senior, $order->discount_type);
         $this->assertSame(20, (int) $order->discount_rate);
         $this->assertSame('20.00', $order->discount_amount);
-        $this->assertSame('119.00', $order->total);
+        $this->assertSame('100.00', $order->total);
         $this->assertSame('OSCA-12345', $order->discount_id_number);
     }
 
@@ -207,7 +207,7 @@ class OrderBoardTest extends TestCase
             ->call('applyDiscount')
             ->assertSet('flashError', 'Customer name and OSCA/PWD ID number are required for this discount.');
 
-        $this->assertSame('139.00', $order->fresh()->total);
+        $this->assertSame('120.00', $order->fresh()->total);
     }
 
     public function test_the_total_is_locked_once_payment_is_recorded(): void

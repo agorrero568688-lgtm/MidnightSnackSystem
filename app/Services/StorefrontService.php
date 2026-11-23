@@ -81,6 +81,11 @@ class StorefrontService
     /** @return array<string, mixed> */
     public function storeConfig(): array
     {
+        $freeBarangays = array_values(array_filter(array_map(
+            'trim',
+            explode("\n", (string) Setting::get('delivery_free_barangays', '')),
+        )));
+
         return [
             'ordering_open' => $this->orderingOpen(),
             'store_name' => Setting::get('store_name'),
@@ -90,6 +95,8 @@ class StorefrontService
             'delivery_enabled' => Setting::bool('delivery_enabled'),
             'pickup_enabled' => Setting::bool('pickup_enabled'),
             'delivery_fee_cents' => Money::cents(Setting::get('delivery_fee', '0')),
+            'delivery_free_barangays' => $freeBarangays,
+            'delivery_free_barangays_text' => $freeBarangays !== [] ? implode(', ', $freeBarangays) : '',
             'free_delivery_threshold_cents' => Money::cents(Setting::get('free_delivery_threshold', '0')),
             'minimum_order_cents' => Money::cents(Setting::get('minimum_order_total', '0')),
             'gcash_name' => Setting::get('gcash_name'),

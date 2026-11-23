@@ -42,6 +42,8 @@ class Edit extends Component
 
     public string $deliveryFee = '0.00';
 
+    public string $deliveryFreeBarangays = '';
+
     public string $freeDeliveryThreshold = '0.00';
 
     public string $minimumOrderTotal = '0.00';
@@ -95,6 +97,7 @@ class Edit extends Component
         $this->deliveryEnabled = Setting::bool('delivery_enabled');
         $this->pickupEnabled = Setting::bool('pickup_enabled');
         $this->deliveryFee = (string) Setting::get('delivery_fee', '0.00');
+        $this->deliveryFreeBarangays = (string) Setting::get('delivery_free_barangays', "Magosilom\nLininti-an");
         $this->freeDeliveryThreshold = (string) Setting::get('free_delivery_threshold', '0.00');
         $this->minimumOrderTotal = (string) Setting::get('minimum_order_total', '0.00');
         $this->gcashName = (string) Setting::get('gcash_name');
@@ -122,6 +125,7 @@ class Edit extends Component
             'lowStockDefault' => ['required', 'integer', 'min:0', 'max:9999'],
             'storeHours' => ['nullable', 'string', 'max:100'],
             'deliveryFee' => ['required', 'numeric', 'min:0', 'max:99999'],
+            'deliveryFreeBarangays' => ['required', 'string', 'max:400'],
             'freeDeliveryThreshold' => ['required', 'numeric', 'min:0', 'max:99999'],
             'minimumOrderTotal' => ['required', 'numeric', 'min:0', 'max:99999'],
             'gcashName' => ['nullable', 'string', 'max:100'],
@@ -160,6 +164,7 @@ class Edit extends Component
             'delivery_enabled' => $this->deliveryEnabled ? '1' : '0',
             'pickup_enabled' => $this->pickupEnabled ? '1' : '0',
             'delivery_fee' => Money::decimal(Money::cents($validated['deliveryFee'])),
+            'delivery_free_barangays' => trim((string) $validated['deliveryFreeBarangays']),
             'free_delivery_threshold' => Money::decimal(Money::cents($validated['freeDeliveryThreshold'])),
             'minimum_order_total' => Money::decimal(Money::cents($validated['minimumOrderTotal'])),
             'gcash_name' => $validated['gcashName'] ?? '',

@@ -105,12 +105,20 @@
                         </div>
 
                         <div>
-                            <label class="label">Delivery fee</label>
+                            <label class="label">Delivery fee (other barangays)</label>
                             <div class="relative">
                                 <span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-400">₱</span>
                                 <input wire:model="deliveryFee" type="number" step="0.01" min="0" class="input pl-7">
                             </div>
                             @error('deliveryFee') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="label">Free delivery barangays</label>
+                            <textarea wire:model="deliveryFreeBarangays" rows="3" maxlength="400" class="input" spellcheck="false"
+                                placeholder="Magosilom&#10;Lininti-an"></textarea>
+                            <p class="mt-1 text-[11px] text-slate-500">One barangay per line — customers typing an address with one of these names get free delivery.</p>
+                            @error('deliveryFreeBarangays') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                         </div>
 
                         <div>

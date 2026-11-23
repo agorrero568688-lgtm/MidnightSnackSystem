@@ -239,8 +239,11 @@
                         </div>
                         <div class="flex justify-between text-slate-600">
                             <span>Delivery fee</span>
-                            <span x-text="orderType === 'pickup' ? 'Pickup' : (deliveryFeeCents === 0 ? 'Free' : money(deliveryFeeCents))"></span>
+                            <span x-text="orderType === 'pickup' ? 'Pickup' : (deliveryFeeCents === 0 ? 'Free delivery' : money(deliveryFeeCents))"></span>
                         </div>
+                        <p x-show="isDeliveryFree && orderType === 'delivery'" x-cloak class="text-[11px] text-emerald-700">
+                            Free delivery: <span x-text="config.delivery_free_barangays_text || ''"></span>
+                        </p>
                         <div class="flex justify-between border-t border-slate-100 pt-2 text-base font-black">
                             <span>Total</span><span x-text="money(totalCents)"></span>
                         </div>

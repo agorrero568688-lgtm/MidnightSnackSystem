@@ -155,8 +155,12 @@ OSCA/PWD ID on the board before the total is locked by payment.
 ### Availability, fees and payment details
 
 Settings → *Online ordering* controls whether ordering is open, a temporary
-pause, delivery/pickup availability, the fixed delivery fee, an optional free
-delivery threshold, a minimum order, and the store hours shown to customers.
+pause, delivery/pickup availability, the fixed delivery fee (charged to
+customers **outside** the free-delivery barangays, default ₱20.00), an
+optional free-delivery threshold, a free-delivery barangay list
+(`Magosilom`, `Lininti-an` by default — customers typing an address with one
+of these names get free delivery), a minimum order, and the store hours
+shown to customers.
 Public timing estimates are not shown; we instead tell customers we'll call them
 when the order is ready.
 Product → *Show on the online menu* controls what appears in the menu; stock and

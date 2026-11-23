@@ -201,8 +201,29 @@ window.orderCart = function () {
             return this.items.reduce((sum, item) => sum + item.price_cents * item.qty, 0);
         },
 
+        get isDeliveryFree() {
+            if (this.orderType !== 'delivery' || this.address.trim() === '') {
+                return false;
+            }
+
+            const address = this.normalizeBarangay(this.address);
+
+            return (this.config.delivery_free_barangays || []).some((barangay) => {
+                const name = this.normalizeBarangay(barangay);
+                return name !== '' && address.includes(name);
+            });
+        },
+
+        normalizeBarangay(value) {
+            return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
+        },
+
         get deliveryFeeCents() {
             if (this.orderType === 'pickup') {
+                return 0;
+            }
+
+            if (this.isDeliveryFree) {
                 return 0;
             }
 

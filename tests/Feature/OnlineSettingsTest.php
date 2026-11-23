@@ -74,6 +74,19 @@ class OnlineSettingsTest extends TestCase
             ->assertSet('telegramStatus', 'Could not send. Check the bot token and chat ID, and make sure the bot is in the group.');
     }
 
+    public function test_admin_can_save_the_free_delivery_barangays(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Edit::class)
+            ->set('deliveryFreeBarangays', "Magosilom\nLininti-an")
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame("Magosilom\nLininti-an", Setting::get('delivery_free_barangays'));
+    }
+
     public function test_admin_can_save_the_sms_settings(): void
     {
         Http::fake();

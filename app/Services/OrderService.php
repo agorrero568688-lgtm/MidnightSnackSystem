@@ -144,7 +144,9 @@ class OrderService
             $deliveryCents = 0;
 
             if ($type === OrderType::Delivery) {
-                $deliveryCents = Money::cents(Setting::get('delivery_fee', '0'));
+                $deliveryCents = $this->deliveryIsFree(trim((string) ($data['delivery_address'] ?? '')))
+                    ? 0
+                    : Money::cents(Setting::get('delivery_fee', '0'));
                 $freeThreshold = Money::cents(Setting::get('free_delivery_threshold', '0'));
 
                 if ($freeThreshold > 0 && $subtotalCents >= $freeThreshold) {
@@ -602,6 +604,39 @@ class OrderService
     private function normalizePhone(string $phone): string
     {
         return preg_replace('/[^0-9]/', '', $phone) ?? '';
+    }
+
+    /**
+     * True when the customer's address mentions one of the configured
+     * free-delivery barangays (case/punctuation-insensitive).
+     */
+    private function deliveryIsFree(string $address): bool
+    {
+        $address = $this->normalizeBarangay($address);
+
+        if ($address === '') {
+            return false;
+        }
+
+        $free = array_filter(array_map('trim', explode("\n", (string) Setting::get('delivery_free_barangays'))));
+
+        foreach ($free as $barangay) {
+            $name = $this->normalizeBarangay($barangay);
+
+            if ($name !== '' && str_contains($address, $name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Lowercase alphanumerics only — for address/barangay matching. */
+    private function normalizeBarangay(string $value): string
+    {
+        $value = mb_strtolower(trim($value));
+
+        return (string) preg_replace('/[^a-z0-9]+/', '', $value);
     }
 
     /** @param array<string, mixed> $changes */
