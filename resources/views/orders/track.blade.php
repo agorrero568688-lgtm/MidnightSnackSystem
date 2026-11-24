@@ -188,7 +188,7 @@
                                     <label class="label text-sky-900!">{{ $order->payment_proof_path ? 'Replace receipt screenshot' : 'GCash receipt screenshot' }}</label>
                                     <input name="proof" type="file" accept="image/jpeg,image/png,image/webp" required
                                         class="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky-700">
-                                    <p class="mt-1 text-[11px] text-sky-700">JPG, PNG or WebP · up to 5 MB.</p>
+                                    <p class="mt-1 text-[11px] text-sky-700">JPG, PNG or WebP · up to 4 MB.</p>
                                     @error('proof') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-sm">Upload receipt</button>

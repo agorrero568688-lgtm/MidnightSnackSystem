@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CronController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\GcashQrController;
 use App\Http\Controllers\OrderingController;
@@ -49,6 +50,9 @@ Route::get('track/{token}/proof', [OrderProofController::class, 'showByToken'])
 Route::get('suggestions', [OrderingController::class, 'suggestions'])->name('suggestions');
 
 Route::get('gcash-qr', [GcashQrController::class, 'show'])->name('gcash.qr');
+
+Route::get('cron/abandoned-reminders', [CronController::class, 'abandonedReminders'])
+    ->name('cron.abandoned-reminders');
 
 Route::get('feedback/{token}', [FeedbackController::class, 'show'])->name('feedback.show');
 Route::post('feedback/{token}', [FeedbackController::class, 'update'])->name('feedback.update');

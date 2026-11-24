@@ -22,6 +22,7 @@ use App\Support\PosCatalog;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -213,7 +214,17 @@ class OrderService
         }
 
         PosCatalog::flush();
-        $this->notifier->newOrder($order);
+
+        // Alerts run inline on Vercel (QUEUE_CONNECTION=sync). A Telegram
+        // outage must never turn a successfully placed order into a 500.
+        try {
+            $this->notifier->newOrder($order);
+        } catch (\Throwable $e) {
+            Log::warning('New-order alert failed', [
+                'order' => $order->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
 
         return $order;
     }

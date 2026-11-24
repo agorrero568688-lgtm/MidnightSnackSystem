@@ -47,7 +47,7 @@ class PlaceOrderRequest extends FormRequest
                 'required_if:payment_method,'.OrderPaymentMethod::GCash->value,
                 'image',
                 'mimes:jpg,jpeg,png,webp',
-                'max:5120',
+                'max:4096',
             ],
             'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
@@ -65,7 +65,7 @@ class PlaceOrderRequest extends FormRequest
             'items.required' => 'Your cart is empty.',
             'payment_proof.required_if' => 'Upload a screenshot of your GCash receipt to place the order.',
             'payment_proof.image' => 'The receipt must be a JPG, PNG or WebP image.',
-            'payment_proof.max' => 'That screenshot is larger than 5 MB. Please choose a smaller one.',
+            'payment_proof.max' => 'That screenshot is larger than 4 MB. Please choose a smaller one.',
         ];
     }
 }

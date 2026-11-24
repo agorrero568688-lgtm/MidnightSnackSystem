@@ -364,8 +364,8 @@ window.orderCart = function () {
                 return;
             }
 
-            if (file.size > 5 * 1024 * 1024) {
-                this.setProofError('That screenshot is larger than 5 MB. Please choose a smaller one.');
+            if (file.size > 4 * 1024 * 1024) {
+                this.setProofError('That screenshot is larger than 4 MB. Please choose a smaller one.');
                 return;
             }
 

@@ -206,7 +206,7 @@
                                     <button type="button" @click="$refs.proofInput.click()" class="block w-full py-4">
                                         <x-icon name="receipt" class="mx-auto h-7 w-7 text-sky-500" />
                                         <span class="mt-2 block text-sm font-semibold text-sky-900">Upload receipt screenshot</span>
-                                        <span class="mt-1 block text-xs text-sky-700">Tap to choose from your gallery · JPG, PNG or WebP · up to 5 MB</span>
+                                        <span class="mt-1 block text-xs text-sky-700">Tap to choose from your gallery · JPG, PNG or WebP · up to 4 MB</span>
                                     </button>
                                 </template>
 

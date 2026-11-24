@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('snack:abandoned-reminders')->everyFiveMinutes();
     })
     ->withMiddleware(function (Middleware $middleware) {
+        // Vercel terminates TLS in front of the container.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'role' => EnsureRole::class,
         ]);

@@ -126,7 +126,7 @@ class OrderingController extends Controller
         $order = Order::query()->where('public_token', $token)->firstOrFail();
 
         $validated = $request->validate([
-            'proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
         $orders->submitPayment($order, $validated['proof']);

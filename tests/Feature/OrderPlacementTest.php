@@ -114,6 +114,25 @@ class OrderPlacementTest extends TestCase
         $response->assertJsonPath('redirect', route('orders.track', ['token' => $order->public_token]));
     }
 
+    public function test_a_failed_telegram_alert_does_not_break_checkout(): void
+    {
+        $product = $this->product();
+
+        Setting::setMany([
+            'order_alerts_enabled' => '1',
+            'telegram_bot_token' => 'test-token',
+            'telegram_chat_id' => '12345',
+        ]);
+
+        Http::fake(['*' => Http::response('nope', 500)]);
+
+        $this->postJson('/orders', $this->deliveryPayload($product, 1))
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $this->assertDatabaseCount('orders', 1);
+    }
+
     public function test_prices_come_from_the_database_not_the_client(): void
     {
         $product = $this->product(['selling_price' => '50.00']);

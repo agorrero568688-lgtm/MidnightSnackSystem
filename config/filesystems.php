@@ -30,22 +30,55 @@ return [
 
     'disks' => [
 
-        'local' => [
-            'driver' => 'local',
-            'root' => storage_path('app/private'),
-            'serve' => true,
-            'throw' => false,
-            'report' => false,
-        ],
+        /*
+         * On Vercel the container filesystem is ephemeral, so the "local"
+         * (private receipts) and "public" (product photos, GCash QR) disks
+         * switch to Supabase Storage's S3 API when the drivers below are set
+         * to "s3". Locally and in tests they keep using the filesystem.
+         */
+        'local' => env('PROOF_DISK_DRIVER', 'local') === 's3'
+            ? [
+                'driver' => 's3',
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+                'bucket' => env('AWS_PROOFS_BUCKET', 'proofs'),
+                'endpoint' => env('AWS_ENDPOINT'),
+                'use_path_style_endpoint' => true,
+                'directory_visibility' => 'private',
+                'throw' => true,
+                'report' => false,
+            ]
+            : [
+                'driver' => 'local',
+                'root' => storage_path('app/private'),
+                'serve' => true,
+                'throw' => false,
+                'report' => false,
+            ],
 
-        'public' => [
-            'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => '/storage',
-            'visibility' => 'public',
-            'throw' => false,
-            'report' => false,
-        ],
+        'public' => env('PUBLIC_DISK_DRIVER', 'local') === 's3'
+            ? [
+                'driver' => 's3',
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+                'bucket' => env('AWS_MEDIA_BUCKET', 'media'),
+                'endpoint' => env('AWS_ENDPOINT'),
+                'use_path_style_endpoint' => true,
+                'url' => env('AWS_MEDIA_URL'),
+                'directory_visibility' => 'private',
+                'throw' => false,
+                'report' => false,
+            ]
+            : [
+                'driver' => 'local',
+                'root' => storage_path('app/public'),
+                'url' => '/storage',
+                'visibility' => 'public',
+                'throw' => false,
+                'report' => false,
+            ],
 
         's3' => [
             'driver' => 's3',
