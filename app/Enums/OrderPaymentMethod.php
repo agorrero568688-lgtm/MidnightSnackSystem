@@ -29,7 +29,7 @@ enum OrderPaymentMethod: string
     public function description(): string
     {
         return match ($this) {
-            self::GCash => 'Pay online and send us the reference number',
+            self::GCash => 'Pay online and upload your GCash receipt',
             self::CashOnDelivery => 'Pay the rider in cash when your order arrives',
             self::CashOnPickup => 'Pay at the counter when you pick up',
         };

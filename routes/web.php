@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\GcashQrController;
 use App\Http\Controllers\OrderingController;
 use App\Http\Controllers\OrderProofController;
 use App\Http\Controllers\ReceiptController;
@@ -42,7 +43,12 @@ Route::post('track/{token}/payment', [OrderingController::class, 'updatePayment'
     ->middleware('throttle:12,1')
     ->name('orders.payment');
 
+Route::get('track/{token}/proof', [OrderProofController::class, 'showByToken'])
+    ->name('orders.proof.public');
+
 Route::get('suggestions', [OrderingController::class, 'suggestions'])->name('suggestions');
+
+Route::get('gcash-qr', [GcashQrController::class, 'show'])->name('gcash.qr');
 
 Route::get('feedback/{token}', [FeedbackController::class, 'show'])->name('feedback.show');
 Route::post('feedback/{token}', [FeedbackController::class, 'update'])->name('feedback.update');

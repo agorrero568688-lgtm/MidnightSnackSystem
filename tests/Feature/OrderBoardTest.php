@@ -17,6 +17,7 @@ use App\Services\OrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -31,6 +32,7 @@ class OrderBoardTest extends TestCase
 
         Queue::fake();
         Http::fake();
+        Storage::fake('local');
 
         Setting::setMany([
             'online_ordering_enabled' => '1',
@@ -52,7 +54,7 @@ class OrderBoardTest extends TestCase
             'customer_name' => 'Maria Santos',
             'customer_phone' => '0917 123 4567',
             'delivery_address' => '12 Mabini St, Poblacion',
-            'payment_reference' => '1234567890123',
+            'payment_proof' => $this->fakeImageUpload('receipt.png'),
             'items' => [
                 ['product_id' => $product->id, 'qty' => $qty, 'note' => null],
             ],

@@ -23,8 +23,9 @@ class SmsGateway
     public function abandonedMessage(Order $order): string
     {
         return sprintf(
-            '[%s] — Still waiting on your snack. We saved your spot — reply PAY if you already paid via GCash.',
+            '[%s] — Still waiting on your snack. We saved your spot — upload your GCash receipt here: %s',
             $this->storeName(),
+            route('orders.track', ['token' => $order->public_token]),
         );
     }
 

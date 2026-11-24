@@ -149,9 +149,6 @@
                     <div class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
                         <p><span class="text-slate-400">Method:</span> {{ $order->payment_method->label() }}</p>
                         <p><span class="text-slate-400">Amount:</span> <span class="font-semibold text-slate-900">{{ \App\Support\Money::format($order->total) }}</span></p>
-                        @if ($order->payment_reference)
-                            <p><span class="text-slate-400">GCash reference:</span> <span class="font-mono font-semibold">{{ $order->payment_reference }}</span></p>
-                        @endif
                         @if ($order->paid_at)
                             <p><span class="text-slate-400">Paid:</span> {{ $order->paid_at->format('M d, h:i A') }}</p>
                         @endif
@@ -168,31 +165,33 @@
                                     @endif
                                 </p>
                             @endif
-                            @if ($config['gcash_qr_url'])
-                                <img src="{{ $config['gcash_qr_url'] }}" alt="GCash QR code" class="mt-3 h-32 w-32 rounded-lg bg-white object-contain p-1 ring-1 ring-sky-200">
+                            <x-gcash-qr :src="$config['gcash_qr_url']" caption="Tap to enlarge" class="mt-3" />
+
+                            @if ($order->payment_proof_path)
+                                <a href="{{ route('orders.proof.public', ['token' => $order->public_token]) }}" target="_blank" class="mt-3 inline-block">
+                                    <img src="{{ route('orders.proof.public', ['token' => $order->public_token]) }}" alt="Uploaded GCash receipt"
+                                        class="h-32 w-auto rounded-lg ring-1 ring-sky-200">
+                                </a>
                             @endif
+
                             <p class="mt-2 text-xs text-sky-700">
                                 @if ($order->payment_status === \App\Enums\PaymentStatus::AwaitingVerification)
-                                    We received your reference and will verify it shortly. You can send a new one below if you need to correct it.
+                                    We received your receipt and will verify it shortly. You can replace the screenshot below if you need to.
                                 @else
-                                    Paid already? Send the reference number or a screenshot so we can verify it.
+                                    Paid already? Upload a screenshot of your GCash receipt so we can verify it.
                                 @endif
                             </p>
 
                             <form action="{{ route('orders.payment', ['token' => $order->public_token]) }}" method="POST" enctype="multipart/form-data" class="mt-3 space-y-3">
                                 @csrf
                                 <div>
-                                    <label class="label text-sky-900!">Reference number</label>
-                                    <input name="reference" type="text" maxlength="100" value="{{ old('reference', $order->payment_reference) }}"
-                                        placeholder="e.g. 1234567890123" class="input font-mono">
-                                    @error('reference') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
-                                </div>
-                                <div>
-                                    <label class="label text-sky-900!">Screenshot <span class="text-sky-600 normal-case">(optional)</span></label>
-                                    <input name="proof" type="file" accept="image/*" class="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky-700">
+                                    <label class="label text-sky-900!">{{ $order->payment_proof_path ? 'Replace receipt screenshot' : 'GCash receipt screenshot' }}</label>
+                                    <input name="proof" type="file" accept="image/jpeg,image/png,image/webp" required
+                                        class="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky-700">
+                                    <p class="mt-1 text-[11px] text-sky-700">JPG, PNG or WebP · up to 5 MB.</p>
                                     @error('proof') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                 </div>
-                                <button type="submit" class="btn btn-primary btn-sm">Send payment details</button>
+                                <button type="submit" class="btn btn-primary btn-sm">Upload receipt</button>
                             </form>
                         </div>
                     @elseif ($order->payment_method->isCash() && ! $order->isPaid() && ! $order->isFinal())

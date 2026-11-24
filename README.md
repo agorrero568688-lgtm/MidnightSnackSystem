@@ -140,9 +140,10 @@ The flow:
    stock with a `stock_movements` row of type `online_order`. Nothing is deducted
    twice: when the staff completes the order, those movements are re-pointed at
    the resulting sale.
-3. GCash orders start as *awaiting verification* when a reference is supplied;
-   COD and cash-at-pickup start *unpaid*. Staff verify the money and mark the
-   order paid.
+3. GCash orders must include a screenshot of the payment receipt (stored on the
+   private `local` disk) and start as *awaiting verification*; COD and
+   cash-at-pickup start *unpaid*. Customers can replace the screenshot from
+   their tracking page. Staff verify the money and mark the order paid.
 4. Staff confirm → prepare → ready → (dispatch) → complete. Completing creates a
    normal `sales` row with `channel = online` and the delivery fee, and the
    receipt works exactly like a walk-in sale.
@@ -183,7 +184,8 @@ they get repeat-customer suggestions in their cart.
 When SMS is enabled, the customer gets:
 
 - **"Snack is ready"** — a text when the order is marked ready.
-- **"Still waiting"** — a nudge for abandoned GCash payments after N minutes.
+- **"Still waiting"** — a nudge for abandoned GCash payments after N minutes,
+  with the tracking link so the customer can upload their receipt.
 - **Feedback request** — after the order completes, a link to `/feedback/{token}`
   with 5 star ratings; replies are stored in `customer_feedbacks`.
 
@@ -198,9 +200,16 @@ the checkout — `GET /suggestions?phone=09171234567`.
 ### Deployment
 
 Public ordering needs a real hostname with HTTPS. `localhost` is not reachable
-from a customer's phone, and GCash references/images should not travel over
+from a customer's phone, and GCash receipt screenshots should not travel over
 plain HTTP. Set `APP_URL` to the public address, keep a queue worker running,
-and run `php artisan storage:link` so menu photos and the GCash QR load.
+and run `php artisan storage:link` so menu photos load. The GCash QR is served
+through `GET /gcash-qr` straight from the `public` disk, so it keeps working
+even on hosts where symlinks are unavailable; uploading a new QR busts the
+browser cache automatically. If `public/storage` already exists but points at
+an old path (for example after moving the project folder), delete it and run
+`php artisan storage:link` again — on Windows use `cmd /c rmdir public\storage`
+and `cmd /c mklink /J public\storage storage\app\public` if a symlink is not
+possible.
 
 ## Receipts
 
@@ -243,7 +252,7 @@ resources/js/      pos.js, order.js (public cart), orders.js (staff alerts)
 
 ## Not included (next steps)
 
-- Automatic GCash (PayMongo/Xendit) instead of manual reference verification.
+- Automatic GCash (PayMongo/Xendit) instead of manual receipt verification.
 - Partial refunds (voids currently reverse the whole sale).
 - Rider assignment and live map tracking; riders are coordinated by phone.
 - Recipe/ingredient-level inventory; online orders use product stock.

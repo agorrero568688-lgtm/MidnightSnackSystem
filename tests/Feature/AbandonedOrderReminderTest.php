@@ -90,6 +90,6 @@ class AbandonedOrderReminderTest extends TestCase
 
         Http::assertSent(fn ($request) => $request['to'] === '09171234567'
             && str_contains($request['message'], 'Still waiting')
-            && str_contains($request['message'], 'PAY'));
+            && str_contains($request['message'], route('orders.track', ['token' => $order->public_token])));
     }
 }

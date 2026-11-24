@@ -126,14 +126,13 @@ class OrderingController extends Controller
         $order = Order::query()->where('public_token', $token)->firstOrFail();
 
         $validated = $request->validate([
-            'reference' => ['nullable', 'string', 'max:100', 'required_without:proof'],
-            'proof' => ['nullable', 'image', 'max:4096', 'required_without:reference'],
+            'proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $orders->submitPayment($order, (string) ($validated['reference'] ?? ''), $request->file('proof'));
+        $orders->submitPayment($order, $validated['proof']);
 
         return redirect()
             ->route('orders.track', ['token' => $order->public_token])
-            ->with('status', 'Thank you! We will verify your GCash payment shortly.');
+            ->with('status', 'Receipt received. We will verify your GCash payment shortly.');
     }
 }

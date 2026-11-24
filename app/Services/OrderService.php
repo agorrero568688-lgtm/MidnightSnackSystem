@@ -37,7 +37,8 @@ class OrderService
      *
      * Prices are re-read from the database so a client can never choose its
      * own price. Ingredient stock is tracked separately in the inventory
-     * module and is not reserved here.
+     * module and is not reserved here. GCash orders must arrive with a
+     * screenshot of the payment receipt, stored on the private disk.
      *
      * @param  array<string, mixed>  $data
      *
@@ -70,6 +71,14 @@ class OrderService
             throw ValidationException::withMessages(['payment_method' => 'Choose a valid payment method for this order.']);
         }
 
+        $proof = $data['payment_proof'] ?? null;
+
+        if ($method->isGcash() && ! $proof instanceof UploadedFile) {
+            throw ValidationException::withMessages([
+                'payment_proof' => 'Upload a screenshot of your GCash receipt to place the order.',
+            ]);
+        }
+
         $lines = $this->normalizeLines($data['items'] ?? []);
 
         if ($lines === []) {
@@ -82,114 +91,126 @@ class OrderService
             $quantities[$line['product_id']] = ($quantities[$line['product_id']] ?? 0) + $line['qty'];
         }
 
-        $order = DB::transaction(function () use ($data, $type, $method, $lines, $quantities) {
-            /** @var Collection<int, Product> $products */
-            $products = Product::query()
-                ->whereIn('id', array_keys($quantities))
-                ->orderBy('id')
-                ->get()
-                ->keyBy('id');
+        $proofPath = null;
 
-            foreach ($quantities as $productId => $qty) {
-                $product = $products->get($productId);
+        if ($method->isGcash() && $proof instanceof UploadedFile) {
+            $proofPath = $proof->store('order-proofs', 'local');
+        }
 
-                if (! $product) {
-                    throw ValidationException::withMessages(['items' => 'One of the items is no longer available.']);
+        try {
+            $order = DB::transaction(function () use ($data, $type, $method, $lines, $quantities, $proofPath) {
+                /** @var Collection<int, Product> $products */
+                $products = Product::query()
+                    ->whereIn('id', array_keys($quantities))
+                    ->orderBy('id')
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($quantities as $productId => $qty) {
+                    $product = $products->get($productId);
+
+                    if (! $product) {
+                        throw ValidationException::withMessages(['items' => 'One of the items is no longer available.']);
+                    }
+
+                    if (! $product->is_active || ! $product->is_online || ! $product->is_available) {
+                        throw ValidationException::withMessages([
+                            'items' => "\"{$product->name}\" is not available for online orders right now.",
+                        ]);
+                    }
                 }
 
-                if (! $product->is_active || ! $product->is_online || ! $product->is_available) {
+                $subtotalCents = 0;
+                $rows = [];
+
+                foreach ($lines as $line) {
+                    $product = $products->get($line['product_id']);
+                    $unitCents = Money::cents($product->selling_price);
+                    $lineCents = $unitCents * $line['qty'];
+                    $subtotalCents += $lineCents;
+
+                    $rows[] = [
+                        'product' => $product,
+                        'qty' => $line['qty'],
+                        'note' => $line['note'],
+                        'unit_cents' => $unitCents,
+                        'line_cents' => $lineCents,
+                    ];
+                }
+
+                $minimumCents = Money::cents(Setting::get('minimum_order_total', '0'));
+
+                if ($minimumCents > 0 && $subtotalCents < $minimumCents) {
                     throw ValidationException::withMessages([
-                        'items' => "\"{$product->name}\" is not available for online orders right now.",
+                        'items' => 'The minimum order is '.Money::formatCents($minimumCents).'. Please add a little more.',
                     ]);
                 }
-            }
 
-            $subtotalCents = 0;
-            $rows = [];
+                $deliveryCents = 0;
 
-            foreach ($lines as $line) {
-                $product = $products->get($line['product_id']);
-                $unitCents = Money::cents($product->selling_price);
-                $lineCents = $unitCents * $line['qty'];
-                $subtotalCents += $lineCents;
+                if ($type === OrderType::Delivery) {
+                    $deliveryCents = $this->deliveryIsFree(trim((string) ($data['delivery_address'] ?? '')))
+                        ? 0
+                        : Money::cents(Setting::get('delivery_fee', '0'));
+                    $freeThreshold = Money::cents(Setting::get('free_delivery_threshold', '0'));
 
-                $rows[] = [
-                    'product' => $product,
-                    'qty' => $line['qty'],
-                    'note' => $line['note'],
-                    'unit_cents' => $unitCents,
-                    'line_cents' => $lineCents,
-                ];
-            }
-
-            $minimumCents = Money::cents(Setting::get('minimum_order_total', '0'));
-
-            if ($minimumCents > 0 && $subtotalCents < $minimumCents) {
-                throw ValidationException::withMessages([
-                    'items' => 'The minimum order is '.Money::formatCents($minimumCents).'. Please add a little more.',
-                ]);
-            }
-
-            $deliveryCents = 0;
-
-            if ($type === OrderType::Delivery) {
-                $deliveryCents = $this->deliveryIsFree(trim((string) ($data['delivery_address'] ?? '')))
-                    ? 0
-                    : Money::cents(Setting::get('delivery_fee', '0'));
-                $freeThreshold = Money::cents(Setting::get('free_delivery_threshold', '0'));
-
-                if ($freeThreshold > 0 && $subtotalCents >= $freeThreshold) {
-                    $deliveryCents = 0;
+                    if ($freeThreshold > 0 && $subtotalCents >= $freeThreshold) {
+                        $deliveryCents = 0;
+                    }
                 }
-            }
 
-            $totalCents = $subtotalCents + $deliveryCents;
-            $reference = trim((string) ($data['payment_reference'] ?? ''));
-            $paymentStatus = $method->isGcash() && $reference !== ''
-                ? PaymentStatus::AwaitingVerification
-                : PaymentStatus::Unpaid;
+                $totalCents = $subtotalCents + $deliveryCents;
 
-            $order = Order::create([
-                'public_token' => Str::random(48),
-                'status' => OrderStatus::Pending,
-                'payment_status' => $paymentStatus,
-                'payment_method' => $method,
-                'order_type' => $type,
-                'customer_name' => trim((string) $data['customer_name']),
-                'customer_phone' => $this->normalizePhone(trim((string) $data['customer_phone'])),
-                'customer_email' => filled($data['customer_email'] ?? null) ? trim((string) $data['customer_email']) : null,
-                'delivery_address' => $type === OrderType::Delivery ? trim((string) ($data['delivery_address'] ?? '')) : null,
-                'notes' => filled($data['notes'] ?? null) ? trim((string) $data['notes']) : null,
-                'subtotal' => Money::decimal($subtotalCents),
-                'delivery_fee' => Money::decimal($deliveryCents),
-                'discount_type' => DiscountType::None,
-                'discount_rate' => 0,
-                'discount_amount' => Money::decimal(0),
-                'total' => Money::decimal($totalCents),
-                'payment_reference' => $reference !== '' ? $reference : null,
-                'placed_at' => now(),
-            ]);
-
-            $order->reference_no = 'ORD-'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT);
-            $order->save();
-
-            foreach ($rows as $row) {
-                /** @var Product $product */
-                $product = $row['product'];
-
-                $order->items()->create([
-                    'product_id' => $product->id,
-                    'name_snapshot' => $product->name,
-                    'sku_snapshot' => $product->sku,
-                    'unit_price' => Money::decimal($row['unit_cents']),
-                    'qty' => $row['qty'],
-                    'line_total' => Money::decimal($row['line_cents']),
-                    'note' => $row['note'],
+                $order = Order::create([
+                    'public_token' => Str::random(48),
+                    'status' => OrderStatus::Pending,
+                    'payment_status' => $method->isGcash()
+                        ? PaymentStatus::AwaitingVerification
+                        : PaymentStatus::Unpaid,
+                    'payment_method' => $method,
+                    'order_type' => $type,
+                    'customer_name' => trim((string) $data['customer_name']),
+                    'customer_phone' => $this->normalizePhone(trim((string) $data['customer_phone'])),
+                    'customer_email' => filled($data['customer_email'] ?? null) ? trim((string) $data['customer_email']) : null,
+                    'delivery_address' => $type === OrderType::Delivery ? trim((string) ($data['delivery_address'] ?? '')) : null,
+                    'notes' => filled($data['notes'] ?? null) ? trim((string) $data['notes']) : null,
+                    'subtotal' => Money::decimal($subtotalCents),
+                    'delivery_fee' => Money::decimal($deliveryCents),
+                    'discount_type' => DiscountType::None,
+                    'discount_rate' => 0,
+                    'discount_amount' => Money::decimal(0),
+                    'total' => Money::decimal($totalCents),
+                    'payment_proof_path' => $proofPath,
+                    'placed_at' => now(),
                 ]);
+
+                $order->reference_no = 'ORD-'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT);
+                $order->save();
+
+                foreach ($rows as $row) {
+                    /** @var Product $product */
+                    $product = $row['product'];
+
+                    $order->items()->create([
+                        'product_id' => $product->id,
+                        'name_snapshot' => $product->name,
+                        'sku_snapshot' => $product->sku,
+                        'unit_price' => Money::decimal($row['unit_cents']),
+                        'qty' => $row['qty'],
+                        'line_total' => Money::decimal($row['line_cents']),
+                        'note' => $row['note'],
+                    ]);
+                }
+
+                return $order->load('items');
+            }, 3);
+        } catch (\Throwable $e) {
+            if ($proofPath !== null) {
+                Storage::disk('local')->delete($proofPath);
             }
 
-            return $order->load('items');
-        }, 3);
+            throw $e;
+        }
 
         PosCatalog::flush();
         $this->notifier->newOrder($order);
@@ -433,46 +454,46 @@ class OrderService
         }, 3);
     }
 
-    /** Let a customer attach or correct their GCash reference from the tracking page. */
-    public function submitPayment(Order $order, string $reference, ?UploadedFile $proof = null): Order
+    /** Let a customer upload or replace their GCash receipt from the tracking page. */
+    public function submitPayment(Order $order, UploadedFile $proof): Order
     {
-        return DB::transaction(function () use ($order, $reference, $proof) {
-            $locked = $this->lock($order);
+        $previousPath = $order->payment_proof_path;
+        $proofPath = $proof->store('order-proofs', 'local');
 
-            if (! $locked->payment_method->isGcash()) {
-                $this->fail('This order is paid in cash.');
-            }
+        try {
+            $updated = DB::transaction(function () use ($order, $proofPath) {
+                $locked = $this->lock($order);
 
-            if ($locked->status->isFinal()) {
-                $this->fail('This order is already closed.');
-            }
-
-            if ($locked->isPaid()) {
-                $this->fail('This order is already marked paid.');
-            }
-
-            $proofPath = $locked->payment_proof_path;
-
-            if ($proof) {
-                if ($proofPath) {
-                    Storage::disk('local')->delete($proofPath);
+                if (! $locked->payment_method->isGcash()) {
+                    $this->fail('This order is paid in cash.');
                 }
 
-                $proofPath = $proof->store('order-proofs', 'local');
-            }
+                if ($locked->status->isFinal()) {
+                    $this->fail('This order is already closed.');
+                }
 
-            $newReference = trim($reference) !== '' ? trim($reference) : $locked->payment_reference;
+                if ($locked->isPaid()) {
+                    $this->fail('This order is already marked paid.');
+                }
 
-            $locked->forceFill([
-                'payment_reference' => $newReference,
-                'payment_proof_path' => $proofPath,
-                'payment_status' => filled($newReference) || $proofPath
-                    ? PaymentStatus::AwaitingVerification
-                    : PaymentStatus::Unpaid,
-            ])->save();
+                $locked->forceFill([
+                    'payment_proof_path' => $proofPath,
+                    'payment_status' => PaymentStatus::AwaitingVerification,
+                ])->save();
 
-            return $locked;
-        }, 3);
+                return $locked;
+            }, 3);
+        } catch (\Throwable $e) {
+            Storage::disk('local')->delete($proofPath);
+
+            throw $e;
+        }
+
+        if ($previousPath && $previousPath !== $proofPath) {
+            Storage::disk('local')->delete($previousPath);
+        }
+
+        return $updated;
     }
 
     public function saveStaffNotes(Order $order, User $staff, ?string $notes): Order

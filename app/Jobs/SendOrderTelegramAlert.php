@@ -42,7 +42,7 @@ class SendOrderTelegramAlert implements ShouldQueue
         ];
 
         if ($order->payment_method->isGcash() && $order->payment_status->value === 'awaiting_verification') {
-            $lines[] = '⚠️ GCash reference is waiting for verification.';
+            $lines[] = '⚠️ GCash payment screenshot is waiting for verification.';
         }
 
         $lines[] = '';

@@ -9,9 +9,12 @@ use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Services\OrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class OrderPlacementTest extends TestCase
@@ -75,6 +78,16 @@ class OrderPlacementTest extends TestCase
 
         $this->assertTrue($visible->exists);
         $this->assertTrue($hidden->exists);
+    }
+
+    public function test_checkout_page_shows_the_gcash_receipt_upload(): void
+    {
+        $this->get('/order')
+            ->assertOk()
+            ->assertSee('GCash receipt screenshot')
+            ->assertSee('Upload receipt screenshot')
+            ->assertSee('accept="image/jpeg,image/png,image/webp"', false)
+            ->assertDontSee('GCash reference number');
     }
 
     public function test_guest_can_place_a_delivery_order(): void
@@ -218,20 +231,86 @@ class OrderPlacementTest extends TestCase
         $this->assertSame('20.00', $order->delivery_fee);
     }
 
-    public function test_gcash_reference_puts_the_order_awaiting_verification(): void
+    public function test_gcash_order_requires_a_payment_screenshot(): void
     {
         $product = $this->product();
 
-        $this->postJson('/orders', $this->deliveryPayload($product, 1, [
+        $this->post('/orders', $this->deliveryPayload($product, 1, [
             'payment_method' => 'gcash',
-            'payment_reference' => '1234567890123',
-        ]))->assertOk();
+        ]), ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_proof');
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_a_rejected_order_does_not_leave_a_stored_receipt(): void
+    {
+        Storage::fake('local');
+
+        try {
+            app(OrderService::class)->place([
+                'order_type' => 'delivery',
+                'payment_method' => 'gcash',
+                'customer_name' => 'Maria Santos',
+                'customer_phone' => '0917 123 4567',
+                'delivery_address' => '12 Mabini St, Poblacion',
+                'payment_proof' => $this->fakeImageUpload('receipt.png'),
+                'items' => [],
+            ]);
+
+            $this->fail('Expected the empty cart to be rejected.');
+        } catch (ValidationException) {
+            // Expected.
+        }
+
+        $this->assertSame([], Storage::disk('local')->allFiles('order-proofs'));
+    }
+
+    public function test_gcash_screenshot_puts_the_order_awaiting_verification(): void
+    {
+        Storage::fake('local');
+
+        $product = $this->product();
+
+        $this->post('/orders', $this->deliveryPayload($product, 1, [
+            'payment_method' => 'gcash',
+            'payment_proof' => $this->fakeImageUpload('receipt.png'),
+        ]), ['Accept' => 'application/json'])->assertOk();
 
         $order = Order::query()->sole();
 
         $this->assertSame(OrderPaymentMethod::GCash, $order->payment_method);
         $this->assertSame(PaymentStatus::AwaitingVerification, $order->payment_status);
-        $this->assertSame('1234567890123', $order->payment_reference);
+        $this->assertNull($order->payment_reference);
+        $this->assertNotNull($order->payment_proof_path);
+        Storage::disk('local')->assertExists($order->payment_proof_path);
+    }
+
+    public function test_customer_can_replace_the_receipt_from_the_tracking_page(): void
+    {
+        Storage::fake('local');
+
+        $product = $this->product();
+
+        $this->post('/orders', $this->deliveryPayload($product, 1, [
+            'payment_method' => 'gcash',
+            'payment_proof' => $this->fakeImageUpload('first.png'),
+        ]), ['Accept' => 'application/json'])->assertOk();
+
+        $order = Order::query()->sole();
+        $firstPath = $order->payment_proof_path;
+
+        $this->post(route('orders.payment', ['token' => $order->public_token]), [
+            'proof' => $this->fakeImageUpload('second.png'),
+        ])->assertRedirect(route('orders.track', ['token' => $order->public_token]));
+
+        $order->refresh();
+
+        $this->assertSame(PaymentStatus::AwaitingVerification, $order->payment_status);
+        $this->assertNotSame($firstPath, $order->payment_proof_path);
+        Storage::disk('local')->assertMissing($firstPath);
+        Storage::disk('local')->assertExists($order->payment_proof_path);
     }
 
     public function test_products_marked_as_sold_out_cannot_be_ordered(): void

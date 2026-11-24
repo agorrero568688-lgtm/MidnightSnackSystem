@@ -86,6 +86,7 @@ class SmsGatewayTest extends TestCase
 
         $this->assertStringContainsString('ready to pick up', $ready);
         $this->assertStringContainsString('Saw you earlier', $feedback);
-        $this->assertStringContainsString('PAY', $abandoned);
+        $this->assertStringContainsString('upload your GCash receipt', $abandoned);
+        $this->assertStringContainsString(route('orders.track', ['token' => $order->public_token]), $abandoned);
     }
 }

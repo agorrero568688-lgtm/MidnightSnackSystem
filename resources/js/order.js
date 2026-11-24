@@ -24,7 +24,9 @@ window.orderCart = function () {
         customerEmail: '',
         address: '',
         notes: '',
-        reference: '',
+        proofFile: null,
+        proofPreview: '',
+        proofName: '',
 
         errors: {},
         formError: '',
@@ -252,7 +254,7 @@ window.orderCart = function () {
                 {
                     value: 'gcash',
                     label: 'GCash',
-                    description: 'Pay now, then send us the reference number.',
+                    description: 'Pay now and upload your GCash receipt.',
                 },
             ];
 
@@ -342,6 +344,58 @@ window.orderCart = function () {
         /* Checkout                                                           */
         /* ------------------------------------------------------------------ */
 
+        pickProof(event) {
+            const input = event.target;
+            const file = input.files && input.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            this.useProof(file);
+            input.value = '';
+        },
+
+        useProof(file) {
+            const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+
+            if (!allowed.includes(file.type)) {
+                this.setProofError('Use a JPG, PNG or WebP screenshot.');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                this.setProofError('That screenshot is larger than 5 MB. Please choose a smaller one.');
+                return;
+            }
+
+            if (this.proofPreview) {
+                URL.revokeObjectURL(this.proofPreview);
+            }
+
+            this.proofFile = file;
+            this.proofName = file.name;
+            this.proofPreview = URL.createObjectURL(file);
+
+            const errors = { ...this.errors };
+            delete errors.payment_proof;
+            this.errors = errors;
+        },
+
+        clearProof() {
+            if (this.proofPreview) {
+                URL.revokeObjectURL(this.proofPreview);
+            }
+
+            this.proofFile = null;
+            this.proofPreview = '';
+            this.proofName = '';
+        },
+
+        setProofError(message) {
+            this.errors = { ...this.errors, payment_proof: [message] };
+        },
+
         error(field) {
             return this.errors[field] ? this.errors[field][0] : '';
         },
@@ -378,6 +432,10 @@ window.orderCart = function () {
                 this.errors.customer_email = ['That email address does not look right.'];
             }
 
+            if (this.paymentMethod === 'gcash' && ! this.proofFile) {
+                this.errors.payment_proof = ['Upload a screenshot of your GCash receipt to place the order.'];
+            }
+
             if (Object.keys(this.errors).length > 0) {
                 this.formError = 'Please check the highlighted fields.';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -398,28 +456,31 @@ window.orderCart = function () {
             const url = this.config.place_order_url || '/orders';
 
             try {
+                const form = new FormData();
+                form.append('order_type', this.orderType);
+                form.append('payment_method', this.paymentMethod);
+                form.append('customer_name', this.customerName.trim());
+                form.append('customer_phone', this.customerPhone.trim());
+                form.append('customer_email', this.customerEmail.trim());
+                form.append('delivery_address', this.address.trim());
+                form.append('notes', this.notes.trim());
+                form.append('items', JSON.stringify(this.items.map((item) => ({
+                    product_id: item.id,
+                    qty: item.qty,
+                    note: item.note,
+                }))));
+
+                if (this.proofFile) {
+                    form.append('payment_proof', this.proofFile);
+                }
+
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': token ? token.content : '',
                     },
-                    body: JSON.stringify({
-                        order_type: this.orderType,
-                        payment_method: this.paymentMethod,
-                        customer_name: this.customerName.trim(),
-                        customer_phone: this.customerPhone.trim(),
-                        customer_email: this.customerEmail.trim(),
-                        delivery_address: this.address.trim(),
-                        notes: this.notes.trim(),
-                        payment_reference: this.reference.trim(),
-                        items: this.items.map((item) => ({
-                            product_id: item.id,
-                            qty: item.qty,
-                            note: item.note,
-                        })),
-                    }),
+                    body: form,
                 });
 
                 const data = await response.json().catch(() => ({}));

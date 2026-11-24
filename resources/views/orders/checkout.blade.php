@@ -176,24 +176,47 @@
                                         @endif
                                     </p>
                                 @else
-                                    <p class="mt-1 text-sm text-sky-800">GCash details are sent when we confirm your order. You can also add your reference later on the tracking page.</p>
+                                    <p class="mt-1 text-sm text-sky-800">GCash details are sent when we confirm your order.</p>
                                 @endif
 
                                 <p class="mt-2 text-xs text-sky-700">
-                                    You can place the order now and send the reference afterwards — your tracking page will remind you.
+                                    Scan the QR or send to the number above, then upload a screenshot of the receipt to place your order.
                                 </p>
                             </div>
 
-                            @if ($config['gcash_qr_url'])
-                                <img src="{{ $config['gcash_qr_url'] }}" alt="GCash QR code" class="h-28 w-28 rounded-lg bg-white object-contain p-1 ring-1 ring-sky-200">
-                            @endif
+                            <x-gcash-qr :src="$config['gcash_qr_url']" />
                         </div>
 
                         <div class="mt-3">
-                            <label class="label text-sky-900!">GCash reference number</label>
-                            <input x-model="reference" type="text" maxlength="100" placeholder="e.g. 1234567890123"
-                                class="input font-mono" :class="error('payment_reference') && 'border-rose-400'">
-                            <p class="mt-1 text-xs text-rose-600" x-text="error('payment_reference')"></p>
+                            <label class="label text-sky-900!">GCash receipt screenshot</label>
+
+                            <div class="rounded-xl border-2 border-dashed border-sky-300 bg-white/70 p-3 text-center"
+                                :class="error('payment_proof') && 'border-rose-400'">
+                                <template x-if="proofPreview">
+                                    <div class="space-y-2">
+                                        <img :src="proofPreview" alt="GCash receipt preview" class="mx-auto max-h-56 rounded-lg object-contain ring-1 ring-sky-200">
+                                        <p class="truncate text-xs font-medium text-slate-600" x-text="proofName"></p>
+                                        <button type="button" @click="clearProof()" class="text-xs font-semibold text-rose-600 hover:text-rose-700">
+                                            Remove screenshot
+                                        </button>
+                                    </div>
+                                </template>
+
+                                <template x-if="! proofPreview">
+                                    <button type="button" @click="$refs.proofInput.click()" class="block w-full py-4">
+                                        <x-icon name="receipt" class="mx-auto h-7 w-7 text-sky-500" />
+                                        <span class="mt-2 block text-sm font-semibold text-sky-900">Upload receipt screenshot</span>
+                                        <span class="mt-1 block text-xs text-sky-700">Tap to choose from your gallery · JPG, PNG or WebP · up to 5 MB</span>
+                                    </button>
+                                </template>
+
+                                <input x-ref="proofInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="pickProof($event)">
+                            </div>
+
+                            <p class="mt-1 text-xs text-rose-600" x-text="error('payment_proof')"></p>
+                            <p class="mt-1 text-[11px] text-sky-700">
+                                Open GCash → Pay → screenshot the receipt, then upload it here. Required to place a GCash order.
+                            </p>
                         </div>
                     </div>
 

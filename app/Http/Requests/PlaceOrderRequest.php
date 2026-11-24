@@ -43,7 +43,12 @@ class PlaceOrderRequest extends FormRequest
                 ? ['required', 'string', 'max:300']
                 : ['nullable', 'string', 'max:300'],
             'notes' => ['nullable', 'string', 'max:500'],
-            'payment_reference' => ['nullable', 'string', 'max:100'],
+            'payment_proof' => [
+                'required_if:payment_method,'.OrderPaymentMethod::GCash->value,
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
+            ],
             'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.qty' => ['required', 'integer', 'min:1', 'max:20'],
@@ -58,6 +63,9 @@ class PlaceOrderRequest extends FormRequest
             'customer_phone.regex' => 'Enter a phone number the rider can call, e.g. 0917 123 4567.',
             'delivery_address.required' => 'We need an address to deliver to.',
             'items.required' => 'Your cart is empty.',
+            'payment_proof.required_if' => 'Upload a screenshot of your GCash receipt to place the order.',
+            'payment_proof.image' => 'The receipt must be a JPG, PNG or WebP image.',
+            'payment_proof.max' => 'That screenshot is larger than 5 MB. Please choose a smaller one.',
         ];
     }
 }

@@ -56,7 +56,7 @@
         <div class="card card-body">
             <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">To verify</p>
             <p class="mt-1 text-3xl font-black {{ $awaitingPayment > 0 ? 'text-sky-600' : 'text-slate-900' }}">{{ $awaitingPayment }}</p>
-            <p class="mt-1 text-xs text-slate-500">GCash references waiting for a check</p>
+            <p class="mt-1 text-xs text-slate-500">GCash receipts waiting for a check</p>
         </div>
         <div class="card card-body">
             <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">In progress</p>
@@ -326,11 +326,17 @@
                             @endif
                         </div>
 
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            @if ($selected->payment_proof_path)
-                                <a href="{{ route('orders.proof', $selected) }}" target="_blank" class="btn btn-secondary btn-sm">View payment proof</a>
-                            @endif
+                        @if ($selected->payment_proof_path)
+                            <a href="{{ route('orders.proof', $selected) }}" target="_blank" class="group mt-3 inline-block">
+                                <img src="{{ route('orders.proof', $selected) }}" alt="GCash receipt"
+                                    class="h-28 w-28 rounded-lg object-cover ring-1 ring-slate-200 transition group-hover:ring-amber-400">
+                                <span class="mt-1 block text-[11px] font-semibold text-sky-700">Open full receipt</span>
+                            </a>
+                        @elseif ($selected->payment_method->isGcash() && ! $selected->isPaid())
+                            <p class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">No receipt screenshot uploaded yet.</p>
+                        @endif
 
+                        <div class="mt-3 flex flex-wrap gap-2">
                             @if (! $selected->isPaid() && $selected->status !== \App\Enums\OrderStatus::Cancelled && $selected->payment_status !== \App\Enums\PaymentStatus::Refunded)
                                 <button type="button" wire:click="markPaid" wire:loading.attr="disabled" class="btn btn-primary btn-sm">
                                     {{ $selected->payment_method->isGcash() ? 'Mark GCash paid' : 'Mark cash received' }}
@@ -343,7 +349,7 @@
                         </div>
 
                         @if ($selected->payment_method->isGcash() && ! $selected->isPaid() && $selected->status !== \App\Enums\OrderStatus::Cancelled)
-                            <p class="mt-2 text-xs text-slate-500">Check the reference in your GCash app first. Marking it paid locks the total.</p>
+                            <p class="mt-2 text-xs text-slate-500">Compare the receipt with your GCash transactions first. Marking it paid locks the total.</p>
                         @endif
                     </div>
 

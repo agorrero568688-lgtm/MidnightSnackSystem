@@ -6,7 +6,9 @@ use App\Livewire\Settings\Edit;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -110,5 +112,40 @@ class OnlineSettingsTest extends TestCase
         $this->assertSame('Diding SMS', Setting::get('sms_sender_name'));
         $this->assertSame('20', Setting::get('sms_reminder_minutes'));
         $this->assertSame('2', Setting::get('sms_feedback_every_n'));
+    }
+
+    public function test_an_admin_can_upload_a_gcash_qr_image(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->admin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Edit::class)
+            ->set('gcashQr', UploadedFile::fake()->createWithContent('qr.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')))
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $path = Setting::get('gcash_qr_path');
+
+        $this->assertNotEmpty($path);
+        Storage::disk('public')->assertExists($path);
+    }
+
+    public function test_an_admin_can_remove_the_gcash_qr_image(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('store-settings/qr.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='));
+        Setting::set('gcash_qr_path', 'store-settings/qr.png');
+
+        $admin = User::factory()->admin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Edit::class)
+            ->call('removeGcashQr')
+            ->assertHasNoErrors();
+
+        $this->assertSame('', Setting::get('gcash_qr_path'));
+        Storage::disk('public')->assertMissing('store-settings/qr.png');
     }
 }
