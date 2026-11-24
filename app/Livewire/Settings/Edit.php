@@ -26,10 +26,6 @@ class Edit extends Component
 
     public bool $requireShift = true;
 
-    public bool $allowNegativeStock = false;
-
-    public string $lowStockDefault = '5';
-
     public bool $onlineOrderingEnabled = true;
 
     public bool $ordersPaused = false;
@@ -88,8 +84,6 @@ class Edit extends Component
         $this->receiptFooter = (string) Setting::get('receipt_footer');
         $this->receiptWidth = (string) Setting::get('receipt_width', '58');
         $this->requireShift = Setting::get('require_shift') === '1';
-        $this->allowNegativeStock = Setting::bool('allow_negative_stock');
-        $this->lowStockDefault = (string) Setting::get('low_stock_default', '5');
 
         $this->onlineOrderingEnabled = Setting::bool('online_ordering_enabled');
         $this->ordersPaused = Setting::bool('orders_paused');
@@ -122,7 +116,6 @@ class Edit extends Component
             'storePhone' => ['nullable', 'string', 'max:50'],
             'receiptFooter' => ['nullable', 'string', 'max:200'],
             'receiptWidth' => ['required', 'in:58,80'],
-            'lowStockDefault' => ['required', 'integer', 'min:0', 'max:9999'],
             'storeHours' => ['nullable', 'string', 'max:100'],
             'deliveryFee' => ['required', 'numeric', 'min:0', 'max:99999'],
             'deliveryFreeBarangays' => ['required', 'string', 'max:400'],
@@ -155,8 +148,6 @@ class Edit extends Component
             'receipt_footer' => $validated['receiptFooter'] ?? '',
             'receipt_width' => $validated['receiptWidth'],
             'require_shift' => $this->requireShift ? '1' : '0',
-            'allow_negative_stock' => $this->allowNegativeStock ? '1' : '0',
-            'low_stock_default' => $validated['lowStockDefault'],
 
             'online_ordering_enabled' => $this->onlineOrderingEnabled ? '1' : '0',
             'orders_paused' => $this->ordersPaused ? '1' : '0',

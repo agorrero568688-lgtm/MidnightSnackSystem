@@ -7,7 +7,6 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\SalesChannel;
 use App\Enums\SaleStatus;
-use App\Enums\StockMovementType;
 use App\Livewire\Orders\Board;
 use App\Models\Order;
 use App\Models\Product;
@@ -41,7 +40,6 @@ class OrderBoardTest extends TestCase
             'delivery_fee' => '20.00',
             'free_delivery_threshold' => '0',
             'minimum_order_total' => '0',
-            'allow_negative_stock' => '0',
             'order_alerts_enabled' => '0',
         ]);
     }
@@ -69,7 +67,7 @@ class OrderBoardTest extends TestCase
     public function test_staff_can_open_the_order_board(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '50.00', 'stock_qty' => 10]);
+        $product = Product::factory()->create(['selling_price' => '50.00']);
         $order = $this->place($product);
 
         $this->actingAs($cashier)->get('/orders')->assertOk()->assertSee($order->reference_no);
@@ -78,7 +76,7 @@ class OrderBoardTest extends TestCase
     public function test_staff_can_move_an_order_through_to_a_sale(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '50.00', 'stock_qty' => 10]);
+        $product = Product::factory()->create(['selling_price' => '50.00']);
         $order = $this->place($product, 2);
 
         Livewire::actingAs($cashier)
@@ -108,25 +106,12 @@ class OrderBoardTest extends TestCase
         $this->assertSame($cashier->id, $sale->user_id);
         $this->assertStringStartsWith('DMS-', $sale->reference_no);
         $this->assertCount(1, $sale->items);
-
-        $this->assertDatabaseHas('stock_movements', [
-            'product_id' => $product->id,
-            'type' => StockMovementType::Sale->value,
-            'qty_change' => -2,
-            'reference_type' => 'sale',
-            'reference_id' => $sale->id,
-        ]);
-
-        $this->assertDatabaseMissing('stock_movements', ['reference_type' => 'order']);
-
-        // Stock was reserved at placement, so completing must not deduct again.
-        $this->assertSame(8, $product->fresh()->stock_qty);
     }
 
     public function test_an_order_cannot_be_completed_before_payment(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '50.00', 'stock_qty' => 10]);
+        $product = Product::factory()->create(['selling_price' => '50.00']);
         $order = $this->place($product);
 
         Livewire::actingAs($cashier)
@@ -142,13 +127,11 @@ class OrderBoardTest extends TestCase
         $this->assertDatabaseCount('sales', 0);
     }
 
-    public function test_cancelling_returns_reserved_stock(): void
+    public function test_cancelling_closes_the_order_without_stock_side_effects(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '50.00', 'stock_qty' => 10]);
+        $product = Product::factory()->create(['selling_price' => '50.00']);
         $order = $this->place($product, 2);
-
-        $this->assertSame(8, $product->fresh()->stock_qty);
 
         Livewire::actingAs($cashier)
             ->test(Board::class)
@@ -159,21 +142,13 @@ class OrderBoardTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertSame(OrderStatus::Cancelled, $order->fresh()->status);
-        $this->assertSame(10, $product->fresh()->stock_qty);
-
-        $this->assertDatabaseHas('stock_movements', [
-            'product_id' => $product->id,
-            'type' => StockMovementType::Void->value,
-            'qty_change' => 2,
-            'reference_type' => 'order',
-            'reference_id' => $order->id,
-        ]);
+        $this->assertDatabaseCount('inventory_movements', 0);
     }
 
     public function test_staff_can_apply_a_verified_senior_discount(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '50.00', 'stock_qty' => 10]);
+        $product = Product::factory()->create(['selling_price' => '50.00']);
         $order = $this->place($product, 2);
 
         Livewire::actingAs($cashier)
@@ -197,7 +172,7 @@ class OrderBoardTest extends TestCase
     public function test_a_discount_needs_a_name_and_id(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '50.00', 'stock_qty' => 10]);
+        $product = Product::factory()->create(['selling_price' => '50.00']);
         $order = $this->place($product);
 
         Livewire::actingAs($cashier)
@@ -213,7 +188,7 @@ class OrderBoardTest extends TestCase
     public function test_the_total_is_locked_once_payment_is_recorded(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '50.00', 'stock_qty' => 10]);
+        $product = Product::factory()->create(['selling_price' => '50.00']);
         $order = $this->place($product);
 
         app(OrderService::class)->markPaid($order, $cashier);
@@ -232,7 +207,7 @@ class OrderBoardTest extends TestCase
     public function test_a_cancelled_paid_order_can_be_marked_refunded(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '50.00', 'stock_qty' => 10]);
+        $product = Product::factory()->create(['selling_price' => '50.00']);
         $order = $this->place($product);
 
         $service = app(OrderService::class);

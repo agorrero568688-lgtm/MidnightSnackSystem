@@ -6,7 +6,6 @@ use App\Enums\OrderPaymentMethod;
 use App\Enums\OrderStatus;
 use App\Enums\OrderType;
 use App\Enums\PaymentStatus;
-use App\Enums\StockMovementType;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Setting;
@@ -34,7 +33,6 @@ class OrderPlacementTest extends TestCase
             'delivery_fee' => '20.00',
             'free_delivery_threshold' => '0',
             'minimum_order_total' => '0',
-            'allow_negative_stock' => '0',
             'order_alerts_enabled' => '0',
         ]);
     }
@@ -43,10 +41,9 @@ class OrderPlacementTest extends TestCase
     {
         return Product::factory()->create(array_merge([
             'selling_price' => '50.00',
-            'stock_qty' => 10,
             'is_active' => true,
             'is_online' => true,
-            'track_stock' => true,
+            'is_available' => true,
         ], $attributes));
     }
 
@@ -80,9 +77,9 @@ class OrderPlacementTest extends TestCase
         $this->assertTrue($hidden->exists);
     }
 
-    public function test_guest_can_place_a_delivery_order_and_stock_is_reserved(): void
+    public function test_guest_can_place_a_delivery_order(): void
     {
-        $product = $this->product(['stock_qty' => 10]);
+        $product = $this->product();
 
         $response = $this->postJson('/orders', $this->deliveryPayload($product, 2));
 
@@ -99,16 +96,7 @@ class OrderPlacementTest extends TestCase
         $this->assertStringStartsWith('ORD-', $order->reference_no);
         $this->assertCount(1, $order->items);
         $this->assertSame('No onions', $order->items->first()->note);
-
-        $this->assertSame(8, $product->fresh()->stock_qty);
-
-        $this->assertDatabaseHas('stock_movements', [
-            'product_id' => $product->id,
-            'type' => StockMovementType::OnlineOrder->value,
-            'qty_change' => -2,
-            'reference_type' => 'order',
-            'reference_id' => $order->id,
-        ]);
+        $this->assertDatabaseCount('inventory_movements', 0);
 
         $response->assertJsonPath('redirect', route('orders.track', ['token' => $order->public_token]));
     }
@@ -246,16 +234,15 @@ class OrderPlacementTest extends TestCase
         $this->assertSame('1234567890123', $order->payment_reference);
     }
 
-    public function test_it_will_not_oversell(): void
+    public function test_products_marked_as_sold_out_cannot_be_ordered(): void
     {
-        $product = $this->product(['stock_qty' => 1]);
+        $product = $this->product(['is_available' => false]);
 
-        $this->postJson('/orders', $this->deliveryPayload($product, 2))
+        $this->postJson('/orders', $this->deliveryPayload($product, 1))
             ->assertStatus(422)
             ->assertJsonValidationErrors('items');
 
         $this->assertDatabaseCount('orders', 0);
-        $this->assertSame(1, $product->fresh()->stock_qty);
     }
 
     public function test_offline_products_cannot_be_ordered(): void

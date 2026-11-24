@@ -15,8 +15,6 @@ class SettingsSeeder extends Seeder
             'store_phone' => '',
             'receipt_footer' => 'Salamat po! Come again.',
             'receipt_width' => '58',
-            'allow_negative_stock' => '0',
-            'low_stock_default' => '5',
             'require_shift' => '1',
             'online_ordering_enabled' => '1',
             'orders_paused' => '0',

@@ -33,7 +33,7 @@ class PosTerminalTest extends TestCase
     public function test_checkout_from_the_till_returns_the_receipt_payload(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '30.00', 'stock_qty' => 10]);
+        $product = Product::factory()->create(['selling_price' => '30.00']);
 
         $component = Livewire::actingAs($cashier)->test(Terminal::class);
         $component->call('openShift', '0');
@@ -47,17 +47,15 @@ class PosTerminalTest extends TestCase
             && $result['sale']['total_cents'] === 6000
             && $result['sale']['change_cents'] === 4000
             && $result['sale']['item_count'] === 2
-            && $result['stock'][$product->id] === 8
             && str_contains($result['sale']['receipt_url'], '/receipt'));
 
         $this->assertDatabaseCount('sales', 1);
-        $this->assertSame(8, $product->fresh()->stock_qty);
     }
 
     public function test_checkout_is_refused_without_an_open_shift_when_required(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '10.00', 'stock_qty' => 5]);
+        $product = Product::factory()->create(['selling_price' => '10.00']);
 
         Livewire::actingAs($cashier)
             ->test(Terminal::class)
@@ -73,10 +71,10 @@ class PosTerminalTest extends TestCase
         $this->assertDatabaseCount('sales', 0);
     }
 
-    public function test_checkout_reports_insufficient_stock_without_throwing(): void
+    public function test_checkout_reports_unavailable_products_without_throwing(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '10.00', 'stock_qty' => 1]);
+        $product = Product::factory()->unavailable()->create(['selling_price' => '10.00']);
 
         $component = Livewire::actingAs($cashier)->test(Terminal::class);
         $component->call('openShift', '0');
@@ -87,15 +85,15 @@ class PosTerminalTest extends TestCase
             'amount_tendered' => '100.00',
             'discount_type' => 'none',
         ])->assertReturned(fn (array $result) => $result['ok'] === false
-            && str_contains($result['message'], 'Not enough stock'));
+            && str_contains($result['message'], 'sold out'));
 
-        $this->assertSame(1, $product->fresh()->stock_qty);
+        $this->assertDatabaseCount('sales', 0);
     }
 
     public function test_senior_discount_requires_customer_details_at_the_till(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '100.00', 'stock_qty' => 5]);
+        $product = Product::factory()->create(['selling_price' => '100.00']);
 
         $component = Livewire::actingAs($cashier)->test(Terminal::class);
         $component->call('openShift', '0');

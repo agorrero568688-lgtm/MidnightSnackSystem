@@ -23,7 +23,6 @@ class PageSmokeTest extends TestCase
         $product = Product::factory()->create([
             'category_id' => $category->id,
             'selling_price' => '30.00',
-            'stock_qty' => 20,
         ]);
 
         $shift = app(ShiftService::class)->open($cashier, '100.00');
@@ -60,7 +59,7 @@ class PageSmokeTest extends TestCase
     public function test_cashier_can_render_the_till_and_reprint_a_receipt(): void
     {
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '12.50', 'stock_qty' => 5]);
+        $product = Product::factory()->create(['selling_price' => '12.50']);
         $shift = app(ShiftService::class)->open($cashier, '0');
         $sale = app(CheckoutService::class)->checkout(
             $cashier,
@@ -78,7 +77,7 @@ class PageSmokeTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
         $cashier = User::factory()->create();
-        $product = Product::factory()->create(['selling_price' => '10.00', 'stock_qty' => 5]);
+        $product = Product::factory()->create(['selling_price' => '10.00']);
         $shift = app(ShiftService::class)->open($cashier, '0');
 
         app(CheckoutService::class)->checkout(

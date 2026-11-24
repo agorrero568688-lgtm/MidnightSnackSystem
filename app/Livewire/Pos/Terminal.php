@@ -49,17 +49,10 @@ class Terminal extends Component
             ];
         }
 
-        $stock = Product::query()
-            ->whereIn('id', $sale->items->pluck('product_id')->filter())
-            ->pluck('stock_qty', 'id')
-            ->map(fn ($qty) => (int) $qty)
-            ->all();
-
         $width = Setting::get('receipt_width', '58');
 
         return [
             'ok' => true,
-            'stock' => $stock,
             'sale' => [
                 'id' => $sale->id,
                 'reference_no' => $sale->reference_no,
@@ -123,8 +116,7 @@ class Terminal extends Component
                     'sku' => $product->sku,
                     'barcode' => $product->barcode,
                     'price_cents' => Money::cents($product->selling_price),
-                    'stock' => $product->track_stock ? $product->stock_qty : 0,
-                    'track_stock' => $product->track_stock,
+                    'is_available' => $product->is_available,
                     'category_id' => $product->category_id,
                     'unit' => $product->unit,
                 ])

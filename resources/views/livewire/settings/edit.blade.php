@@ -23,11 +23,6 @@
                         <input wire:model="storePhone" type="text" class="input" placeholder="0917 000 0000">
                         @error('storePhone') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                     </div>
-                    <div>
-                        <label class="label">Default low-stock threshold</label>
-                        <input wire:model="lowStockDefault" type="number" min="0" class="input">
-                        @error('lowStockDefault') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
-                    </div>
                 </div>
             </div>
 
@@ -58,16 +53,6 @@
                         <span>
                             <span class="block text-sm font-medium">Require a shift before selling</span>
                             <span class="block text-xs text-slate-500">Cashiers open a drawer session with their starting cash, and close it with a count.</span>
-                        </span>
-                    </label>
-
-                    <label class="flex items-start gap-3">
-                        <input wire:model="allowNegativeStock" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500">
-                        <span>
-                            <span class="block text-sm font-medium">Allow stock to go negative</span>
-                            <span class="block text-xs text-slate-500">
-                                Off means the till blocks a sale when stock runs out. On lets a miscount be reconciled later.
-                            </span>
                         </span>
                     </label>
                 </div>
@@ -180,20 +165,31 @@
 
                     <div>
                         <label class="label">GCash QR image <span class="text-slate-400 normal-case">(optional)</span></label>
+                        @php
+                            $existingQrUrl = null;
+                            if ($existingGcashQrPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($existingGcashQrPath)) {
+                                $existingQrUrl = route('gcash.qr', ['v' => \Illuminate\Support\Facades\Storage::disk('public')->lastModified($existingGcashQrPath)], false);
+                            }
+                        @endphp
                         <div class="flex flex-wrap items-start gap-4">
                             @if ($gcashQr)
-                                <img src="{{ $gcashQr->temporaryUrl() }}" alt="New GCash QR" class="h-28 w-28 rounded-xl object-contain ring-1 ring-slate-200">
+                                <x-gcash-qr :src="$gcashQr->temporaryUrl()" alt="New GCash QR" caption="Tap to preview" />
+                            @elseif ($existingQrUrl)
+                                <x-gcash-qr :src="$existingQrUrl" />
                             @elseif ($existingGcashQrPath)
-                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($existingGcashQrPath) }}" alt="GCash QR" class="h-28 w-28 rounded-xl object-contain ring-1 ring-slate-200">
+                                <div class="flex h-40 w-40 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-rose-300 bg-rose-50 p-3 text-center text-[10px] font-semibold text-rose-600">
+                                    <x-icon name="alert" class="h-5 w-5" />
+                                    Saved file is missing — re-upload
+                                </div>
                             @else
-                                <div class="flex h-28 w-28 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-center text-[10px] text-slate-400">
+                                <div class="flex h-40 w-40 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-center text-[10px] text-slate-400">
                                     No QR yet
                                 </div>
                             @endif
 
                             <div class="min-w-48 flex-1 space-y-2">
                                 <input wire:model="gcashQr" type="file" accept="image/*" class="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-700">
-                                <p class="text-[11px] text-slate-500">PNG or JPG, up to 2 MB. Shown at checkout and on the tracking page.</p>
+                                <p class="text-[11px] text-slate-500">PNG or JPG, up to 2 MB. Shown at checkout and on the tracking page — customers can tap it to enlarge.</p>
                                 @error('gcashQr') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
 
                                 @if ($existingGcashQrPath)

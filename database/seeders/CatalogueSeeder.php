@@ -11,17 +11,20 @@ class CatalogueSeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Chips & Crackers' => 10,
-            'Biscuits' => 20,
-            'Drinks' => 30,
-            'Instant Noodles' => 40,
-            'Candies' => 50,
-            'Bread & Bakery' => 60,
-            'Others' => 70,
+            'Lomi' => 10,
+            'Pancit' => 20,
+            'Food Platter' => 30,
+            'Barkada Combo' => 40,
+            'Combo Burger' => 50,
+            'Combo Meal' => 60,
+            'Combo Snack' => 70,
+            'Silog' => 80,
+            'Burger (Buy 1 Take 1)' => 90,
+            'Burger (Regular)' => 100,
         ];
 
         foreach ($categories as $name => $order) {
-            Category::query()->firstOrCreate(
+            Category::query()->updateOrCreate(
                 ['name' => $name],
                 ['sort_order' => $order, 'is_active' => true],
             );
@@ -30,51 +33,81 @@ class CatalogueSeeder extends Seeder
         $categoryIds = Category::query()->pluck('id', 'name');
 
         $products = [
-            // name, category, sku, barcode, cost, price, stock, unit
-            ['Piattos Cheese 40g', 'Chips & Crackers', 'PIATTOS-CHS', '4800016641231', 22.00, 30.00, 48, 'pc'],
-            ['Nova Country Cheddar 40g', 'Chips & Crackers', 'NOVA-CHED', '4800016641232', 20.50, 28.00, 36, 'pc'],
-            ['Chippy BBQ 110g', 'Chips & Crackers', 'CHIPPY-BBQ', '4800016641233', 24.00, 32.00, 30, 'pc'],
-            ['Boy Bawang Cornick 100g', 'Chips & Crackers', 'BAWANG-GRL', '4800016641234', 18.00, 25.00, 42, 'pc'],
-            ['Roller Coaster 90g', 'Chips & Crackers', 'ROLLER-CHS', '4800016641235', 19.00, 26.00, 24, 'pc'],
-            ['Skyflakes Crackers 25g', 'Biscuits', 'SKYFLAKES-25', '4800016641236', 8.00, 12.00, 80, 'pc'],
-            ['Fita Crackers 300g', 'Biscuits', 'FITA-300', '4800016641237', 30.00, 38.00, 22, 'pc'],
-            ['Rebisco Sandwich 10s', 'Biscuits', 'REBISCO-SW', '4800016641238', 36.00, 45.00, 18, 'pack'],
-            ['Cream-O Vanilla 10s', 'Biscuits', 'CREAMO-VAN', '4800016641239', 44.00, 55.00, 15, 'pack'],
-            ['Choco Mucho 10s', 'Biscuits', 'CHOCOMUCHO', '4800016641240', 38.00, 48.00, 16, 'pack'],
-            ['Jack n Jill Creams 10s', 'Biscuits', 'JJC-10', '4800016641241', 32.00, 40.00, 12, 'pack'],
-            ['Coke Mismo 300ml', 'Drinks', 'COKE-300', '4800016641242', 17.50, 22.00, 60, 'bottle'],
-            ['Royal Tru-Orange 300ml', 'Drinks', 'ROYAL-300', '4800016641243', 17.50, 22.00, 48, 'bottle'],
-            ['Sprite 300ml', 'Drinks', 'SPRITE-300', '4800016641244', 17.50, 22.00, 42, 'bottle'],
-            ['C2 Green Tea 230ml', 'Drinks', 'C2-GREEN', '4800016641245', 20.00, 25.00, 36, 'bottle'],
-            ['Chuckie Chocolate 250ml', 'Drinks', 'CHUCKIE-250', '4800016641246', 32.00, 40.00, 20, 'pack'],
-            ['Del Monte Pineapple 240ml', 'Drinks', 'DELMONTE-PA', '4800016641247', 20.00, 25.00, 24, 'can'],
-            ['Kopiko 3-in-1', 'Drinks', 'KOPIKO-3IN1', '4800016641248', 7.00, 10.00, 100, 'sachet'],
-            ['Lucky Me Pancit Canton Original', 'Instant Noodles', 'LM-CANTON', '4800016641249', 14.00, 18.00, 90, 'pack'],
-            ['Lucky Me Beef Noodles', 'Instant Noodles', 'LM-BEEF', '4800016641250', 11.00, 15.00, 80, 'pack'],
-            ['Payless Xtra Big', 'Instant Noodles', 'PAYLESS-XB', '4800016641251', 15.00, 20.00, 50, 'pack'],
-            ['Maxx Candy 10s', 'Candies', 'MAXX-10', '4800016641252', 11.00, 15.00, 40, 'pack'],
-            ['White Rabbit 10s', 'Candies', 'WRABBIT-10', '4800016641253', 22.00, 30.00, 25, 'pack'],
-            ['Stik-O Chocolate 100g', 'Candies', 'STIKO-CHO', '4800016641254', 18.00, 25.00, 30, 'pack'],
-            ['Gardenia Classic 400g', 'Bread & Bakery', 'GARDENIA-400', '4800016641255', 68.00, 85.00, 10, 'loaf'],
-            ['Pandesal 6s', 'Bread & Bakery', 'PANDESAL-6', '4800016641256', 22.00, 30.00, 12, 'pack'],
-            ['Ice Candy (assorted)', 'Others', 'ICECANDY', null, 4.00, 10.00, 40, 'pc'],
-            ['Bottled Water 500ml', 'Others', 'WATER-500', '4800016641257', 12.00, 20.00, 60, 'bottle'],
+            // name, category, sku, price, menu order
+            ['Chicken Lomi', 'Lomi', 'LOMI-CHICKEN', 180.00, 10],
+            ['Pork Lomi', 'Lomi', 'LOMI-PORK', 180.00, 20],
+            ['Beef Lomi', 'Lomi', 'LOMI-BEEF', 200.00, 30],
+            ['Seafood Lomi', 'Lomi', 'LOMI-SEAFOOD', 200.00, 40],
+            ['Egg Soup', 'Lomi', 'LOMI-EGGSOUP', 120.00, 50],
+
+            ['Chicken Bam-e', 'Pancit', 'PANCIT-CHICKEN', 180.00, 10],
+            ['Beef Bam-e', 'Pancit', 'PANCIT-BEEF', 200.00, 20],
+            ['Pork Bam-e', 'Pancit', 'PANCIT-PORK', 180.00, 30],
+            ['Sotanghon', 'Pancit', 'PANCIT-SOTANGHON', 180.00, 40],
+            ['Behon', 'Pancit', 'PANCIT-BEHON', 180.00, 50],
+
+            ['Sizzling Sisig', 'Food Platter', 'PLATTER-SISIG', 200.00, 10],
+            ['Sizzling Squid', 'Food Platter', 'PLATTER-SQUID', 200.00, 20],
+            ['Letchon Kawali', 'Food Platter', 'PLATTER-LECHON', 200.00, 30],
+            ['Halang-Halang', 'Food Platter', 'PLATTER-HALANG', 250.00, 40],
+            ['Calamares', 'Food Platter', 'PLATTER-CALAMARES', 250.00, 50],
+
+            ['Fries Cheesy Overload', 'Barkada Combo', 'BARKADA-FRIES-CHEESY', 89.00, 10],
+            ['Fries Egg Pansit Canton', 'Barkada Combo', 'BARKADA-FRIES-CANTON', 99.00, 20],
+            ['Regular Fries', 'Barkada Combo', 'BARKADA-FRIES', 50.00, 30],
+
+            ['Hamburger with Fries & Coke', 'Combo Burger', 'COMBO-HAMBURGER', 105.00, 10],
+            ['Burger with Fries & Coke', 'Combo Burger', 'COMBO-BURGER', 105.00, 20],
+            ['Cheesy Foot Long / Fries with Coke', 'Combo Burger', 'COMBO-FOOTLONG', 125.00, 30],
+
+            ['Sisig with Rice and Coke', 'Combo Meal', 'MEAL-SISIG', 129.00, 10],
+            ['Chicken with Rice and Coke', 'Combo Meal', 'MEAL-CHICKEN', 109.00, 20],
+            ['Burger Patty with Rice and Coke', 'Combo Meal', 'MEAL-BURGER', 99.00, 30],
+
+            ['Fries, Hotdog, Siomai with Coke', 'Combo Snack', 'SNACK-FRIES-HOTDOG-SIOMAI', 99.00, 10],
+            ['Fries, Burger with Coke', 'Combo Snack', 'SNACK-FRIES-BURGER', 109.00, 20],
+
+            ['TapSilog', 'Silog', 'SILOG-TAPA', 149.00, 10],
+            ['Tocilog', 'Silog', 'SILOG-TOCINO', 89.00, 20],
+            ['BangusSilog', 'Silog', 'SILOG-BANGUS', 149.00, 30],
+            ['LumpSilog', 'Silog', 'SILOG-LUMPIA', 89.00, 40],
+            ['HotSilog', 'Silog', 'SILOG-HOTDOG', 89.00, 50],
+            ['PorkSilog', 'Silog', 'SILOG-PORK', 109.00, 60],
+            ['BaconSilog', 'Silog', 'SILOG-BACON', 149.00, 70],
+            ['LongSilog', 'Silog', 'SILOG-LONGGANISA', 89.00, 80],
+            ['SpamSilog', 'Silog', 'SILOG-SPAM', 89.00, 90],
+            ['ChickSilog', 'Silog', 'SILOG-CHICKEN', 109.00, 100],
+            ['BurgerSilog', 'Silog', 'SILOG-BURGER', 89.00, 110],
+            ['HamSilog', 'Silog', 'SILOG-HAM', 89.00, 120],
+            ['SiomaiSilog', 'Silog', 'SILOG-SIOMAI', 89.00, 130],
+            ['Sisilog', 'Silog', 'SILOG-SISIG', 135.00, 140],
+
+            ['Plain Burger (Buy 1 Take 1)', 'Burger (Buy 1 Take 1)', 'BURGER-B1T1-PLAIN', 75.00, 10],
+            ['Egg Burger (Buy 1 Take 1)', 'Burger (Buy 1 Take 1)', 'BURGER-B1T1-EGG', 95.00, 20],
+            ['Cheese Burger (Buy 1 Take 1)', 'Burger (Buy 1 Take 1)', 'BURGER-B1T1-CHEESE', 95.00, 30],
+            ['Egg/Cheese Burger (Buy 1 Take 1)', 'Burger (Buy 1 Take 1)', 'BURGER-B1T1-EGGCHEESE', 105.00, 40],
+
+            ['Plain Burger', 'Burger (Regular)', 'BURGER-PLAIN', 45.00, 10],
+            ['Egg Burger', 'Burger (Regular)', 'BURGER-EGG', 55.00, 20],
+            ['Cheese Burger', 'Burger (Regular)', 'BURGER-CHEESE', 55.00, 30],
+            ['Egg/Cheese Burger', 'Burger (Regular)', 'BURGER-EGGCHEESE', 65.00, 40],
+            ['Cheesy Footlong Hotdog', 'Burger (Regular)', 'BURGER-FOOTLONG', 75.00, 50],
         ];
 
-        foreach ($products as [$name, $category, $sku, $barcode, $cost, $price, $stock, $unit]) {
-            Product::query()->firstOrCreate(
+        foreach ($products as [$name, $category, $sku, $price, $sortOrder]) {
+            Product::query()->updateOrCreate(
                 ['sku' => $sku],
                 [
                     'name' => $name,
                     'category_id' => $categoryIds[$category] ?? null,
-                    'barcode' => $barcode,
-                    'cost_price' => $cost,
+                    'barcode' => null,
+                    'cost_price' => 0.00,
                     'selling_price' => $price,
-                    'stock_qty' => $stock,
-                    'low_stock_threshold' => 10,
-                    'unit' => $unit,
-                    'track_stock' => true,
+                    'unit' => 'serving',
+                    'is_available' => true,
                     'is_active' => true,
+                    'is_online' => true,
+                    'sort_order' => $sortOrder,
                 ],
             );
         }

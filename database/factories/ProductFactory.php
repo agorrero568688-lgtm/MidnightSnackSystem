@@ -22,25 +22,23 @@ class ProductFactory extends Factory
             'sku' => mb_strtoupper(fake()->unique()->bothify('SKU-####??')),
             'barcode' => fake()->unique()->ean13(),
             'name' => ucfirst(fake()->unique()->words(3, true)),
-            'unit' => 'pc',
+            'unit' => 'serving',
             'cost_price' => $cost.'.00',
             'selling_price' => $price.'.00',
-            'stock_qty' => 50,
-            'low_stock_threshold' => 5,
-            'track_stock' => true,
+            'is_available' => true,
             'is_active' => true,
             'is_online' => true,
             'sort_order' => 0,
         ];
     }
 
-    public function outOfStock(): static
+    public function unavailable(): static
     {
-        return $this->state(fn (array $attributes) => ['stock_qty' => 0]);
+        return $this->state(fn (array $attributes) => ['is_available' => false]);
     }
 
-    public function untracked(): static
+    public function hidden(): static
     {
-        return $this->state(fn (array $attributes) => ['track_stock' => false]);
+        return $this->state(fn (array $attributes) => ['is_active' => false]);
     }
 }

@@ -2,7 +2,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap gap-2 text-xs">
             <span class="badge badge-slate">{{ $totalActive }} active</span>
-            <span class="badge {{ $totalLow > 0 ? 'badge-amber' : 'badge-slate' }}">{{ $totalLow }} low stock</span>
+            <span class="badge {{ $totalUnavailable > 0 ? 'badge-amber' : 'badge-slate' }}">{{ $totalUnavailable }} sold out</span>
         </div>
         <a href="{{ route('products.create') }}" class="btn btn-primary">
             <x-icon name="plus" class="h-4 w-4" /> New product
@@ -22,10 +22,10 @@
                     <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                 @endforeach
             </select>
-            <select wire:model.live="stock" class="input w-full sm:w-44">
-                <option value="all">Any stock level</option>
-                <option value="low">Low stock</option>
-                <option value="out">Out of stock</option>
+            <select wire:model.live="availability" class="input w-full sm:w-44">
+                <option value="all">Any availability</option>
+                <option value="available">Available</option>
+                <option value="unavailable">Sold out</option>
             </select>
         </div>
 
@@ -38,7 +38,7 @@
                         <th class="text-right">Cost</th>
                         <th class="text-right">Price</th>
                         <th>Margin</th>
-                        <th>Stock</th>
+                        <th>Availability</th>
                         <th>Status</th>
                         <th class="text-right">Actions</th>
                     </tr>
@@ -59,19 +59,19 @@
                                 @php
                                     $cost = \App\Support\Money::cents($product->cost_price);
                                     $price = \App\Support\Money::cents($product->selling_price);
-                                    $margin = $price > 0 ? (($price - $cost) / $price) * 100 : 0;
+                                    $margin = $cost > 0 && $price > 0 ? (($price - $cost) / $price) * 100 : null;
                                 @endphp
-                                <span class="{{ $margin >= 20 ? 'text-emerald-600' : 'text-slate-500' }}">{{ number_format($margin, 1) }}%</span>
+                                @if ($margin === null)
+                                    <span class="text-slate-400">—</span>
+                                @else
+                                    <span class="{{ $margin >= 20 ? 'text-emerald-600' : 'text-slate-500' }}">{{ number_format($margin, 1) }}%</span>
+                                @endif
                             </td>
                             <td>
-                                @if (! $product->track_stock)
-                                    <span class="badge badge-slate">Unlimited</span>
-                                @elseif ($product->stock_qty <= 0)
-                                    <span class="badge badge-red">Out</span>
-                                @elseif ($product->isLowStock())
-                                    <span class="badge badge-amber">{{ $product->stock_qty }}</span>
+                                @if ($product->is_available)
+                                    <span class="badge badge-green">Available</span>
                                 @else
-                                    <span class="badge badge-green">{{ $product->stock_qty }}</span>
+                                    <span class="badge badge-red">Sold out</span>
                                 @endif
                             </td>
                             <td>
@@ -87,6 +87,9 @@
                             <td>
                                 <div class="flex items-center justify-end gap-1">
                                     <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-ghost">Edit</a>
+                                    <button wire:click="toggleAvailable({{ $product->id }})" class="btn btn-sm btn-ghost">
+                                        {{ $product->is_available ? 'Sold out' : 'Restock' }}
+                                    </button>
                                     <button wire:click="toggleActive({{ $product->id }})" class="btn btn-sm btn-ghost">
                                         {{ $product->is_active ? 'Hide' : 'Show' }}
                                     </button>

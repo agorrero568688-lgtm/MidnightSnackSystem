@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Enums\SaleStatus;
-use App\Models\Product;
+use App\Models\Inventory;
 use App\Models\Sale;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
@@ -36,10 +36,10 @@ class Dashboard extends Component
             ->limit(8)
             ->get();
 
-        $lowStock = Product::query()
+        $lowStock = Inventory::query()
             ->active()
             ->lowStock()
-            ->orderBy('stock_qty')
+            ->orderBy('quantity')
             ->limit(6)
             ->get();
 
@@ -65,7 +65,7 @@ class Dashboard extends Component
             'recentSales' => $recentSales,
             'lowStock' => $lowStock,
             'topProducts' => $topProducts,
-            'lowStockCount' => Product::query()->active()->lowStock()->count(),
+            'lowStockCount' => Inventory::query()->active()->lowStock()->count(),
         ])->layout('layouts.app', ['title' => 'Dashboard', 'subtitle' => $day->format('l, F j, Y')]);
     }
 }

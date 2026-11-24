@@ -2,7 +2,7 @@
  * Public storefront cart and checkout state.
  *
  * Prices in the cart are display-only. The server re-reads every price and
- * re-checks stock when the order is placed.
+ * re-checks availability when the order is placed.
  */
 window.orderCart = function () {
     const storageKey = 'dms.cart.v1';

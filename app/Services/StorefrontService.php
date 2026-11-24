@@ -60,8 +60,8 @@ class StorefrontService
                 'unit' => $product->unit,
                 'image' => $product->image_path ? Storage::disk('public')->url($product->image_path) : null,
                 'description' => $product->description,
-                'available' => ! $product->isOutOfStock(),
-                'max_qty' => $product->track_stock ? min(20, max(0, $product->stock_qty)) : 20,
+                'available' => $product->is_available,
+                'max_qty' => 20,
             ];
         }
 
@@ -119,7 +119,11 @@ class StorefrontService
     {
         $path = Setting::get('gcash_qr_path');
 
-        return filled($path) ? Storage::disk('public')->url($path) : null;
+        if (blank($path) || ! Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return route('gcash.qr', ['v' => Storage::disk('public')->lastModified($path)], false);
     }
 
     /** @return Collection<int, Product> */

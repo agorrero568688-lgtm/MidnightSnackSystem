@@ -1,7 +1,7 @@
 <div class="space-y-5">
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div class="card card-body">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Tracked products</p>
+            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Ingredients tracked</p>
             <p class="mt-1 text-3xl font-black">{{ $trackedCount }}</p>
         </div>
         <div class="card card-body">
@@ -18,6 +18,92 @@
         </div>
     </div>
 
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap gap-2 text-xs">
+            <span class="badge badge-slate">{{ $trackedCount }} active</span>
+            <span class="badge {{ $lowCount > 0 ? 'badge-amber' : 'badge-slate' }}">{{ $lowCount }} low</span>
+            <span class="badge {{ $outCount > 0 ? 'badge-red' : 'badge-slate' }}">{{ $outCount }} out</span>
+        </div>
+        <button wire:click="openCreate" class="btn btn-primary">
+            <x-icon name="plus" class="h-4 w-4" /> New ingredient
+        </button>
+    </div>
+
+    @if ($showForm)
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-sm font-bold">{{ $editingId ? 'Edit ingredient' : 'New ingredient' }}</h2>
+                <button wire:click="cancelForm" class="text-xs font-semibold text-slate-500 hover:text-slate-700">Cancel</button>
+            </div>
+            <form wire:submit="saveIngredient" class="card-body grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="sm:col-span-2">
+                    <label class="label">Name</label>
+                    <input wire:model="name" type="text" class="input" placeholder="e.g. Pork Belly">
+                    @error('name') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="label">Category</label>
+                    <select wire:model="category" class="input">
+                        @foreach ($categories as $option)
+                            <option value="{{ $option }}">{{ $option }}</option>
+                        @endforeach
+                    </select>
+                    @error('category') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="label">Unit</label>
+                    <select wire:model="unit" class="input">
+                        @foreach ($units as $option)
+                            <option value="{{ $option }}">{{ $option }}</option>
+                        @endforeach
+                    </select>
+                    @error('unit') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="label">{{ $editingId ? 'Current quantity' : 'Opening quantity' }}</label>
+                    <input wire:model="quantity" type="number" step="0.001" min="0" class="input disabled:bg-slate-100" @disabled($editingId)>
+                    @if ($editingId)
+                        <p class="mt-1 text-[11px] text-slate-500">Use the movement form to change stock.</p>
+                    @endif
+                    @error('quantity') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="label">Reorder level</label>
+                    <input wire:model="reorderLevel" type="number" step="0.001" min="0" class="input">
+                    @error('reorderLevel') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="label">Cost per unit <span class="font-normal normal-case text-slate-400">(optional)</span></label>
+                    <div class="relative">
+                        <span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-400">₱</span>
+                        <input wire:model="costPerUnit" type="number" step="0.01" min="0" class="input pl-7">
+                    </div>
+                    @error('costPerUnit') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="flex items-end">
+                    <label class="flex items-center gap-2 pb-2 text-sm text-slate-600">
+                        <input wire:model="isActive" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-amber-500">
+                        Active in inventory
+                    </label>
+                </div>
+
+                <div class="flex items-end justify-end gap-2 sm:col-span-2 xl:col-span-4">
+                    <button type="button" wire:click="cancelForm" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                        <span wire:loading.remove>{{ $editingId ? 'Save changes' : 'Add ingredient' }}</span>
+                        <span wire:loading>Saving…</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    @endif
+
     <div class="grid gap-5 xl:grid-cols-3">
         <div class="card h-fit">
             <div class="card-header">
@@ -25,14 +111,14 @@
             </div>
             <form wire:submit="saveMovement" class="card-body space-y-4">
                 <div>
-                    <label class="label">Product</label>
-                    <select wire:model.live="productId" class="input">
-                        <option value="">Choose a product…</option>
-                        @foreach ($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }} · {{ $product->sku }}</option>
+                    <label class="label">Ingredient</label>
+                    <select wire:model.live="inventoryId" class="input">
+                        <option value="">Choose an ingredient…</option>
+                        @foreach ($ingredients as $ingredient)
+                            <option value="{{ $ingredient->id }}">{{ $ingredient->name }} · {{ $ingredient->category }}</option>
                         @endforeach
                     </select>
-                    @error('productId') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                    @error('inventoryId') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
@@ -49,12 +135,12 @@
 
                 <div>
                     <label class="label">{{ $mode === 'adjust' ? 'New stock count' : 'Quantity' }}</label>
-                    <input wire:model="qty" type="number" min="0" class="input" placeholder="0">
+                    <input wire:model="qty" type="number" step="0.001" min="0" class="input" placeholder="0.000">
                     @error('qty') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
-                    @if ($selectedProduct)
+                    @if ($selectedInventory)
                         <p class="mt-1 text-[11px] text-slate-500">
-                            Current: <span class="font-semibold text-slate-700">{{ $selectedProduct->name }}</span>
-                            · {{ $selectedProduct->stock_qty }} {{ $selectedProduct->unit }}
+                            Current: <span class="font-semibold text-slate-700">{{ $selectedInventory->name }}</span>
+                            · {{ $selectedInventory->quantityLabel() }} {{ $selectedInventory->unit }}
                         </p>
                     @endif
                 </div>
@@ -82,11 +168,19 @@
                 </div>
 
                 @if ($tab === 'levels')
-                    <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search products" class="input input-sm w-48">
+                    <div class="flex gap-2">
+                        <select wire:model.live="categoryFilter" class="input input-sm w-44">
+                            <option value="all">All categories</option>
+                            @foreach ($categories as $option)
+                                <option value="{{ $option }}">{{ $option }}</option>
+                            @endforeach
+                        </select>
+                        <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search ingredients" class="input input-sm w-48">
+                    </div>
                 @else
                     <select wire:model.live="logType" class="input input-sm w-40">
                         <option value="all">All movements</option>
-                        @foreach (\App\Enums\StockMovementType::cases() as $type)
+                        @foreach (\App\Enums\InventoryMovementType::cases() as $type)
                             <option value="{{ $type->value }}">{{ $type->label() }}</option>
                         @endforeach
                     </select>
@@ -97,57 +191,67 @@
                 @if ($tab === 'levels')
                     <table class="data-table">
                         <thead>
-                            <tr><th>Product</th><th>Category</th><th>Stock</th><th>Value</th><th>Last movement</th><th></th></tr>
+                            <tr><th>Ingredient</th><th>Category</th><th>Quantity</th><th>Reorder</th><th>Value</th><th>Last movement</th><th></th></tr>
                         </thead>
                         <tbody>
-                            @forelse ($levels as $product)
-                                <tr wire:key="level-{{ $product->id }}">
+                            @forelse ($levels as $inventory)
+                                <tr wire:key="level-{{ $inventory->id }}">
                                     <td>
-                                        <p class="font-semibold">{{ $product->name }}</p>
-                                        <p class="font-mono text-[11px] text-slate-500">{{ $product->sku }}</p>
-                                    </td>
-                                    <td class="text-slate-600">{{ $product->category?->name ?? '—' }}</td>
-                                    <td>
-                                        @if (! $product->track_stock)
-                                            <span class="badge badge-slate">Unlimited</span>
-                                        @elseif ($product->stock_qty <= 0)
-                                            <span class="badge badge-red">Out</span>
-                                        @elseif ($product->isLowStock())
-                                            <span class="badge badge-amber">{{ $product->stock_qty }} {{ $product->unit }}</span>
-                                        @else
-                                            <span class="badge badge-green">{{ $product->stock_qty }} {{ $product->unit }}</span>
+                                        <p class="font-semibold">{{ $inventory->name }}</p>
+                                        @if (! $inventory->is_active)
+                                            <span class="badge badge-slate">Archived</span>
                                         @endif
                                     </td>
+                                    <td class="text-slate-600">{{ $inventory->category }}</td>
                                     <td>
-                                        {{ \App\Support\Money::formatCents(\App\Support\Money::cents($product->cost_price) * max(0, $product->stock_qty)) }}
+                                        @if ($inventory->isOutOfStock())
+                                            <span class="badge badge-red">Out</span>
+                                        @elseif ($inventory->isLowStock())
+                                            <span class="badge badge-amber">{{ $inventory->quantityLabel() }} {{ $inventory->unit }}</span>
+                                        @else
+                                            <span class="badge badge-green">{{ $inventory->quantityLabel() }} {{ $inventory->unit }}</span>
+                                        @endif
                                     </td>
+                                    <td class="text-slate-600">{{ $inventory->reorderLabel() }} {{ $inventory->unit }}</td>
+                                    <td>{{ \App\Support\Money::formatCents($inventory->stockValueCents()) }}</td>
                                     <td class="text-xs text-slate-500">
-                                        {{ $product->movements_max_created_at ? \Illuminate\Support\Carbon::parse($product->movements_max_created_at)->diffForHumans() : 'Never' }}
+                                        {{ $inventory->movements_max_created_at ? \Illuminate\Support\Carbon::parse($inventory->movements_max_created_at)->diffForHumans() : 'Never' }}
                                     </td>
                                     <td class="text-right">
-                                        <button wire:click="selectProduct({{ $product->id }}, 'in')" class="btn btn-sm btn-ghost">Restock</button>
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button wire:click="selectInventory({{ $inventory->id }}, 'in')" class="btn btn-sm btn-ghost">Restock</button>
+                                            <button wire:click="openEdit({{ $inventory->id }})" class="btn btn-sm btn-ghost">Edit</button>
+                                            <button wire:click="toggleIngredient({{ $inventory->id }})" class="btn btn-sm btn-ghost">
+                                                {{ $inventory->is_active ? 'Archive' : 'Activate' }}
+                                            </button>
+                                            @if (! $inventory->is_active)
+                                                <button wire:click="deleteIngredient({{ $inventory->id }})"
+                                                    wire:confirm="Delete {{ $inventory->name }} permanently?"
+                                                    class="btn btn-sm text-rose-600 hover:bg-rose-50">Delete</button>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="empty-state">No products match.</td></tr>
+                                <tr><td colspan="7" class="empty-state">No ingredients match.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 @else
                     <table class="data-table">
                         <thead>
-                            <tr><th>When</th><th>Product</th><th>Type</th><th class="text-right">Change</th><th class="text-right">After</th><th>By</th><th>Note</th></tr>
+                            <tr><th>When</th><th>Ingredient</th><th>Type</th><th class="text-right">Change</th><th class="text-right">After</th><th>By</th><th>Note</th></tr>
                         </thead>
                         <tbody>
                             @forelse ($movements as $movement)
                                 <tr wire:key="movement-{{ $movement->id }}">
                                     <td class="text-xs whitespace-nowrap text-slate-500">{{ $movement->created_at->format('M d, h:i A') }}</td>
-                                    <td class="font-medium">{{ $movement->product?->name ?? 'Deleted product' }}</td>
+                                    <td class="font-medium">{{ $movement->inventory?->name ?? 'Deleted ingredient' }}</td>
                                     <td><span class="badge badge-{{ $movement->type->color() }}">{{ $movement->type->label() }}</span></td>
-                                    <td class="text-right font-semibold {{ $movement->qty_change >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
-                                        {{ $movement->qty_change > 0 ? '+' : '' }}{{ $movement->qty_change }}
+                                    <td class="text-right font-semibold {{ (float) $movement->qty_change >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
+                                        {{ (float) $movement->qty_change > 0 ? '+' : '' }}{{ rtrim(rtrim(number_format((float) $movement->qty_change, 3, '.', ''), '0'), '.') }}
                                     </td>
-                                    <td class="text-right text-slate-600">{{ $movement->qty_after }}</td>
+                                    <td class="text-right text-slate-600">{{ rtrim(rtrim(number_format((float) $movement->qty_after, 3, '.', ''), '0'), '.') }}</td>
                                     <td class="text-xs text-slate-500">{{ $movement->user?->name ?? 'System' }}</td>
                                     <td class="max-w-48 truncate text-xs text-slate-500">{{ $movement->note ?? '—' }}</td>
                                 </tr>

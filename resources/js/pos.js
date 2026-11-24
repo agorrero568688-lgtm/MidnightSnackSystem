@@ -159,18 +159,12 @@ window.posTerminal = function () {
             });
         },
 
-        stockOf(productId) {
-            const product = this.catalog.find((row) => row.id === productId);
-
-            return product ? product.stock : 0;
-        },
-
         inCart(productId) {
             return this.cart.find((row) => row.id === productId)?.qty ?? 0;
         },
 
         isSoldOut(product) {
-            return product.track_stock && product.stock <= 0;
+            return !product.is_available;
         },
 
         /* ---------------------------------------------------------------- */
@@ -179,17 +173,13 @@ window.posTerminal = function () {
 
         addProduct(product) {
             if (this.isSoldOut(product)) {
-                this.flashError(`"${product.name}" is out of stock.`);
+                this.flashError(`"${product.name}" is marked as sold out.`);
                 return;
             }
 
             const existing = this.cart.find((row) => row.id === product.id);
 
             if (existing) {
-                if (product.track_stock && existing.qty >= product.stock) {
-                    this.flashError(`Only ${product.stock} of "${product.name}" in stock.`);
-                    return;
-                }
                 existing.qty++;
             } else {
                 this.cart.push({
@@ -198,8 +188,6 @@ window.posTerminal = function () {
                     sku: product.sku,
                     price_cents: product.price_cents,
                     qty: 1,
-                    track_stock: product.track_stock,
-                    stock: product.stock,
                 });
             }
 
@@ -207,11 +195,6 @@ window.posTerminal = function () {
         },
 
         increment(item) {
-            if (item.track_stock && item.qty >= item.stock) {
-                this.flashError(`Only ${item.stock} of "${item.name}" in stock.`);
-                return;
-            }
-
             item.qty++;
         },
 
@@ -349,23 +332,12 @@ window.posTerminal = function () {
                 }
 
                 this.success = response.sale;
-                this.applyStock(response.stock || {});
                 this.resetCart();
             } catch (error) {
                 this.flashError('Checkout failed. Please try again.');
             } finally {
                 this.busy = false;
             }
-        },
-
-        applyStock(map) {
-            Object.entries(map).forEach(([id, stock]) => {
-                const product = this.catalog.find((row) => row.id === Number(id));
-
-                if (product) {
-                    product.stock = stock;
-                }
-            });
         },
 
         newSale() {

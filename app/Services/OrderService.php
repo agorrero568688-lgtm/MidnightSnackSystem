@@ -9,7 +9,6 @@ use App\Enums\OrderType;
 use App\Enums\PaymentStatus;
 use App\Enums\SalesChannel;
 use App\Enums\SaleStatus;
-use App\Enums\StockMovementType;
 use App\Jobs\SendAbandonedOrderReminderJob;
 use App\Jobs\SendFeedbackSmsJob;
 use App\Jobs\SendOrderReadySmsJob;
@@ -17,7 +16,6 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Setting;
-use App\Models\StockMovement;
 use App\Models\User;
 use App\Support\Money;
 use App\Support\PosCatalog;
@@ -31,15 +29,15 @@ use Illuminate\Validation\ValidationException;
 class OrderService
 {
     public function __construct(
-        private readonly StockService $stock,
         private readonly OrderNotifier $notifier,
     ) {}
 
     /**
      * Place a public order.
      *
-     * Prices are re-read from the database and stock is reserved in the same
-     * transaction, so a client can never choose its own price or oversell.
+     * Prices are re-read from the database so a client can never choose its
+     * own price. Ingredient stock is tracked separately in the inventory
+     * module and is not reserved here.
      *
      * @param  array<string, mixed>  $data
      *
@@ -89,11 +87,8 @@ class OrderService
             $products = Product::query()
                 ->whereIn('id', array_keys($quantities))
                 ->orderBy('id')
-                ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
-
-            $allowNegative = Setting::bool('allow_negative_stock');
 
             foreach ($quantities as $productId => $qty) {
                 $product = $products->get($productId);
@@ -102,15 +97,9 @@ class OrderService
                     throw ValidationException::withMessages(['items' => 'One of the items is no longer available.']);
                 }
 
-                if (! $product->is_active || ! $product->is_online) {
+                if (! $product->is_active || ! $product->is_online || ! $product->is_available) {
                     throw ValidationException::withMessages([
                         'items' => "\"{$product->name}\" is not available for online orders right now.",
-                    ]);
-                }
-
-                if ($product->track_stock && ! $allowNegative && $product->stock_qty < $qty) {
-                    throw ValidationException::withMessages([
-                        'items' => "Only {$product->stock_qty} of \"{$product->name}\" left.",
                     ]);
                 }
             }
@@ -197,22 +186,6 @@ class OrderService
                     'line_total' => Money::decimal($row['line_cents']),
                     'note' => $row['note'],
                 ]);
-            }
-
-            foreach ($quantities as $productId => $qty) {
-                $product = $products->get($productId);
-
-                if ($product->track_stock) {
-                    $this->stock->record(
-                        $product,
-                        StockMovementType::OnlineOrder,
-                        -$qty,
-                        null,
-                        "Online order {$order->reference_no}",
-                        'order',
-                        $order->id,
-                    );
-                }
             }
 
             return $order->load('items');
@@ -310,8 +283,8 @@ class OrderService
     /**
      * Close an order by creating the matching sale.
      *
-     * Stock was reserved when the order was placed, so the sale only copies the
-     * line snapshots and re-points the stock movements at the sale.
+     * The sale copies the line snapshots; product stock is no longer tracked
+     * on menu items, so there is nothing to reconcile here.
      *
      * @throws ValidationException
      */
@@ -365,16 +338,6 @@ class OrderService
                 ]);
             }
 
-            StockMovement::query()
-                ->where('reference_type', 'order')
-                ->where('reference_id', $locked->id)
-                ->update([
-                    'type' => StockMovementType::Sale->value,
-                    'reference_type' => 'sale',
-                    'reference_id' => $sale->id,
-                    'note' => "Online order {$locked->reference_no}",
-                ]);
-
             $locked->forceFill([
                 'status' => OrderStatus::Completed,
                 'completed_by' => $staff->id,
@@ -394,7 +357,7 @@ class OrderService
     }
 
     /**
-     * Cancel an order and return its reserved stock.
+     * Cancel an order.
      *
      * @throws ValidationException
      */
@@ -409,22 +372,6 @@ class OrderService
 
             if ($locked->sale_id) {
                 $this->fail('This order has a sale. Void the sale instead.');
-            }
-
-            foreach ($locked->items as $item) {
-                if (! $item->product || ! $item->product->track_stock) {
-                    continue;
-                }
-
-                $this->stock->record(
-                    $item->product,
-                    StockMovementType::Void,
-                    $item->qty,
-                    $staff,
-                    "Order cancelled {$locked->reference_no}",
-                    'order',
-                    $locked->id,
-                );
             }
 
             $locked->forceFill([
@@ -587,6 +534,7 @@ class OrderService
             ->whereIn('id', $counts->keys()->all())
             ->where('is_active', true)
             ->where('is_online', true)
+            ->where('is_available', true)
             ->get()
             ->keyBy('id');
 

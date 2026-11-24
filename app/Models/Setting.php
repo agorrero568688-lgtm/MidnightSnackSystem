@@ -18,8 +18,6 @@ class Setting extends Model
         'store_phone' => '',
         'receipt_footer' => 'Salamat po! Come again.',
         'receipt_width' => '58',
-        'allow_negative_stock' => '0',
-        'low_stock_default' => '5',
         'require_shift' => '1',
 
         // Online ordering

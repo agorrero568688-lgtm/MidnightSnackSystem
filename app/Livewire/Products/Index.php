@@ -20,7 +20,7 @@ class Index extends Component
     public string $category = 'all';
 
     #[Url]
-    public string $stock = 'all';
+    public string $availability = 'all';
 
     public function updating(): void
     {
@@ -35,6 +35,16 @@ class Index extends Component
         session()->flash('status', $product->is_active
             ? "\"{$product->name}\" is now available at the till."
             : "\"{$product->name}\" was hidden from the till.");
+    }
+
+    public function toggleAvailable(Product $product): void
+    {
+        $product->update(['is_available' => ! $product->is_available]);
+        PosCatalog::flush();
+
+        session()->flash('status', $product->is_available
+            ? "\"{$product->name}\" is back in stock."
+            : "\"{$product->name}\" is marked as sold out.");
     }
 
     public function delete(Product $product): void
@@ -63,19 +73,19 @@ class Index extends Component
             $query->where('category_id', $this->category);
         }
 
-        if ($this->stock === 'low') {
-            $query->lowStock();
+        if ($this->availability === 'available') {
+            $query->where('is_available', true);
         }
 
-        if ($this->stock === 'out') {
-            $query->where('track_stock', true)->where('stock_qty', '<=', 0);
+        if ($this->availability === 'unavailable') {
+            $query->where('is_available', false);
         }
 
         return view('livewire.products.index', [
             'products' => $query->paginate(15),
             'categories' => Category::orderBy('name')->get(['id', 'name']),
             'totalActive' => Product::query()->where('is_active', true)->count(),
-            'totalLow' => Product::query()->active()->lowStock()->count(),
+            'totalUnavailable' => Product::query()->active()->where('is_available', false)->count(),
         ])->layout('layouts.app', ['title' => 'Products', 'subtitle' => 'Catalogue and pricing']);
     }
 }

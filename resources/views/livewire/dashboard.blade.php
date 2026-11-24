@@ -19,7 +19,7 @@
         <a href="{{ route('inventory.index') }}" class="card card-body transition hover:border-amber-300 hover:shadow">
             <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Low stock</p>
             <p class="mt-1 text-3xl font-black {{ $lowStockCount > 0 ? 'text-rose-600' : 'text-slate-900' }}">{{ $lowStockCount }}</p>
-            <p class="mt-1 text-xs text-slate-500">Products at or below threshold</p>
+            <p class="mt-1 text-xs text-slate-500">Ingredients at or below reorder level</p>
         </a>
     </div>
 
@@ -97,21 +97,21 @@
         <div class="overflow-x-auto">
             <table class="data-table">
                 <thead>
-                    <tr><th>Product</th><th>SKU</th><th>In stock</th><th>Threshold</th><th>Cost value</th></tr>
+                    <tr><th>Ingredient</th><th>Category</th><th>Quantity</th><th>Reorder level</th><th>Cost value</th></tr>
                 </thead>
                 <tbody>
-                    @forelse ($lowStock as $product)
+                    @forelse ($lowStock as $inventory)
                         <tr>
-                            <td class="font-medium">{{ $product->name }}</td>
-                            <td class="font-mono text-xs text-slate-500">{{ $product->sku }}</td>
+                            <td class="font-medium">{{ $inventory->name }}</td>
+                            <td class="text-slate-500">{{ $inventory->category }}</td>
                             <td>
-                                <span class="badge {{ $product->stock_qty <= 0 ? 'badge-red' : 'badge-amber' }}">{{ $product->stock_qty }}</span>
+                                <span class="badge {{ $inventory->isOutOfStock() ? 'badge-red' : 'badge-amber' }}">{{ $inventory->quantityLabel() }} {{ $inventory->unit }}</span>
                             </td>
-                            <td class="text-slate-500">{{ $product->low_stock_threshold }}</td>
-                            <td>{{ \App\Support\Money::format(\App\Support\Money::decimal(\App\Support\Money::cents($product->cost_price) * max(0, $product->stock_qty))) }}</td>
+                            <td class="text-slate-500">{{ $inventory->reorderLabel() }} {{ $inventory->unit }}</td>
+                            <td>{{ \App\Support\Money::formatCents($inventory->stockValueCents()) }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="empty-state">Everything is above its stock threshold.</td></tr>
+                        <tr><td colspan="5" class="empty-state">Everything is above its reorder level.</td></tr>
                     @endforelse
                 </tbody>
             </table>

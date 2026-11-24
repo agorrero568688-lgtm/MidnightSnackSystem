@@ -118,11 +118,7 @@
                                 <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-300 to-amber-500 text-base font-black text-slate-950">
                                     <span x-text="product.name.charAt(0).toUpperCase()"></span>
                                 </div>
-                                <span x-show="product.track_stock && product.stock <= 5"
-                                    class="badge"
-                                    :class="product.stock <= 0 ? 'bg-rose-500/15 text-rose-300' : 'bg-amber-500/15 text-amber-300'"
-                                    x-text="product.stock <= 0 ? 'Sold out' : product.stock + ' left'"></span>
-                                <span x-show="!product.track_stock" x-cloak class="badge bg-slate-700/60 text-slate-300">∞</span>
+                                <span x-show="!product.is_available" class="badge bg-rose-500/15 text-rose-300">Sold out</span>
                             </div>
                             <p class="line-clamp-2 min-h-[2.5rem] text-sm font-semibold text-white" x-text="product.name"></p>
                             <div class="mt-2 flex items-end justify-between">

@@ -93,10 +93,8 @@
                                         </div>
                                     @endif
 
-                                    @if ($product->isOutOfStock())
+                                    @if (! $product->is_available)
                                         <span class="absolute top-3 left-3 rounded-full bg-slate-950/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-white uppercase">Sold out</span>
-                                    @elseif ($product->isLowStock())
-                                        <span class="absolute top-3 left-3 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-bold tracking-wider text-slate-950 uppercase">Few left</span>
                                     @endif
                                 </div>
 
@@ -114,7 +112,7 @@
 
                                         <template x-if="qty({{ $product->id }}) === 0">
                                             <button type="button" @click="add({{ $product->id }})"
-                                                @disabled($product->isOutOfStock() || ! $orderingOpen)
+                                                @disabled(! $product->is_available || ! $orderingOpen)
                                                 class="inline-flex items-center gap-1.5 rounded-xl bg-slate-950 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">
                                                 <x-icon name="plus" class="h-3.5 w-3.5" /> Add
                                             </button>

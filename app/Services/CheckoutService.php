@@ -6,10 +6,8 @@ use App\Enums\DiscountType;
 use App\Enums\PaymentMethod;
 use App\Enums\SalesChannel;
 use App\Enums\SaleStatus;
-use App\Enums\StockMovementType;
 use App\Models\Product;
 use App\Models\Sale;
-use App\Models\Setting;
 use App\Models\Shift;
 use App\Models\User;
 use App\Support\Money;
@@ -20,13 +18,12 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutService
 {
-    public function __construct(private readonly StockService $stock) {}
-
     /**
      * Ring up a sale.
      *
-     * Prices are always taken from the database — never from the client — and
-     * stock rows are locked before anything is written.
+     * Prices are always taken from the database — never from the client.
+     * Menu availability is a simple flag; ingredient stock lives in the
+     * separate inventory module and is not deducted here.
      *
      * @param  array<int, array{product_id: int|string, qty: int|string}>  $lines
      *
@@ -65,11 +62,9 @@ class CheckoutService
             $products = Product::query()
                 ->whereIn('id', array_keys($quantities))
                 ->orderBy('id')
-                ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
 
-            $allowNegative = Setting::bool('allow_negative_stock');
             $subtotalCents = 0;
             $rows = [];
 
@@ -86,9 +81,9 @@ class CheckoutService
                     ]);
                 }
 
-                if ($product->track_stock && ! $allowNegative && $product->stock_qty < $qty) {
+                if (! $product->is_available) {
                     throw ValidationException::withMessages([
-                        'cart' => "Not enough stock for \"{$product->name}\" — only {$product->stock_qty} left.",
+                        'cart' => "\"{$product->name}\" is marked as sold out.",
                     ]);
                 }
 
@@ -151,18 +146,6 @@ class CheckoutService
                     'qty' => $row['qty'],
                     'line_total' => Money::decimal($row['line_cents']),
                 ]);
-
-                if ($product->track_stock) {
-                    $this->stock->record(
-                        $product,
-                        StockMovementType::Sale,
-                        -$row['qty'],
-                        $cashier,
-                        "Sale {$sale->reference_no}",
-                        'sale',
-                        $sale->id,
-                    );
-                }
             }
 
             return $sale->load('items');

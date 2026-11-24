@@ -4,7 +4,6 @@ namespace App\Livewire\Products;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Services\StockService;
 use App\Support\PosCatalog;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -25,7 +24,7 @@ class Form extends Component
 
     public ?string $barcode = null;
 
-    public string $unit = 'pc';
+    public string $unit = 'serving';
 
     public $category_id = '';
 
@@ -33,11 +32,7 @@ class Form extends Component
 
     public $selling_price = '0.00';
 
-    public $stock_qty = '0';
-
-    public $low_stock_threshold = '5';
-
-    public bool $track_stock = true;
+    public bool $is_available = true;
 
     public bool $is_active = true;
 
@@ -69,8 +64,7 @@ class Form extends Component
                 'category_id' => $product->category_id ?? '',
                 'cost_price' => $product->cost_price,
                 'selling_price' => $product->selling_price,
-                'low_stock_threshold' => $product->low_stock_threshold,
-                'track_stock' => $product->track_stock,
+                'is_available' => $product->is_available,
                 'is_active' => $product->is_active,
                 'is_online' => $product->is_online,
                 'sort_order' => (string) $product->sort_order,
@@ -80,7 +74,7 @@ class Form extends Component
         }
     }
 
-    public function save(StockService $stock): void
+    public function save(): void
     {
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:150'],
@@ -91,9 +85,7 @@ class Form extends Component
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'cost_price' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0'],
-            'stock_qty' => [$this->product ? 'nullable' : 'required', 'integer', 'min:0'],
-            'low_stock_threshold' => ['required', 'integer', 'min:0'],
-            'track_stock' => ['boolean'],
+            'is_available' => ['boolean'],
             'is_active' => ['boolean'],
             'is_online' => ['boolean'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
@@ -120,8 +112,7 @@ class Form extends Component
             'category_id' => $validated['category_id'] ?: null,
             'cost_price' => $validated['cost_price'],
             'selling_price' => $validated['selling_price'],
-            'low_stock_threshold' => $validated['low_stock_threshold'],
-            'track_stock' => $this->track_stock,
+            'is_available' => $this->is_available,
             'is_active' => $this->is_active,
             'is_online' => $this->is_online,
             'sort_order' => (int) $this->sort_order,
@@ -131,13 +122,7 @@ class Form extends Component
             $this->product->update($payload);
             $message = "\"{$this->product->name}\" was updated.";
         } else {
-            $product = Product::create($payload + ['stock_qty' => 0]);
-
-            $opening = max(0, (int) $this->stock_qty);
-
-            if ($opening > 0 && $product->track_stock) {
-                $stock->receive($product, $opening, auth()->user(), 'Opening stock');
-            }
+            $product = Product::create($payload);
 
             $message = "\"{$product->name}\" was added to the catalogue.";
         }
