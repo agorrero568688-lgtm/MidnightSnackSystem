@@ -13,7 +13,7 @@ class PosTerminalTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_cashier_can_open_a_shift_from_the_till(): void
+    public function test_a_cashier_can_open_a_shift_from_the_cashier_screen(): void
     {
         $cashier = User::factory()->create();
 
@@ -30,7 +30,7 @@ class PosTerminalTest extends TestCase
         ]);
     }
 
-    public function test_checkout_from_the_till_returns_the_receipt_payload(): void
+    public function test_checkout_from_the_cashier_screen_returns_the_receipt_payload(): void
     {
         $cashier = User::factory()->create();
         $product = Product::factory()->create(['selling_price' => '30.00']);
@@ -90,7 +90,7 @@ class PosTerminalTest extends TestCase
         $this->assertDatabaseCount('sales', 0);
     }
 
-    public function test_senior_discount_requires_customer_details_at_the_till(): void
+    public function test_senior_discount_requires_customer_details_at_the_cashier_screen(): void
     {
         $cashier = User::factory()->create();
         $product = Product::factory()->create(['selling_price' => '100.00']);

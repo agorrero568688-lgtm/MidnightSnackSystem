@@ -1,6 +1,6 @@
 <div class="space-y-5">
     {{-- Stat cards --}}
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <div class="card card-body">
             <div class="flex items-start justify-between gap-3">
                 <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Sales today</p>
@@ -31,16 +31,6 @@
             <p class="mt-1 text-3xl font-black text-ink-950">{{ $todayDiscounts }}</p>
             <p class="mt-1 text-xs text-ink-500">Senior &amp; PWD</p>
         </div>
-        <a href="{{ route('inventory.index') }}" class="card card-body transition hover:border-brand-300 hover:shadow-lift">
-            <div class="flex items-start justify-between gap-3">
-                <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Low stock</p>
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg {{ $lowStockCount > 0 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-700' }}">
-                    <x-icon name="alert" class="h-4 w-4" />
-                </span>
-            </div>
-            <p class="mt-1 text-3xl font-black {{ $lowStockCount > 0 ? 'text-rose-600' : 'text-ink-950' }}">{{ $lowStockCount }}</p>
-            <p class="mt-1 text-xs text-ink-500">Ingredients at or below reorder level</p>
-        </a>
     </div>
 
     <div class="grid gap-5 xl:grid-cols-3">
@@ -79,7 +69,7 @@
                                 <td class="text-xs text-ink-500">{{ $sale->created_at->format('M d, h:i A') }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="empty-state">No sales yet. Open the till to start.</td></tr>
+                            <tr><td colspan="6" class="empty-state">No sales yet. Open Cashier to start.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -105,36 +95,6 @@
                     <li class="empty-state">Nothing sold yet today.</li>
                 @endforelse
             </ul>
-        </div>
-    </div>
-
-    {{-- Low stock --}}
-    <div class="card">
-        <div class="card-header">
-            <h2 class="text-sm font-bold">Needs restocking</h2>
-            <a href="{{ route('inventory.index') }}" class="text-xs font-semibold text-brand-700 hover:text-brand-900">Manage inventory →</a>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="data-table">
-                <thead>
-                    <tr><th>Ingredient</th><th>Category</th><th>Quantity</th><th>Reorder level</th><th>Cost value</th></tr>
-                </thead>
-                <tbody>
-                    @forelse ($lowStock as $inventory)
-                        <tr>
-                            <td class="font-medium">{{ $inventory->name }}</td>
-                            <td class="text-ink-500">{{ $inventory->category }}</td>
-                            <td>
-                                <span class="badge {{ $inventory->isOutOfStock() ? 'badge-red' : 'badge-amber' }}">{{ $inventory->quantityLabel() }} {{ $inventory->unit }}</span>
-                            </td>
-                            <td class="text-ink-500">{{ $inventory->reorderLabel() }} {{ $inventory->unit }}</td>
-                            <td>{{ \App\Support\Money::formatCents($inventory->stockValueCents()) }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="5" class="empty-state">Everything is above its reorder level.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
         </div>
     </div>
 </div>

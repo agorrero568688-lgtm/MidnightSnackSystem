@@ -18,7 +18,7 @@
                 D
             </div>
             <h1 class="text-2xl font-bold text-white">Diding's Midnight Snack</h1>
-            <p class="mt-1 text-sm text-ink-400">Point of Sale &amp; Inventory</p>
+            <p class="mt-1 text-sm text-ink-400">Point of Sale &amp; Online Orders</p>
         </div>
 
         {{ $slot }}

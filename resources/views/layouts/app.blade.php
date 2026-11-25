@@ -17,7 +17,6 @@
             ['route' => 'pos', 'label' => 'POS Terminal', 'icon' => 'cart', 'roles' => ['admin', 'cashier']],
             ['route' => 'products.index', 'label' => 'Products', 'icon' => 'cube', 'roles' => ['admin']],
             ['route' => 'categories.index', 'label' => 'Categories', 'icon' => 'tag', 'roles' => ['admin']],
-            ['route' => 'inventory.index', 'label' => 'Inventory', 'icon' => 'archive', 'roles' => ['admin']],
             ['route' => 'sales.index', 'label' => 'Sales', 'icon' => 'receipt', 'roles' => ['admin']],
             ['route' => 'shifts.index', 'label' => 'Shifts', 'icon' => 'clock', 'roles' => ['admin']],
             ['route' => 'reports.daily', 'label' => 'Reports', 'icon' => 'chart', 'roles' => ['admin']],
@@ -90,7 +89,7 @@
                 <div class="flex items-center gap-2">
                     {{ $actions ?? '' }}
                     <a href="{{ route('pos') }}" class="btn btn-primary btn-sm">
-                        <x-icon name="cart" class="h-4 w-4" /> Open till
+                        <x-icon name="cart" class="h-4 w-4" /> Open Cashier
                     </a>
                 </div>
             </header>

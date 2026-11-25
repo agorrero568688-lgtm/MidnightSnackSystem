@@ -14,8 +14,7 @@ class SaleService
     /**
      * Void a completed sale.
      *
-     * Menu items no longer carry stock, so voiding only changes the sale
-     * status. Ingredient stock is managed separately in the inventory module.
+     * Menu items do not track quantities, so voiding only changes the sale status.
      *
      * @throws ValidationException
      */

@@ -1,5 +1,5 @@
 /**
- * POS till state. Rendered as an Alpine component on the Livewire terminal page.
+ * POS terminal state. Rendered as an Alpine component on the Livewire cashier page.
  *
  * The cart is intentionally client-side so scanning and quantity changes are
  * instant. The server re-prices every line at checkout, so prices shown here

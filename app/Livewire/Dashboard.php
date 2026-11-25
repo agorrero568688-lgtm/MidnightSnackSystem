@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Enums\SaleStatus;
-use App\Models\Inventory;
 use App\Models\Sale;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
@@ -36,13 +35,6 @@ class Dashboard extends Component
             ->limit(8)
             ->get();
 
-        $lowStock = Inventory::query()
-            ->active()
-            ->lowStock()
-            ->orderBy('quantity')
-            ->limit(6)
-            ->get();
-
         $topProducts = DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->where('sales.status', SaleStatus::Completed->value)
@@ -63,9 +55,7 @@ class Dashboard extends Component
             'todayDiscounts' => Money::format($todayDiscounts),
             'itemsSold' => (int) $itemsSold,
             'recentSales' => $recentSales,
-            'lowStock' => $lowStock,
             'topProducts' => $topProducts,
-            'lowStockCount' => Inventory::query()->active()->lowStock()->count(),
         ])->layout('layouts.app', ['title' => 'Dashboard', 'subtitle' => $day->format('l, F j, Y')]);
     }
 }

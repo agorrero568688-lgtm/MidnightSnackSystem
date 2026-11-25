@@ -40,7 +40,6 @@ class PageSmokeTest extends TestCase
             '/products/create',
             '/products/'.$product->id.'/edit',
             '/categories',
-            '/inventory',
             '/sales',
             '/shifts',
             '/reports/daily',
@@ -56,7 +55,7 @@ class PageSmokeTest extends TestCase
         $this->actingAs($admin)->get('/sales/'.$sale->id.'/receipt')->assertOk();
     }
 
-    public function test_cashier_can_render_the_till_and_reprint_a_receipt(): void
+    public function test_cashier_can_render_the_cashier_screen_and_reprint_a_receipt(): void
     {
         $cashier = User::factory()->create();
         $product = Product::factory()->create(['selling_price' => '12.50']);

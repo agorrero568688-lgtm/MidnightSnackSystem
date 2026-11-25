@@ -37,9 +37,9 @@ class OrderService
      * Place a public order.
      *
      * Prices are re-read from the database so a client can never choose its
-     * own price. Ingredient stock is tracked separately in the inventory
-     * module and is not reserved here. GCash orders must arrive with a
-     * screenshot of the payment receipt, stored on the private disk.
+     * own price. Ingredient quantities are not tracked by the system. GCash
+     * orders must arrive with a screenshot of the payment receipt, stored on
+     * the private disk.
      *
      * @param  array<string, mixed>  $data
      *
@@ -315,8 +315,8 @@ class OrderService
     /**
      * Close an order by creating the matching sale.
      *
-     * The sale copies the line snapshots; product stock is no longer tracked
-     * on menu items, so there is nothing to reconcile here.
+     * The sale copies the line snapshots; menu items do not track quantities,
+     * so there is nothing to reconcile here.
      *
      * @throws ValidationException
      */

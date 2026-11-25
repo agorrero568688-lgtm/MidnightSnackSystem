@@ -51,7 +51,7 @@ class AuthTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_cashiers_can_open_the_till_but_not_the_back_office(): void
+    public function test_cashiers_can_open_the_cashier_screen_but_not_the_back_office(): void
     {
         $cashier = User::factory()->create();
 
@@ -60,7 +60,7 @@ class AuthTest extends TestCase
         $this->actingAs($cashier)->get('/products')->assertForbidden();
     }
 
-    public function test_admins_can_open_the_back_office_and_the_till(): void
+    public function test_admins_can_open_the_back_office_and_the_cashier_screen(): void
     {
         $admin = User::factory()->admin()->create();
 

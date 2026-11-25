@@ -10,7 +10,6 @@ use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\ReportExportController;
 use App\Livewire\Categories\Index as CategoriesIndex;
 use App\Livewire\Dashboard;
-use App\Livewire\Inventory\Index as InventoryIndex;
 use App\Livewire\Orders\Board as OrdersBoard;
 use App\Livewire\Pos\Terminal;
 use App\Livewire\Products\Form as ProductForm;
@@ -68,7 +67,7 @@ Route::post('logout', [LoginController::class, 'destroy'])
 
 /*
 |--------------------------------------------------------------------------
-| Till — admins and cashiers
+| Cashier terminal — admins and cashiers
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin,cashier'])->group(function () {
@@ -92,7 +91,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('products/{product}/edit', ProductForm::class)->name('products.edit');
 
     Route::get('categories', CategoriesIndex::class)->name('categories.index');
-    Route::get('inventory', InventoryIndex::class)->name('inventory.index');
 
     Route::get('sales', SalesIndex::class)->name('sales.index');
     Route::get('shifts', ShiftsIndex::class)->name('shifts.index');

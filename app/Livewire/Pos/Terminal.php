@@ -147,7 +147,7 @@ class Terminal extends Component
             'user' => $user,
             'shift' => $shift,
             'isAdmin' => $user->isAdmin(),
-        ])->layout('layouts.pos', ['title' => 'Till']);
+        ])->layout('layouts.pos', ['title' => 'Cashier']);
     }
 
     private function shiftPayload(Shift $shift): array

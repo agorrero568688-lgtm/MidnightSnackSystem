@@ -29,7 +29,7 @@ class CheckoutTest extends TestCase
         return app(ShiftService::class)->open($user, '100.00');
     }
 
-    public function test_checkout_records_the_sale_without_touching_ingredient_stock(): void
+    public function test_checkout_records_the_sale(): void
     {
         $user = $this->cashier();
         $shift = $this->shiftFor($user);
@@ -54,8 +54,6 @@ class CheckoutTest extends TestCase
             'unit_price' => '30.00',
             'line_total' => '90.00',
         ]);
-
-        $this->assertDatabaseCount('inventory_movements', 0);
     }
 
     public function test_it_charges_the_database_price_even_if_the_client_sends_another(): void
@@ -180,7 +178,6 @@ class CheckoutTest extends TestCase
 
         $this->assertSame('voided', $sale->fresh()->status->value);
         $this->assertSame($admin->id, $sale->fresh()->voided_by);
-        $this->assertDatabaseCount('inventory_movements', 0);
 
         $this->expectException(ValidationException::class);
         app(SaleService::class)->void($sale->fresh(), $admin, 'Again');

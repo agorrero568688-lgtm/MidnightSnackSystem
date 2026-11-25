@@ -77,7 +77,7 @@ class Index extends Component
         }
 
         $this->cancelVoid();
-        session()->flash('status', "Sale {$sale->reference_no} voided and stock returned.");
+        session()->flash('status', "Sale {$sale->reference_no} voided.");
     }
 
     public function render()

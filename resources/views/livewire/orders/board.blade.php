@@ -299,7 +299,7 @@
                                 @error('cancelReason') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                 <div class="mt-2 flex justify-end gap-2">
                                     <button type="button" wire:click="$set('showCancel', false)" class="btn btn-secondary btn-sm">Keep order</button>
-                                    <button type="button" wire:click="cancelOrder" wire:loading.attr="disabled" class="btn btn-danger btn-sm">Cancel and return stock</button>
+                                    <button type="button" wire:click="cancelOrder" wire:loading.attr="disabled" class="btn btn-danger btn-sm">Cancel order</button>
                                 </div>
                             </div>
                         @endif

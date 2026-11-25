@@ -166,7 +166,7 @@ class Board extends Component
 
         $this->run(
             fn () => $orders->cancel($this->selectedOrder(), auth()->user(), $validated['cancelReason']),
-            'Order cancelled and reserved stock returned.',
+            'Order cancelled.',
         );
 
         $this->showCancel = false;

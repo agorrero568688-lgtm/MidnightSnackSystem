@@ -107,6 +107,6 @@
 
     <p class="text-xs text-ink-500">
         Users are never deleted — deactivating keeps their sales history intact. Admins can manage products,
-        stock and reports; cashiers only see the till and their own receipts.
+        orders and reports; cashiers only see the cashier screen and their own receipts.
     </p>
 </div>

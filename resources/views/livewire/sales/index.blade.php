@@ -110,8 +110,7 @@
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
                 <h3 class="text-lg font-bold">Void {{ $voidingSale->reference_no }}?</h3>
                 <p class="mt-1 text-sm text-ink-500">
-                    This returns {{ $voidingSale->itemCount() }} item(s) to stock and keeps the record marked as voided.
-                    This cannot be undone.
+                    This keeps the record marked as voided. This cannot be undone.
                 </p>
 
                 <div class="mt-4">

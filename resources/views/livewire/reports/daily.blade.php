@@ -9,7 +9,7 @@
                 <x-icon name="download" class="h-4 w-4" /> Export CSV
             </a>
             <a href="{{ route('pos') }}" class="btn btn-primary">
-                <x-icon name="cart" class="h-4 w-4" /> Open till
+                <x-icon name="cart" class="h-4 w-4" /> Open Cashier
             </a>
         </div>
     </div>

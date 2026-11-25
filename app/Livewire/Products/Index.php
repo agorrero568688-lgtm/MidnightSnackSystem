@@ -33,8 +33,8 @@ class Index extends Component
         PosCatalog::flush();
 
         session()->flash('status', $product->is_active
-            ? "\"{$product->name}\" is now available at the till."
-            : "\"{$product->name}\" was hidden from the till.");
+            ? "\"{$product->name}\" is now available on the cashier screen."
+            : "\"{$product->name}\" was hidden from the cashier screen.");
     }
 
     public function toggleAvailable(Product $product): void
@@ -43,7 +43,7 @@ class Index extends Component
         PosCatalog::flush();
 
         session()->flash('status', $product->is_available
-            ? "\"{$product->name}\" is back in stock."
+            ? "\"{$product->name}\" is available again."
             : "\"{$product->name}\" is marked as sold out.");
     }
 

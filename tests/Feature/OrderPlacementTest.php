@@ -109,7 +109,6 @@ class OrderPlacementTest extends TestCase
         $this->assertStringStartsWith('ORD-', $order->reference_no);
         $this->assertCount(1, $order->items);
         $this->assertSame('No onions', $order->items->first()->note);
-        $this->assertDatabaseCount('inventory_movements', 0);
 
         $response->assertJsonPath('redirect', route('orders.track', ['token' => $order->public_token]));
     }

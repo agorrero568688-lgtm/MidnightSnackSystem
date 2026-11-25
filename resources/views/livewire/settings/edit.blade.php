@@ -46,7 +46,7 @@
             </div>
 
             <div class="card">
-                <div class="card-header"><h2 class="text-sm font-bold">Till behaviour</h2></div>
+                <div class="card-header"><h2 class="text-sm font-bold">Cashier behaviour</h2></div>
                 <div class="card-body space-y-4">
                     <label class="flex items-start gap-3">
                         <input wire:model="requireShift" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">

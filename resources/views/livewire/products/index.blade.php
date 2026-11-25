@@ -88,7 +88,7 @@
                                 <div class="flex items-center justify-end gap-1">
                                     <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-ghost">Edit</a>
                                     <button wire:click="toggleAvailable({{ $product->id }})" class="btn btn-sm btn-ghost">
-                                        {{ $product->is_available ? 'Sold out' : 'Restock' }}
+                                        {{ $product->is_available ? 'Sold out' : 'Mark available' }}
                                     </button>
                                     <button wire:click="toggleActive({{ $product->id }})" class="btn btn-sm btn-ghost">
                                         {{ $product->is_active ? 'Hide' : 'Show' }}

@@ -9,7 +9,7 @@
             </div>
             <div class="min-w-0 leading-tight">
                 <p class="truncate text-sm font-bold text-white">{{ \App\Models\Setting::get('store_name') }}</p>
-                <p class="truncate text-[11px] text-ink-400">Till · {{ $user->name }}</p>
+                <p class="truncate text-[11px] text-ink-400">Cashier · {{ $user->name }}</p>
             </div>
 
             <span class="badge" :class="hasShift ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'">

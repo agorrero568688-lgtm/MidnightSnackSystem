@@ -89,7 +89,7 @@
                     <label class="flex items-start gap-3">
                         <input wire:model="is_active" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
                         <span>
-                            <span class="block text-sm font-medium">Show at the till</span>
+                            <span class="block text-sm font-medium">Show on the cashier screen</span>
                             <span class="block text-xs text-ink-500">Hidden products stay in reports but can't be sold.</span>
                         </span>
                     </label>
@@ -132,7 +132,7 @@
 
             <div class="card card-body space-y-2 text-sm text-ink-600">
                 <p class="font-semibold text-ink-800">Tips</p>
-                <p>· Keep SKUs short and unique — cashiers can type them at the till.</p>
+                <p>· Keep SKUs short and unique — cashiers can type them on the cashier screen.</p>
                 <p>· Barcodes must be unique. Leave blank if the item has none.</p>
                 <p>· Price is stored exactly; totals always use the database price.</p>
             </div>

@@ -1,8 +1,8 @@
-# Diding's Midnight Snack — POS, Inventory & Online Ordering
+# Diding's Midnight Snack — POS & Online Ordering
 
-A web-based point of sale, stock system and public ordering website for a small
-fast-food store, built with Laravel 12, Livewire 4, Tailwind CSS 4 and
-PostgreSQL (Supabase).
+A web-based point of sale and public ordering website for a small fast-food
+store, built with Laravel 12, Livewire 4, Tailwind CSS 4 and PostgreSQL
+(Supabase).
 
 ## What it does
 
@@ -17,15 +17,13 @@ PostgreSQL (Supabase).
   the snack is ready, feedback questions after completion, and a nudge when a
   GCash payment is still pending. Plus repeat-customer product suggestions on
   checkout. See [SMS & feedback](#sms--feedback).
-- **Till** — barcode scanning, instant local cart, cash / GCash / Maya / bank
+- **Cashier** — barcode scanning, instant local cart, cash / GCash / Maya / bank
   payment, change due, senior & PWD 20% discounts with ID capture, parked
   sales, thermal receipt printing (58 mm or 80 mm).
 - **Catalogue** — categories, products, SKU + barcode, cost and selling price,
-  low-stock thresholds, unlimited-stock items.
-- **Inventory** — stock in, set-count adjustments, wastage, full movement
-  history with who/when/why, stock value at cost.
-- **Sales** — searchable history, reprint receipts, void with a reason (stock is
-  returned automatically), CSV export.
+  online visibility, and a manual available / sold-out toggle.
+- **Sales** — searchable history, reprint receipts, void with a reason, CSV
+  export.
 - **Shifts** — cash drawer sessions: opening cash, expected cash, counted cash,
   variance.
 - **Reports** — daily Z-reading, payment mix, top sellers, discounts, cash
@@ -110,15 +108,15 @@ php artisan migrate:fresh --seed
 
 The production deployment should still point at Supabase.
 
-## How the till works
+## How the cashier screen works
 
 - The catalogue is loaded once into an Alpine store, so scanning a barcode and
   changing quantities never touch the network.
 - Only the final `checkout()` call reaches the server, which **re-prices every
   line from the database** — prices sent by the browser are display-only.
 - Checkout runs in a transaction with `SELECT ... FOR UPDATE` on the products
-  involved, writes the sale, its items and a `stock_movements` row per line, and
-  returns the receipt number and change.
+  involved, writes the sale and its items, and returns the receipt number and
+  change.
 - Money is stored as `numeric(12,2)` but all arithmetic runs on integer centavos
   through `App\Support\Money`, so totals never drift.
 
@@ -136,10 +134,9 @@ The production deployment should still point at Supabase.
 The flow:
 
 1. A guest builds a cart in the browser. Prices there are **display-only**.
-2. `POST /orders` re-reads every price and locks the product rows, then reserves
-   stock with a `stock_movements` row of type `online_order`. Nothing is deducted
-   twice: when the staff completes the order, those movements are re-pointed at
-   the resulting sale.
+2. `POST /orders` re-reads every price and locks the product rows while writing
+   the order. Ingredient quantities are not tracked, so nothing is reserved or
+   deducted.
 3. GCash orders must include a screenshot of the payment receipt (stored on the
    private `local` disk) and start as *awaiting verification*; COD and
    cash-at-pickup start *unpaid*. Customers can replace the screenshot from
@@ -147,8 +144,7 @@ The flow:
 4. Staff confirm → prepare → ready → (dispatch) → complete. Completing creates a
    normal `sales` row with `channel = online` and the delivery fee, and the
    receipt works exactly like a walk-in sale.
-5. Cancelling returns the reserved stock; a cancelled paid order can be marked
-   refunded.
+5. Cancelling closes the order; a cancelled paid order can be marked refunded.
 
 Senior/PWD discounts are **never** self-applied online. Staff verify the
 OSCA/PWD ID on the board before the total is locked by payment.
@@ -164,8 +160,9 @@ of these names get free delivery), a minimum order, and the store hours
 shown to customers.
 Public timing estimates are not shown; we instead tell customers we'll call them
 when the order is ready.
-Product → *Show on the online menu* controls what appears in the menu; stock and
-the sold-out badge come from the normal inventory.
+Product → *Show on the online menu* controls what appears in the menu. The
+manual *Available for sale* toggle controls whether an item can be ordered and
+shows the sold-out badge.
 
 ### Alerts
 
@@ -226,7 +223,7 @@ php artisan test
 
 Covers login and roles, checkout maths, discounts, overselling, voids, shift
 cash expectations, the Livewire terminal actions, CSV export, online order
-placement (stock reservation, delivery fees, GCash/COD, lookup), the staff order
+placement (delivery fees, GCash/COD, lookup), the staff order
 board lifecycle and sale conversion, SMS gateway sends (ready, abandoned,
 feedback, suggestions), repeat customers, the feedback page and route, the
 abandoned-order scheduler, and a smoke test that renders every screen.
@@ -237,12 +234,12 @@ abandoned-order scheduler, and a smoke test that renders every screen.
 app/
   Enums/           Role, PaymentMethod, DiscountType, SaleStatus, SalesChannel,
                    OrderStatus, OrderType, OrderPaymentMethod, PaymentStatus
-  Livewire/        Pos, Orders, Products, Categories, Inventory, Sales, Shifts,
-                   Reports, Users, Settings
-  Models/          User, Category, Product, StockMovement, Sale, SaleItem, Shift,
-                   Setting, Order, OrderItem
-  Services/        CheckoutService, SaleService, StockService, ShiftService,
-                   OrderService, StorefrontService, OrderNotifier
+  Livewire/        Pos, Orders, Products, Categories, Sales, Shifts, Reports,
+                   Users, Settings
+  Models/          User, Category, Product, Sale, SaleItem, Shift, Setting,
+                   Order, OrderItem
+  Services/        CheckoutService, SaleService, ShiftService, OrderService,
+                   StorefrontService, OrderNotifier
   Jobs/            SendOrderTelegramAlert
   Support/         Money, PosCatalog
   Http/Middleware/ EnsureRole
@@ -255,8 +252,8 @@ resources/js/      pos.js, order.js (public cart), orders.js (staff alerts)
 - Automatic GCash (PayMongo/Xendit) instead of manual receipt verification.
 - Partial refunds (voids currently reverse the whole sale).
 - Rider assignment and live map tracking; riders are coordinated by phone.
-- Recipe/ingredient-level inventory; online orders use product stock.
-- Suppliers and purchase orders; stock-in is manual.
+- Ingredient/stock tracking — ingredients are bought as needed and are not
+  tracked in the system.
 - Multi-branch support (`branch_id` would need to be added to products, sales,
   orders and shifts).
 - Barcode label printing.

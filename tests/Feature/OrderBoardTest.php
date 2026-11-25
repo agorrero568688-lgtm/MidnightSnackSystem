@@ -129,7 +129,7 @@ class OrderBoardTest extends TestCase
         $this->assertDatabaseCount('sales', 0);
     }
 
-    public function test_cancelling_closes_the_order_without_stock_side_effects(): void
+    public function test_cancelling_closes_the_order(): void
     {
         $cashier = User::factory()->create();
         $product = Product::factory()->create(['selling_price' => '50.00']);
@@ -144,7 +144,6 @@ class OrderBoardTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertSame(OrderStatus::Cancelled, $order->fresh()->status);
-        $this->assertDatabaseCount('inventory_movements', 0);
     }
 
     public function test_staff_can_apply_a_verified_senior_discount(): void
@@ -214,7 +213,7 @@ class OrderBoardTest extends TestCase
 
         $service = app(OrderService::class);
         $service->markPaid($order, $cashier);
-        $service->cancel($order->fresh(), $cashier, 'Out of stock');
+        $service->cancel($order->fresh(), $cashier, 'Item unavailable');
         $service->markRefunded($order->fresh(), $cashier);
 
         $order->refresh();

@@ -22,8 +22,8 @@ class CheckoutService
      * Ring up a sale.
      *
      * Prices are always taken from the database — never from the client.
-     * Menu availability is a simple flag; ingredient stock lives in the
-     * separate inventory module and is not deducted here.
+     * Menu availability is a simple manual flag; ingredient quantities are
+     * not tracked by the system.
      *
      * @param  array<int, array{product_id: int|string, qty: int|string}>  $lines
      *
