@@ -1,4 +1,4 @@
-<form wire:submit="save" class="space-y-5">
+<form wire:submit="save" x-data="menuPhotoUpload" class="space-y-5">
     <div class="grid gap-5 lg:grid-cols-3">
         <div class="space-y-5 lg:col-span-2">
             <div class="card">
@@ -114,18 +114,28 @@
             <div class="card">
                 <div class="card-header"><h2 class="text-sm font-bold">Menu photo</h2></div>
                 <div class="card-body space-y-3">
-                    @if ($image)
-                        <img src="{{ $image->temporaryUrl() }}" alt="New product photo" class="h-40 w-full rounded-xl object-cover ring-1 ring-ink-200">
-                    @elseif ($existingImagePath)
-                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($existingImagePath) }}" alt="{{ $name }}" class="h-40 w-full rounded-xl object-cover ring-1 ring-ink-200">
-                    @else
-                        <div class="flex h-40 w-full items-center justify-center rounded-xl border border-dashed border-ink-300 bg-ink-50 text-xs text-ink-400">
-                            No photo yet
-                        </div>
-                    @endif
+                    <div x-show="! preview">
+                        @if ($image)
+                            <img src="{{ $image->temporaryUrl() }}" alt="New product photo" class="h-40 w-full rounded-xl object-cover ring-1 ring-ink-200">
+                        @elseif ($existingImagePath)
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($existingImagePath) }}" alt="{{ $name }}" class="h-40 w-full rounded-xl object-cover ring-1 ring-ink-200">
+                        @else
+                            <div class="flex h-40 w-full items-center justify-center rounded-xl border border-dashed border-ink-300 bg-ink-50 text-xs text-ink-400">
+                                No photo yet
+                            </div>
+                        @endif
+                    </div>
 
-                    <input wire:model="image" type="file" accept="image/*" class="block w-full text-xs text-ink-600 file:mr-3 file:rounded-lg file:border-0 file:bg-ink-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700">
-                    <p class="text-[11px] text-ink-500">PNG or JPG, up to 2 MB. Without a photo the menu uses a coloured placeholder.</p>
+                    <img x-show="preview" x-cloak :src="preview" alt="Selected menu photo" class="h-40 w-full rounded-xl object-cover ring-1 ring-ink-200">
+
+                    <input type="file" accept="image/jpeg,image/png,image/webp" @change="selectPhoto($event)"
+                        class="block w-full text-xs text-ink-600 file:mr-3 file:rounded-lg file:border-0 file:bg-ink-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700">
+                    <p class="text-[11px] text-ink-500">PNG, JPG or WebP, up to 10 MB. Large photos are resized automatically.</p>
+
+                    <p x-show="preparing" x-cloak class="text-xs text-ink-500">Preparing photo…</p>
+                    <p x-show="uploading" x-cloak class="text-xs text-ink-500">Uploading… <span x-text="progress"></span>%</p>
+                    <p x-show="error" x-text="error" x-cloak class="text-xs text-rose-600"></p>
+
                     @error('image') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
                 </div>
             </div>
@@ -141,9 +151,11 @@
 
     <div class="flex justify-end gap-2">
         <a href="{{ route('products.index') }}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
-            <span wire:loading.remove>{{ $editing ? 'Save changes' : 'Create product' }}</span>
-            <span wire:loading>Saving…</span>
+        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" :disabled="preparing || uploading">
+            <span wire:loading.remove x-show="! preparing && ! uploading">{{ $editing ? 'Save changes' : 'Create product' }}</span>
+            <span wire:loading x-show="! preparing && ! uploading">Saving…</span>
+            <span x-show="preparing">Preparing…</span>
+            <span x-show="uploading">Uploading…</span>
         </button>
     </div>
 </form>

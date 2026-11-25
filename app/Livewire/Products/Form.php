@@ -89,7 +89,11 @@ class Form extends Component
             'is_active' => ['boolean'],
             'is_online' => ['boolean'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
-            'image' => ['nullable', 'image', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+        ], [
+            'image.image' => 'The menu photo must be a valid image.',
+            'image.mimes' => 'The menu photo must be a JPG, PNG or WebP image.',
+            'image.max' => 'The menu photo must be 10 MB or smaller.',
         ]);
 
         $imagePath = $this->existingImagePath;

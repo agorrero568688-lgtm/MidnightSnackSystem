@@ -127,3 +127,5 @@ Authorization: Bearer <CRON_SECRET>
 - `config:cache` is deliberately not built into the image because Vercel injects
   environment variables at runtime.
 - Vercel caps request bodies at 4.5 MB, so receipt uploads are limited to 4 MB.
+  Menu photos accept up to 10 MB, and large photos are resized in the browser
+  before upload so they stay under the platform cap.
