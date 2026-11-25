@@ -208,6 +208,19 @@ window.orderCart = function () {
             return this.productModalOpen;
         },
 
+        /** Hide a photo that failed to load and reveal the gradient fallback. */
+        brokenImage(event) {
+            if (event?.target) {
+                event.target.style.display = 'none';
+            }
+
+            const product = this.activeProduct;
+
+            if (product) {
+                product.image = null;
+            }
+        },
+
         get modalTotalCents() {
             const product = this.activeProduct;
 

@@ -79,7 +79,7 @@
                     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($section['products'] as $product)
                             @php
-                                $image = $product->image_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) : null;
+                                $image = $product->image_src;
                                 $categoryName = $product->category?->name ?? 'Kitchen special';
                             @endphp
 
@@ -92,7 +92,7 @@
                                 <div class="relative h-44 overflow-hidden bg-ink-100 sm:h-48">
                                     <x-product-visual :image="$image" :name="$product->name" :category="$categoryName" class="h-full w-full" />
 
-                                    <div class="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
+                                    <div class="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 p-3">
                                         <span class="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-ink-700 uppercase shadow-sm backdrop-blur">
                                             {{ $categoryName }}
                                         </span>
@@ -102,7 +102,7 @@
                                         @endif
                                     </div>
 
-                                    <div class="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-ink-950/60 to-transparent px-3 pt-8 pb-2 opacity-0 transition duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+                                    <div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-center justify-between bg-gradient-to-t from-ink-950/60 to-transparent px-3 pt-8 pb-2 opacity-0 transition duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
                                         <span class="text-[11px] font-semibold text-white">Tap for details</span>
                                         <span class="rounded-full bg-white/20 p-1 text-white"><x-icon name="arrow-right" class="h-3.5 w-3.5" /></span>
                                     </div>
@@ -189,11 +189,14 @@
                 class="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
                 <div class="relative h-56 shrink-0 overflow-hidden bg-ink-100 sm:h-72">
                     <template x-if="activeProduct?.image">
-                        <img :src="activeProduct.image" :alt="activeProduct.name" class="h-full w-full object-cover">
+                        <img :src="activeProduct.image" :alt="activeProduct.name"
+                            onerror="this.style.display='none'"
+                            x-on:error="brokenImage($event)"
+                            class="absolute inset-0 h-full w-full object-cover">
                     </template>
 
                     <div x-show="!activeProduct?.image" :class="themeFor(activeProduct?.category).gradient"
-                        class="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br">
+                        class="absolute inset-0 flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br">
                         <div class="absolute -top-8 -right-6 h-32 w-32 rounded-full blur-2xl"
                             :class="themeFor(activeProduct?.category).glow"></div>
                         <div class="absolute -bottom-10 -left-6 h-32 w-32 rounded-full bg-white/50 blur-2xl"></div>

@@ -1,4 +1,4 @@
-# Deploying to Vercel
+﻿# Deploying to Vercel
 
 The app runs on Vercel as a **container service** (FrankenPHP + Caddy), not as a
 static Vite site. `Dockerfile.vercel` makes Vercel pick the Container preset even
@@ -7,7 +7,7 @@ though the repo contains Vite, which is what fixes the
 
 ## 1. Vercel project settings
 
-In **Settings → General**:
+In **Settings â†’ General**:
 
 - **Framework Preset:** `Container`
 - **Build Command:** empty
@@ -22,7 +22,23 @@ npx vercel@latest link
 npx vercel@latest project update --framework container --yes
 ```
 
-## 2. Supabase storage
+## 2. Bundled menu art
+
+Chicken Lomi (and other future Lomi art) is committed to Git under
+`public/images/products/` and is part of the container image. Static asset
+routes (`/images/*`, `/build/*`, favicons) are rewired explicitly in
+`vercel.json` and served directly from `/app/public` by the Caddyfile, so the
+menu no longer depends on a `public/storage` symlink or a matching Supabase
+object.
+
+In `config/filesystems.php`, the `public` disk is S3 in production when
+`PUBLIC_DISK_DRIVER=s3`, and `Product::getImageSrcAttribute()` returns `null`
+for stored paths that don't resolve. Staff-uploaded photos on the storefront
+must still exist on a disk â€” prefer setting `AWS_MEDIA_URL` and using the S3
+disk for uploads; otherwise `resources/js/menu-photo.js` keeps the storefront
+usable by hiding the broken image and showing the gradient fallback.
+
+## 3. Supabase storage
 
 Create two buckets in Supabase Storage:
 
@@ -31,18 +47,18 @@ Create two buckets in Supabase Storage:
 | `media`  | yes    | product photos, GCash QR, store settings   |
 | `proofs` | no     | customer GCash receipt screenshots         |
 
-Then generate S3 access keys (**Storage → S3 Connection**) and copy the
+Then generate S3 access keys (**Storage â†’ S3 Connection**) and copy the
 endpoint, region, access key, and secret.
 
 Upload the existing files that are not in Git:
 
-- `storage/app/public/store-settings/*` → `media/store-settings/`
-- product images referenced by the seeded menu → `media/products/`
-- `storage/app/private/order-proofs/*` → `proofs/order-proofs/`
+- `storage/app/public/store-settings/*` â†’ `media/store-settings/`
+- product images referenced by the seeded menu â†’ `media/products/`
+- `storage/app/private/order-proofs/*` â†’ `proofs/order-proofs/`
 
-## 3. Environment variables
+## 4. Environment variables
 
-Set these in **Settings → Environment Variables** (Production and Preview):
+Set these in **Settings â†’ Environment Variables** (Production and Preview):
 
 ```dotenv
 APP_NAME="Diding's Midnight Snack"
@@ -82,7 +98,7 @@ CRON_SECRET=<long random string>
 Do **not** set `AWS_USE_PATH_STYLE_ENDPOINT`; the disks always use path-style
 because Supabase rejects virtual-hosted requests.
 
-## 4. Migrate the database
+## 5. Migrate the database
 
 Run once from a machine that has the production env values:
 
@@ -93,7 +109,7 @@ php artisan migrate --force
 Migrations are intentionally not run at container start (several instances can
 start at the same time).
 
-## 5. Deploy and verify
+## 6. Deploy and verify
 
 ```bash
 npx vercel@latest deploy --prod
@@ -104,12 +120,12 @@ Check:
 1. `GET /up` returns 200.
 2. Storefront loads and assets come from `/build/...`.
 3. Staff login survives a page reload (database sessions).
-4. GCash checkout uploads a screenshot → file appears in the `proofs` bucket.
+4. GCash checkout uploads a screenshot â†’ file appears in the `proofs` bucket.
 5. Tracking page can re-upload a receipt.
 6. Staff can open the receipt thumbnail (signed URL).
 7. `GET /cron/abandoned-reminders` returns 403 without the bearer token.
 
-## 6. Reminders
+## 7. Reminders
 
 `vercel.json` registers a daily cron (`0 16 * * *` UTC = midnight in Manila).
 The Hobby plan only allows daily crons. For 5-minute reminders, point an external

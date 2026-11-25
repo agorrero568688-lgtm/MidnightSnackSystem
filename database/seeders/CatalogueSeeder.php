@@ -32,6 +32,10 @@ class CatalogueSeeder extends Seeder
 
         $categoryIds = Category::query()->pluck('id', 'name');
 
+        $defaultImages = [
+            'LOMI-CHICKEN' => 'images/products/chicken-lomi.jpg',
+        ];
+
         $products = [
             // name, category, sku, price, menu order
             ['Chicken Lomi', 'Lomi', 'LOMI-CHICKEN', 180.00, 10],
@@ -95,7 +99,7 @@ class CatalogueSeeder extends Seeder
         ];
 
         foreach ($products as [$name, $category, $sku, $price, $sortOrder]) {
-            Product::query()->updateOrCreate(
+            $product = Product::query()->updateOrCreate(
                 ['sku' => $sku],
                 [
                     'name' => $name,
@@ -110,6 +114,15 @@ class CatalogueSeeder extends Seeder
                     'sort_order' => $sortOrder,
                 ],
             );
+
+            // Committed menu art ships with the app, so it survives deploys on
+            // hosts with a read-only filesystem. Never overwrite a photo that
+            // staff uploaded and that still resolves.
+            $defaultImage = $defaultImages[$sku] ?? null;
+
+            if ($defaultImage && $product->image_src === null) {
+                $product->update(['image_path' => $defaultImage]);
+            }
         }
     }
 }

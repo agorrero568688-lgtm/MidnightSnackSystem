@@ -65,12 +65,14 @@
     $initial = mb_strtoupper(mb_substr(trim((string) $name) ?: '?', 0, 1));
 @endphp
 
-@if ($image)
-    <img src="{{ $image }}" alt="{{ $name }}" loading="lazy" decoding="async"
-        {{ $attributes->merge(['class' => 'h-full w-full object-cover transition duration-500 group-hover:scale-105']) }}>
-@else
-    <div
-        {{ $attributes->merge(['class' => 'relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br transition duration-500 group-hover:scale-105 '.$theme['gradient']]) }}>
+@php
+    // Callers size the visual (e.g. h-full w-full); the inner layers fill it.
+    $wrapperClass = 'relative overflow-hidden transition duration-500 group-hover:scale-105';
+@endphp
+
+<div {{ $attributes->merge(['class' => $wrapperClass]) }}>
+    {{-- The fallback always sits underneath, so a failed photo never shows a broken icon. --}}
+    <div class="absolute inset-0 flex items-center justify-center overflow-hidden bg-gradient-to-br {{ $theme['gradient'] }}">
         <div class="absolute -top-6 -right-4 h-24 w-24 rounded-full {{ $theme['glow'] }} blur-2xl"></div>
         <div class="absolute -bottom-8 -left-4 h-24 w-24 rounded-full bg-white/50 blur-2xl"></div>
 
@@ -82,4 +84,10 @@
             {{ $initial }}
         </span>
     </div>
-@endif
+
+    @if ($image)
+        <img src="{{ $image }}" alt="{{ $name }}" loading="lazy" decoding="async"
+            onerror="this.style.display='none'"
+            class="absolute inset-0 h-full w-full object-cover">
+    @endif
+</div>

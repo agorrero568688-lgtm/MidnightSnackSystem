@@ -59,7 +59,7 @@ class StorefrontService
                 'category' => $product->category?->name,
                 'price_cents' => Money::cents($product->selling_price),
                 'unit' => $product->unit,
-                'image' => $product->image_path ? Storage::disk('public')->url($product->image_path) : null,
+                'image' => $product->image_src,
                 'description' => $product->description,
                 'available' => $product->is_available,
                 'max_qty' => 20,

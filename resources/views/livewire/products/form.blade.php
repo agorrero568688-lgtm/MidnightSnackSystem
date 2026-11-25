@@ -117,8 +117,8 @@
                     <div x-show="! preview">
                         @if ($image)
                             <img src="{{ $image->temporaryUrl() }}" alt="New product photo" class="h-40 w-full rounded-xl object-cover ring-1 ring-ink-200">
-                        @elseif ($existingImagePath)
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($existingImagePath) }}" alt="{{ $name }}" class="h-40 w-full rounded-xl object-cover ring-1 ring-ink-200">
+                        @elseif ($product?->image_src)
+                            <img src="{{ $product->image_src }}" alt="{{ $name }}" class="h-40 w-full rounded-xl object-cover ring-1 ring-ink-200">
                         @else
                             <div class="flex h-40 w-full items-center justify-center rounded-xl border border-dashed border-ink-300 bg-ink-50 text-xs text-ink-400">
                                 No photo yet
