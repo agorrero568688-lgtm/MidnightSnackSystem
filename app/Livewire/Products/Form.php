@@ -8,6 +8,7 @@ use App\Support\PosCatalog;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Throwable;
 use Livewire\WithFileUploads;
 
 class Form extends Component
@@ -100,8 +101,13 @@ class Form extends Component
         $photoDisk = (new Product)->photoDisk();
 
         if ($this->image) {
-            if ($imagePath) {
-                Storage::disk($photoDisk)->delete($imagePath);
+            if ($imagePath && ! str_starts_with($imagePath, 'images/')) {
+                try {
+                    Storage::disk($photoDisk)->delete($imagePath);
+                } catch (Throwable) {
+                    // Cleanup is best-effort; do not block saving when the
+                    // remote delete is flaky.
+                }
             }
 
             $imagePath = $this->image->store('products', $photoDisk);

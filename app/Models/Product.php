@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class Product extends Model
 {
@@ -116,13 +117,27 @@ class Product extends Model
             return asset($path);
         }
 
-        $disk = Storage::disk($this->photoDisk());
+        $diskName = $this->photoDisk();
 
-        if (! $disk->exists($path)) {
+        try {
+            if ($diskName === 's3') {
+                // Remote existence checks (HEAD requests) are unreliable on
+                // Supabase and can throw. For the storefront we can safely
+                // build the public URL and let the browser fallback hide any
+                // 404 with the menu gradient + food icon.
+                $url = Storage::disk($diskName)->url($path);
+
+                return $url !== '' ? $url : null;
+            }
+
+            if (! Storage::disk($diskName)->exists($path)) {
+                return null;
+            }
+
+            return Storage::disk($diskName)->url($path);
+        } catch (Throwable) {
             return null;
         }
-
-        return $disk->url($path);
     }
 
     public function isAvailable(): bool
