@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class StorefrontService
 {
@@ -120,11 +121,38 @@ class StorefrontService
     {
         $path = Setting::get('gcash_qr_path');
 
-        if (blank($path) || ! Storage::disk('public')->exists($path)) {
+        if (blank($path)) {
             return null;
         }
 
-        return route('gcash.qr', ['v' => Storage::disk('public')->lastModified($path)], false);
+        $path = trim((string) $path);
+
+        // Settings sometimes store a full public/media URL instead of a disk path.
+        if (preg_match('#^(?:https?:)?//#i', $path) === 1) {
+            return $path !== '' ? $path : null;
+        }
+
+        $disk = Storage::disk('public');
+
+        try {
+            // For S3/Supabase, avoid `exists()` HEAD requests and use the public URL.
+            if (config('filesystems.disks.public.driver') === 's3') {
+                $url = $disk->url($path);
+
+                return $url !== '' ? $url : null;
+            }
+
+            if (! $disk->exists($path)) {
+                return null;
+            }
+
+            $version = $disk->lastModified($path);
+        } catch (Throwable) {
+            // A missing/unreachable store-settings asset must never crash storefront.
+            return null;
+        }
+
+        return route('gcash.qr', ['v' => $version], false);
     }
 
     /** @return Collection<int, Product> */

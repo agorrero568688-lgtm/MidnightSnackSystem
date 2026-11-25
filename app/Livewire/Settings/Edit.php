@@ -9,6 +9,7 @@ use App\Support\Money;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Throwable;
 
 class Edit extends Component
 {
@@ -135,7 +136,11 @@ class Edit extends Component
 
         if ($this->gcashQr) {
             if ($this->existingGcashQrPath) {
-                Storage::disk('public')->delete($this->existingGcashQrPath);
+                try {
+                    Storage::disk('public')->delete($this->existingGcashQrPath);
+                } catch (Throwable) {
+                    // Best-effort cleanup; saving settings must not fail on delete errors.
+                }
             }
 
             $this->existingGcashQrPath = $this->gcashQr->store('store-settings', 'public');
@@ -182,7 +187,11 @@ class Edit extends Component
     public function removeGcashQr(): void
     {
         if ($this->existingGcashQrPath) {
-            Storage::disk('public')->delete($this->existingGcashQrPath);
+            try {
+                Storage::disk('public')->delete($this->existingGcashQrPath);
+            } catch (Throwable) {
+                // Best-effort cleanup; removal should still clear the setting.
+            }
         }
 
         $this->existingGcashQrPath = null;

@@ -63,4 +63,23 @@ class GcashQrTest extends TestCase
         $this->assertStringStartsWith(route('gcash.qr', [], false), $url);
         $this->assertStringContainsString('v=', $url);
     }
+
+    public function test_gcash_qr_url_returns_direct_urls(): void
+    {
+        Storage::fake('public');
+        Setting::set('gcash_qr_path', 'https://media.example/qr.png');
+
+        $this->assertSame('https://media.example/qr.png', app(StorefrontService::class)->gcashQrUrl());
+    }
+
+    public function test_gcash_qr_url_uses_the_public_url_in_s3_mode_without_exists_checks(): void
+    {
+        config(['filesystems.disks.public.driver' => 's3']);
+        Storage::fake('public');
+        Setting::set('gcash_qr_path', 'store-settings/qr.png');
+
+        $url = app(StorefrontService::class)->gcashQrUrl();
+
+        $this->assertSame(Storage::disk('public')->url('store-settings/qr.png'), $url);
+    }
 }
