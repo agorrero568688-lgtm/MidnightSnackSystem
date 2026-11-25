@@ -33,8 +33,5 @@
     </div>
 
     @if (app()->environment('local'))
-        <p class="mt-4 text-center text-xs text-ink-500">
-            Seeded accounts — admin / <span class="font-mono">admin123</span> · cashier / <span class="font-mono">cashier123</span>
-        </p>
     @endif
 </x-layouts.guest>
