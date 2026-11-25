@@ -141,6 +141,27 @@
         @case('arrow-right')
             <path d="M5 12h14M13 6l6 6-6 6" />
             @break
+        @case('bowl')
+            <path d="M4 11h16a8 8 0 0 1-16 0Z" />
+            <path d="M2.5 11h19" />
+            <path d="M9 7.5c0-1 1-1.4 1-2.5M13.5 7.5c0-1 1-1.4 1-2.5" />
+            @break
+        @case('cup')
+            <path d="M6 8h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z" />
+            <path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17" />
+            <path d="M5 21h14" />
+            @break
+        @case('cookie')
+            <path d="M21 12a9 9 0 1 1-9-9 4 4 0 0 0 5 5 4 4 0 0 0 4 4Z" />
+            <circle cx="9" cy="10" r=".9" fill="currentColor" stroke="none" />
+            <circle cx="13" cy="15" r=".9" fill="currentColor" stroke="none" />
+            <circle cx="8.5" cy="16" r=".8" fill="currentColor" stroke="none" />
+            <circle cx="16" cy="10.5" r=".8" fill="currentColor" stroke="none" />
+            @break
+        @case('utensils')
+            <path d="M6 3v7a2 2 0 0 0 4 0V3M8 10v11" />
+            <path d="M17 3c-1.5 1.5-2 3.5-2 5.5s.5 3.5 2 3.5 2-1.5 2-3.5S18.5 4.5 17 3ZM17 12v9" />
+            @break
         @default
             <circle cx="12" cy="12" r="9" />
     @endswitch

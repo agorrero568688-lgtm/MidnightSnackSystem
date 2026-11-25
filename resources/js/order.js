@@ -16,6 +16,11 @@ window.orderCart = function () {
         toast: '',
         search: '',
         activeCategory: 'all',
+        viewingId: null,
+        productModalOpen: false,
+        modalQty: 1,
+        modalNote: '',
+        lastFocused: null,
 
         orderType: 'delivery',
         paymentMethod: 'gcash',
@@ -191,6 +196,162 @@ window.orderCart = function () {
             return line ? line.qty : 0;
         },
 
+        /* ------------------------------------------------------------------ */
+        /* Product details modal                                              */
+        /* ------------------------------------------------------------------ */
+
+        get activeProduct() {
+            return this.viewingId === null ? null : this.products[this.viewingId] || null;
+        },
+
+        get productOpen() {
+            return this.productModalOpen;
+        },
+
+        get modalTotalCents() {
+            const product = this.activeProduct;
+
+            return product ? product.price_cents * this.modalQty : 0;
+        },
+
+        openProduct(id) {
+            const product = this.products[id];
+
+            if (!product) {
+                return;
+            }
+
+            const line = this.items.find((item) => item.id === product.id);
+
+            this.viewingId = product.id;
+            this.productModalOpen = true;
+            this.modalQty = line ? line.qty : 1;
+            this.modalNote = line ? line.note : '';
+            this.lastFocused = typeof document !== 'undefined' ? document.activeElement : null;
+
+            if (typeof document !== 'undefined') {
+                document.body.style.overflow = 'hidden';
+            }
+
+            this.$nextTick(() => {
+                if (this.$refs.modalClose) {
+                    this.$refs.modalClose.focus();
+                }
+            });
+        },
+
+        closeProduct() {
+            if (!this.productModalOpen) {
+                return;
+            }
+
+            this.productModalOpen = false;
+
+            if (typeof document !== 'undefined') {
+                document.body.style.overflow = this.open ? 'hidden' : '';
+            }
+
+            if (this.lastFocused && typeof this.lastFocused.focus === 'function') {
+                this.lastFocused.focus();
+            }
+
+            this.lastFocused = null;
+        },
+
+        modalInc() {
+            const product = this.activeProduct;
+            const max = Math.max(1, (product && product.max_qty) || 20);
+
+            if (this.modalQty < max) {
+                this.modalQty += 1;
+            } else {
+                this.notify('Only ' + max + ' available.');
+            }
+        },
+
+        modalDec() {
+            if (this.modalQty > 1) {
+                this.modalQty -= 1;
+            }
+        },
+
+        addFromModal() {
+            const product = this.activeProduct;
+
+            if (!product) {
+                return;
+            }
+
+            if (!this.config.ordering_open) {
+                this.notify('Online ordering is closed right now.');
+                return;
+            }
+
+            if (product.available === false) {
+                this.notify('That item is sold out.');
+                return;
+            }
+
+            const max = Math.max(1, product.max_qty || 20);
+            const qty = Math.min(max, Math.max(1, Number(this.modalQty) || 1));
+            const note = String(this.modalNote || '').trim().slice(0, 200);
+            const existing = this.items.find((line) => line.id === product.id);
+
+            if (existing) {
+                existing.qty = qty;
+                existing.note = note;
+            } else {
+                this.items.push({
+                    id: product.id,
+                    name: product.name,
+                    price_cents: product.price_cents,
+                    qty,
+                    note,
+                });
+            }
+
+            this.notify(product.name + (existing ? ' updated' : ' added'));
+            this.closeProduct();
+        },
+
+        themeFor(category) {
+            const value = String(category || '').toLowerCase();
+
+            if (/(drink|beverage|juice|coffee|tea|shake|soda|water|milk)/.test(value)) {
+                return {
+                    gradient: 'from-sky-300 via-cyan-200 to-sky-100',
+                    icon: 'cup',
+                    ink: 'text-sky-900/60',
+                    glow: 'bg-sky-400/30',
+                };
+            }
+
+            if (/(snack|dessert|cake|sweet|pastry|cookie|halo|merienda|ice cream)/.test(value)) {
+                return {
+                    gradient: 'from-rose-300 via-amber-200 to-rose-100',
+                    icon: 'cookie',
+                    ink: 'text-rose-900/60',
+                    glow: 'bg-rose-400/30',
+                };
+            }
+
+            if (/(noodle|soup|meal|rice|combo|viand|ulam|silog|pancit|lomi|mami|burger|sandwich|chicken|pork|beef|fish)/.test(value)) {
+                return {
+                    gradient: 'from-amber-300 via-brand-200 to-amber-100',
+                    icon: 'bowl',
+                    ink: 'text-amber-900/60',
+                    glow: 'bg-amber-400/30',
+                };
+            }
+
+            return {
+                gradient: 'from-brand-300 via-brand-200 to-violet-200',
+                icon: 'utensils',
+                ink: 'text-brand-900/60',
+                glow: 'bg-brand-400/30',
+            };
+        },
+
         clear() {
             this.items = [];
         },
@@ -295,7 +456,7 @@ window.orderCart = function () {
             this.open = false;
 
             if (typeof document !== 'undefined') {
-                document.body.style.overflow = '';
+                document.body.style.overflow = this.productOpen ? 'hidden' : '';
             }
         },
 

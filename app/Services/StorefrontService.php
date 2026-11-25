@@ -56,6 +56,7 @@ class StorefrontService
             $cartProducts[$product->id] = [
                 'id' => $product->id,
                 'name' => $product->name,
+                'category' => $product->category?->name,
                 'price_cents' => Money::cents($product->selling_price),
                 'unit' => $product->unit,
                 'image' => $product->image_path ? Storage::disk('public')->url($product->image_path) : null,

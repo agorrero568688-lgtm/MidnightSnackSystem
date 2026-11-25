@@ -79,39 +79,49 @@
                     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($section['products'] as $product)
                             @php
-                                $image = $product->image_path ? \Illuminate\Support\Facades\Storage::disk('public')->url ($product->image_path) : null;
+                                $image = $product->image_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($product->image_path) : null;
+                                $categoryName = $product->category?->name ?? 'Kitchen special';
                             @endphp
 
                             <article x-show="productVisible({{ $product->id }})"
-                                class="group flex flex-col overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                                <div class="relative h-36 overflow-hidden bg-gradient-to-br from-brand-200 via-brand-100 to-violet-100">
-                                    @if ($image)
-                                        <img src="{{ $image }}" alt="{{ $product->name }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105">
-                                    @else
-                                        <div class="flex h-full items-center justify-center">
-                                            <span class="text-5xl font-black text-brand-500/40">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
-                                        </div>
-                                    @endif
+                                @click="openProduct({{ $product->id }})"
+                                @keydown.enter.self.prevent="openProduct({{ $product->id }})"
+                                @keydown.space.self.prevent="openProduct({{ $product->id }})"
+                                role="button" tabindex="0" aria-label="View details for {{ $product->name }}"
+                                class="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-lift focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:outline-none">
+                                <div class="relative h-44 overflow-hidden bg-ink-100 sm:h-48">
+                                    <x-product-visual :image="$image" :name="$product->name" :category="$categoryName" class="h-full w-full" />
 
-                                    @if (! $product->is_available)
-                                        <span class="absolute top-3 left-3 rounded-full bg-ink-950/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-white uppercase">Sold out</span>
-                                    @endif
+                                    <div class="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
+                                        <span class="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-ink-700 uppercase shadow-sm backdrop-blur">
+                                            {{ $categoryName }}
+                                        </span>
+
+                                        @if (! $product->is_available)
+                                            <span class="rounded-full bg-ink-950/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-white uppercase">Sold out</span>
+                                        @endif
+                                    </div>
+
+                                    <div class="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-ink-950/60 to-transparent px-3 pt-8 pb-2 opacity-0 transition duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+                                        <span class="text-[11px] font-semibold text-white">Tap for details</span>
+                                        <span class="rounded-full bg-white/20 p-1 text-white"><x-icon name="arrow-right" class="h-3.5 w-3.5" /></span>
+                                    </div>
                                 </div>
 
                                 <div class="flex flex-1 flex-col p-4">
                                     <div class="flex items-start justify-between gap-3">
                                         <h4 class="font-bold leading-snug">{{ $product->name }}</h4>
-                                        <span class="shrink-0 font-black text-brand-700">{{ \App\Support\Money::format($product->selling_price) }}</span>
+                                        <span class="shrink-0 text-base font-black text-brand-700">{{ \App\Support\Money::format($product->selling_price) }}</span>
                                     </div>
                                     <p class="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-500">
                                         {{ $product->description ?: 'Cooked to order and packed warm.' }}
                                     </p>
 
-                                    <div class="mt-4 flex items-center justify-between gap-3">
+                                    <div class="mt-auto flex items-center justify-between gap-3 pt-4">
                                         <span class="text-[11px] text-ink-400">per {{ $product->unit }}</span>
 
                                         <template x-if="qty({{ $product->id }}) === 0">
-                                            <button type="button" @click="add({{ $product->id }})"
+                                            <button type="button" @click.stop="add({{ $product->id }})"
                                                 @disabled(! $product->is_available || ! $orderingOpen)
                                                 class="inline-flex items-center gap-1.5 rounded-xl bg-brand-400 px-3.5 py-2 text-xs font-bold text-ink-950 shadow-sm shadow-brand-500/25 transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-40">
                                                 <x-icon name="plus" class="h-3.5 w-3.5" /> Add
@@ -119,12 +129,12 @@
                                         </template>
 
                                         <template x-if="qty({{ $product->id }}) > 0">
-                                            <div class="inline-flex items-center rounded-xl bg-brand-400 text-ink-950">
-                                                <button type="button" @click="dec({{ $product->id }})" class="px-2.5 py-2" aria-label="Less">
+                                            <div @click.stop class="inline-flex items-center rounded-xl bg-brand-400 text-ink-950">
+                                                <button type="button" @click.stop="dec({{ $product->id }})" class="px-2.5 py-2" aria-label="Less">
                                                     <x-icon name="minus" class="h-3.5 w-3.5" />
                                                 </button>
                                                 <span class="min-w-7 text-center text-xs font-black" x-text="qty({{ $product->id }})"></span>
-                                                <button type="button" @click="inc({{ $product->id }})" class="px-2.5 py-2" aria-label="More">
+                                                <button type="button" @click.stop="inc({{ $product->id }})" class="px-2.5 py-2" aria-label="More">
                                                     <x-icon name="plus" class="h-3.5 w-3.5" />
                                                 </button>
                                             </div>
@@ -162,4 +172,123 @@
             </div>
         </section>
     </main>
+
+    {{-- Product details modal --}}
+    <div x-show="productOpen" x-cloak @keydown.escape.window="closeProduct()"
+        class="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+        <div x-show="productOpen" x-transition.opacity class="absolute inset-0 bg-ink-950/70 backdrop-blur-sm" @click="closeProduct()"></div>
+
+        <div class="absolute inset-0 flex items-end justify-center sm:items-center sm:p-6">
+            <div x-show="productOpen"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="translate-y-8 opacity-0 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="translate-y-0 opacity-100 sm:scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="translate-y-0 opacity-100 sm:scale-100"
+                x-transition:leave-end="translate-y-8 opacity-0 sm:translate-y-0 sm:scale-95"
+                class="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
+                <div class="relative h-56 shrink-0 overflow-hidden bg-ink-100 sm:h-72">
+                    <template x-if="activeProduct?.image">
+                        <img :src="activeProduct.image" :alt="activeProduct.name" class="h-full w-full object-cover">
+                    </template>
+
+                    <div x-show="!activeProduct?.image" :class="themeFor(activeProduct?.category).gradient"
+                        class="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br">
+                        <div class="absolute -top-8 -right-6 h-32 w-32 rounded-full blur-2xl"
+                            :class="themeFor(activeProduct?.category).glow"></div>
+                        <div class="absolute -bottom-10 -left-6 h-32 w-32 rounded-full bg-white/50 blur-2xl"></div>
+
+                        <span class="relative flex h-24 w-24 items-center justify-center rounded-full bg-white/55 shadow-sm ring-1 ring-white/70 backdrop-blur-sm">
+                            <template x-if="themeFor(activeProduct?.category).icon === 'cup'">
+                                <x-icon name="cup" class="h-12 w-12" x-bind:class="themeFor(activeProduct?.category).ink" />
+                            </template>
+                            <template x-if="themeFor(activeProduct?.category).icon === 'cookie'">
+                                <x-icon name="cookie" class="h-12 w-12" x-bind:class="themeFor(activeProduct?.category).ink" />
+                            </template>
+                            <template x-if="themeFor(activeProduct?.category).icon === 'bowl'">
+                                <x-icon name="bowl" class="h-12 w-12" x-bind:class="themeFor(activeProduct?.category).ink" />
+                            </template>
+                            <template x-if="themeFor(activeProduct?.category).icon === 'utensils'">
+                                <x-icon name="utensils" class="h-12 w-12" x-bind:class="themeFor(activeProduct?.category).ink" />
+                            </template>
+                        </span>
+
+                        <span class="absolute right-5 bottom-2 text-7xl leading-none font-black text-ink-950/10 select-none"
+                            x-text="(activeProduct?.name || '?').charAt(0).toUpperCase()"></span>
+                    </div>
+
+                    <div class="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-4">
+                        <span class="rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold tracking-wider text-ink-700 uppercase shadow-sm backdrop-blur"
+                            x-text="activeProduct?.category || 'Kitchen special'"></span>
+                        <button type="button" x-ref="modalClose" @click="closeProduct()"
+                            class="rounded-full bg-white/90 p-2 text-ink-700 shadow-sm backdrop-blur transition hover:bg-white hover:text-ink-950"
+                            aria-label="Close product details">
+                            <x-icon name="x" class="h-5 w-5" />
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-7">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <h2 id="product-modal-title" class="text-2xl font-black tracking-tight" x-text="activeProduct?.name"></h2>
+                            <p class="mt-1 text-xs font-semibold"
+                                :class="activeProduct?.available ? 'text-emerald-700' : 'text-rose-600'"
+                                x-text="activeProduct?.available ? 'Available now' : 'Sold out'"></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xl font-black text-brand-700" x-text="money(activeProduct?.price_cents)"></p>
+                            <p class="text-[11px] text-ink-400" x-text="'per ' + (activeProduct?.unit || 'serving')"></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 rounded-2xl bg-ink-50 px-4 py-3 text-sm leading-relaxed text-ink-600">
+                        <p class="text-[11px] font-bold tracking-wider text-ink-500 uppercase">What you get</p>
+                        <p class="mt-1" x-text="activeProduct?.description || 'Cooked to order and packed warm.'"></p>
+                    </div>
+
+                    <p x-show="!config.ordering_open" x-cloak
+                        class="mt-3 rounded-xl bg-brand-50 px-3 py-2 text-xs font-semibold text-brand-900">
+                        Online ordering is paused right now.
+                    </p>
+
+                    <div class="mt-5">
+                        <label class="label" for="product-note">
+                            Special instructions <span class="font-normal text-ink-400 normal-case">(optional)</span>
+                        </label>
+                        <input id="product-note" x-model="modalNote" type="text" maxlength="200"
+                            placeholder="e.g. no onions, extra spicy, extra sauce" class="input">
+                        <p class="mt-1 text-[11px] text-ink-500">We'll pass this to the kitchen.</p>
+                    </div>
+
+                    <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
+                        <div class="inline-flex items-center rounded-xl border border-ink-200 bg-white">
+                            <button type="button" @click="modalDec()"
+                                class="px-3 py-2.5 text-ink-600 transition hover:bg-ink-50" aria-label="Decrease quantity">
+                                <x-icon name="minus" class="h-4 w-4" />
+                            </button>
+                            <span class="min-w-10 text-center text-sm font-black" x-text="modalQty"></span>
+                            <button type="button" @click="modalInc()"
+                                class="px-3 py-2.5 text-ink-600 transition hover:bg-ink-50" aria-label="Increase quantity">
+                                <x-icon name="plus" class="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <p class="text-xs text-ink-500">
+                            Total <span class="ml-1 text-lg font-black text-ink-900" x-text="money(modalTotalCents)"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="shrink-0 border-t border-ink-100 bg-white px-5 py-4 sm:px-7">
+                    <button type="button" @click="addFromModal()"
+                        :disabled="!activeProduct?.available || !config.ordering_open"
+                        class="btn btn-primary w-full py-3 text-sm font-black">
+                        <x-icon name="cart" class="h-4 w-4" />
+                        <span x-text="(qty(activeProduct?.id) > 0 ? 'Update cart' : 'Add to cart') + ' — ' + money(modalTotalCents)"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </x-layouts.storefront>
