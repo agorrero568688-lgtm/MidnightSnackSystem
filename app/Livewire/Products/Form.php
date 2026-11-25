@@ -97,13 +97,14 @@ class Form extends Component
         ]);
 
         $imagePath = $this->existingImagePath;
+        $photoDisk = (new Product)->photoDisk();
 
         if ($this->image) {
             if ($imagePath) {
-                Storage::disk('public')->delete($imagePath);
+                Storage::disk($photoDisk)->delete($imagePath);
             }
 
-            $imagePath = $this->image->store('products', 'public');
+            $imagePath = $this->image->store('products', $photoDisk);
         }
 
         $payload = [

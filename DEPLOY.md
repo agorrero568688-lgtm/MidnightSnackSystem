@@ -98,6 +98,11 @@ CRON_SECRET=<long random string>
 Do **not** set `AWS_USE_PATH_STYLE_ENDPOINT`; the disks always use path-style
 because Supabase rejects virtual-hosted requests.
 
+In production, staff photo uploads (Product form, `app/Livewire/Products/Form`)
+always write to the S3 (`media`) disk, so `PUBLIC_DISK_DRIVER` does not need to
+be set — set the values above on the **Production** environment and redeploy
+before uploading photos.
+
 ## 5. Migrate the database
 
 Run once from a machine that has the production env values:

@@ -75,6 +75,17 @@ class Product extends Model
     }
 
     /**
+     * Disk that stores product photos.
+     *
+     * Production uses Supabase Storage (S3) so uploads are durable across
+     * Vercel deploys and the filesystem is read-only for app code.
+     */
+    public function photoDisk(): string
+    {
+        return config('app.env') === 'production' ? 's3' : 'public';
+    }
+
+    /**
      * Resolve the stored photo into a URL the browser can actually load.
      *
      * Uploaded photos live on the public disk (local in development, Supabase
@@ -105,7 +116,7 @@ class Product extends Model
             return asset($path);
         }
 
-        $disk = Storage::disk('public');
+        $disk = Storage::disk($this->photoDisk());
 
         if (! $disk->exists($path)) {
             return null;

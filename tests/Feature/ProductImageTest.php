@@ -56,6 +56,28 @@ class ProductImageTest extends TestCase
         $this->assertNull($product->image_src);
     }
 
+    public function test_photo_disk_is_s3_in_production(): void
+    {
+        config()->set('app.env', 'production');
+
+        $this->assertSame('s3', (new Product)->photoDisk());
+
+        config()->set('app.env', 'testing');
+
+        $this->assertSame('public', (new Product)->photoDisk());
+    }
+
+    public function test_production_images_are_resolved_from_the_s3_disk(): void
+    {
+        config()->set('app.env', 'production');
+        Storage::fake('s3');
+        Storage::disk('s3')->put('products/photo.jpg', 'photo');
+
+        $product = new Product(['image_path' => 'products/photo.jpg']);
+
+        $this->assertSame(Storage::disk('s3')->url('products/photo.jpg'), $product->image_src);
+    }
+
     public function test_blank_values_resolve_to_null(): void
     {
         Storage::fake('public');
