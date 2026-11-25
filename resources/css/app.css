@@ -9,6 +9,51 @@
     --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
         'Noto Sans', sans-serif;
     --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+    /* Brand — champagne gold */
+    --color-brand-50: #fefaf0;
+    --color-brand-100: #fcf3de;
+    --color-brand-200: #f9e9c4;
+    --color-brand-300: #f7e3b5;
+    --color-brand-400: #f1d48b;
+    --color-brand-500: #d9bc70;
+    --color-brand-600: #c2a356;
+    --color-brand-700: #9a7b33;
+    --color-brand-800: #6e5724;
+    --color-brand-900: #423415;
+
+    /* Ink — neutral graphite */
+    --color-ink-50: #f6f7f7;
+    --color-ink-100: #edeef0;
+    --color-ink-200: #dcdee0;
+    --color-ink-300: #c2c6c9;
+    --color-ink-400: #9ca3aa;
+    --color-ink-500: #747c84;
+    --color-ink-600: #565e66;
+    --color-ink-700: #3b4249;
+    --color-ink-800: #262b30;
+    --color-ink-900: #191c1f;
+    --color-ink-950: #111315;
+
+    /* Accent — soft violet */
+    --color-violet-50: #f4f1ff;
+    --color-violet-100: #eae4ff;
+    --color-violet-200: #d8cdff;
+    --color-violet-300: #bca9fc;
+    --color-violet-400: #a78bfa;
+    --color-violet-500: #8b6cf0;
+    --color-violet-600: #7448e0;
+    --color-violet-700: #6335c7;
+    --color-violet-800: #5228a0;
+    --color-violet-900: #3c1e76;
+
+    /* Surfaces */
+    --color-canvas: #f4f5f3;
+    --color-line: #e3e6e8;
+
+    --shadow-card: 0 1px 2px rgb(17 19 21 / 0.04), 0 14px 30px -24px rgb(17 19 21 / 0.35);
+    --shadow-lift: 0 2px 4px rgb(17 19 21 / 0.05), 0 18px 36px -22px rgb(17 19 21 / 0.4);
+    --shadow-glow-brand: 0 10px 30px -14px rgb(241 212 139 / 0.65);
 }
 
 @layer base {
@@ -19,15 +64,30 @@
     html {
         -webkit-tap-highlight-color: transparent;
     }
+
+    body {
+        background-color: var(--color-canvas);
+        color: var(--color-ink-900);
+    }
+
+    ::selection {
+        background-color: var(--color-brand-400);
+        color: var(--color-ink-950);
+    }
+
+    input[type='checkbox'],
+    input[type='radio'] {
+        accent-color: var(--color-brand-500);
+    }
 }
 
 @layer components {
     .card {
-        @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+        @apply rounded-2xl border border-line bg-white shadow-card;
     }
 
     .card-header {
-        @apply flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4;
+        @apply flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 px-5 py-4;
     }
 
     .card-body {
@@ -35,19 +95,19 @@
     }
 
     .btn {
-        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40;
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40;
     }
 
     .btn-primary {
-        @apply bg-amber-500 text-slate-950 shadow-sm hover:bg-amber-400 active:bg-amber-500;
+        @apply bg-brand-400 text-ink-950 shadow-sm shadow-brand-500/25 hover:bg-brand-300 active:bg-brand-500;
     }
 
     .btn-secondary {
-        @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+        @apply border border-line bg-white text-ink-700 hover:border-ink-300 hover:bg-ink-50;
     }
 
     .btn-dark {
-        @apply bg-slate-900 text-white hover:bg-slate-800;
+        @apply bg-ink-950 text-white hover:bg-ink-900;
     }
 
     .btn-danger {
@@ -55,7 +115,7 @@
     }
 
     .btn-ghost {
-        @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+        @apply text-ink-600 hover:bg-ink-100 hover:text-ink-900;
     }
 
     .btn-sm {
@@ -63,7 +123,7 @@
     }
 
     .input {
-        @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none;
+        @apply w-full rounded-xl border border-ink-300 bg-white px-3.5 py-2.5 text-sm text-ink-900 shadow-sm transition placeholder:text-ink-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-300/50 focus:outline-none;
     }
 
     .input-sm {
@@ -71,7 +131,7 @@
     }
 
     .label {
-        @apply mb-1.5 block text-xs font-semibold tracking-wide text-slate-600 uppercase;
+        @apply mb-1.5 block text-xs font-semibold tracking-wide text-ink-600 uppercase;
     }
 
     .badge {
@@ -87,11 +147,11 @@
     }
 
     .badge-amber {
-        @apply bg-amber-100 text-amber-800;
+        @apply bg-brand-100 text-brand-800;
     }
 
     .badge-slate {
-        @apply bg-slate-100 text-slate-600;
+        @apply bg-ink-100 text-ink-600;
     }
 
     .badge-sky {
@@ -107,7 +167,7 @@
     }
 
     .data-table thead {
-        @apply bg-slate-50 text-[11px] tracking-wider text-slate-500 uppercase;
+        @apply bg-ink-50 text-[11px] tracking-wider text-ink-500 uppercase;
     }
 
     .data-table th {
@@ -115,14 +175,14 @@
     }
 
     .data-table td {
-        @apply border-t border-slate-100 px-4 py-3 align-middle;
+        @apply border-t border-ink-100 px-4 py-3 align-middle;
     }
 
     .data-table tbody tr:hover {
-        @apply bg-amber-50/50;
+        @apply bg-brand-50/70;
     }
 
     .empty-state {
-        @apply px-6 py-12 text-center text-sm text-slate-500;
+        @apply px-6 py-12 text-center text-sm text-ink-500;
     }
 }

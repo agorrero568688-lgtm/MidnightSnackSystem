@@ -49,10 +49,10 @@
                 <div class="card-header"><h2 class="text-sm font-bold">Till behaviour</h2></div>
                 <div class="card-body space-y-4">
                     <label class="flex items-start gap-3">
-                        <input wire:model="requireShift" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500">
+                        <input wire:model="requireShift" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
                         <span>
                             <span class="block text-sm font-medium">Require a shift before selling</span>
-                            <span class="block text-xs text-slate-500">Cashiers open a drawer session with their starting cash, and close it with a count.</span>
+                            <span class="block text-xs text-ink-500">Cashiers open a drawer session with their starting cash, and close it with a count.</span>
                         </span>
                     </label>
                 </div>
@@ -67,22 +67,22 @@
                 </div>
                 <div class="card-body space-y-4">
                     <label class="flex items-start gap-3">
-                        <input wire:model="onlineOrderingEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500">
+                        <input wire:model="onlineOrderingEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
                         <span>
                             <span class="block text-sm font-medium">Show the public menu and accept orders</span>
-                            <span class="block text-xs text-slate-500">The storefront is always visible, but ordering closes when this is off.</span>
+                            <span class="block text-xs text-ink-500">The storefront is always visible, but ordering closes when this is off.</span>
                         </span>
                     </label>
 
                     <label class="flex items-start gap-3">
-                        <input wire:model="ordersPaused" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500">
+                        <input wire:model="ordersPaused" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
                         <span>
                             <span class="block text-sm font-medium">Pause new orders for now</span>
-                            <span class="block text-xs text-slate-500">Use this when the kitchen is slammed. Existing orders keep moving.</span>
+                            <span class="block text-xs text-ink-500">Use this when the kitchen is slammed. Existing orders keep moving.</span>
                         </span>
                     </label>
 
-                    <div class="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                    <div class="grid gap-4 border-t border-ink-100 pt-4 sm:grid-cols-2">
                         <div class="sm:col-span-2">
                             <label class="label">Store hours shown to customers</label>
                             <input wire:model="storeHours" type="text" class="input" placeholder="Open 24/7">
@@ -92,7 +92,7 @@
                         <div>
                             <label class="label">Delivery fee (other barangays)</label>
                             <div class="relative">
-                                <span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-400">₱</span>
+                                <span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-ink-400">₱</span>
                                 <input wire:model="deliveryFee" type="number" step="0.01" min="0" class="input pl-7">
                             </div>
                             @error('deliveryFee') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
@@ -102,45 +102,45 @@
                             <label class="label">Free delivery barangays</label>
                             <textarea wire:model="deliveryFreeBarangays" rows="3" maxlength="400" class="input" spellcheck="false"
                                 placeholder="Magosilom&#10;Lininti-an"></textarea>
-                            <p class="mt-1 text-[11px] text-slate-500">One barangay per line — customers typing an address with one of these names get free delivery.</p>
+                            <p class="mt-1 text-[11px] text-ink-500">One barangay per line — customers typing an address with one of these names get free delivery.</p>
                             @error('deliveryFreeBarangays') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
                             <label class="label">Free delivery from</label>
                             <div class="relative">
-                                <span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-400">₱</span>
+                                <span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-ink-400">₱</span>
                                 <input wire:model="freeDeliveryThreshold" type="number" step="0.01" min="0" class="input pl-7">
                             </div>
-                            <p class="mt-1 text-[11px] text-slate-500">Set to 0.00 to always charge the delivery fee.</p>
+                            <p class="mt-1 text-[11px] text-ink-500">Set to 0.00 to always charge the delivery fee.</p>
                             @error('freeDeliveryThreshold') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
                             <label class="label">Minimum order</label>
                             <div class="relative">
-                                <span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-400">₱</span>
+                                <span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-ink-400">₱</span>
                                 <input wire:model="minimumOrderTotal" type="number" step="0.01" min="0" class="input pl-7">
                             </div>
-                            <p class="mt-1 text-[11px] text-slate-500">Based on the item subtotal, before delivery.</p>
+                            <p class="mt-1 text-[11px] text-ink-500">Based on the item subtotal, before delivery.</p>
                             @error('minimumOrderTotal') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                         </div>
                     </div>
 
-                    <div class="grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                    <div class="grid gap-3 border-t border-ink-100 pt-4 sm:grid-cols-2">
                         <label class="flex items-start gap-3">
-                            <input wire:model="deliveryEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500">
+                            <input wire:model="deliveryEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
                             <span>
                                 <span class="block text-sm font-medium">Offer delivery</span>
-                                <span class="block text-xs text-slate-500">Customers enter an address and pay the delivery fee.</span>
+                                <span class="block text-xs text-ink-500">Customers enter an address and pay the delivery fee.</span>
                             </span>
                         </label>
 
                         <label class="flex items-start gap-3">
-                            <input wire:model="pickupEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500">
+                            <input wire:model="pickupEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
                             <span>
                                 <span class="block text-sm font-medium">Offer pickup</span>
-                                <span class="block text-xs text-slate-500">No delivery fee; the customer collects at the counter.</span>
+                                <span class="block text-xs text-ink-500">No delivery fee; the customer collects at the counter.</span>
                             </span>
                         </label>
                     </div>
@@ -164,7 +164,7 @@
                     </div>
 
                     <div>
-                        <label class="label">GCash QR image <span class="text-slate-400 normal-case">(optional)</span></label>
+                        <label class="label">GCash QR image <span class="text-ink-400 normal-case">(optional)</span></label>
                         @php
                             $existingQrUrl = null;
                             if ($existingGcashQrPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($existingGcashQrPath)) {
@@ -182,14 +182,14 @@
                                     Saved file is missing — re-upload
                                 </div>
                             @else
-                                <div class="flex h-40 w-40 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-center text-[10px] text-slate-400">
+                                <div class="flex h-40 w-40 items-center justify-center rounded-xl border border-dashed border-ink-300 bg-ink-50 p-3 text-center text-[10px] text-ink-400">
                                     No QR yet
                                 </div>
                             @endif
 
                             <div class="min-w-48 flex-1 space-y-2">
-                                <input wire:model="gcashQr" type="file" accept="image/*" class="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-700">
-                                <p class="text-[11px] text-slate-500">PNG or JPG, up to 2 MB. Shown at checkout and on the tracking page — customers can tap it to enlarge.</p>
+                                <input wire:model="gcashQr" type="file" accept="image/*" class="block w-full text-xs text-ink-600 file:mr-3 file:rounded-lg file:border-0 file:bg-ink-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700">
+                                <p class="text-[11px] text-ink-500">PNG or JPG, up to 2 MB. Shown at checkout and on the tracking page — customers can tap it to enlarge.</p>
                                 @error('gcashQr') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
 
                                 @if ($existingGcashQrPath)
@@ -205,14 +205,14 @@
                 <div class="card-header"><h2 class="text-sm font-bold">Order alerts</h2></div>
                 <div class="card-body space-y-4">
                     <label class="flex items-start gap-3">
-                        <input wire:model="orderAlertsEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500">
+                        <input wire:model="orderAlertsEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
                         <span>
                             <span class="block text-sm font-medium">Send new orders to the Telegram staff group</span>
-                            <span class="block text-xs text-slate-500">The board still beeps and shows browser notifications without this.</span>
+                            <span class="block text-xs text-ink-500">The board still beeps and shows browser notifications without this.</span>
                         </span>
                     </label>
 
-                    <div class="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                    <div class="grid gap-4 border-t border-ink-100 pt-4 sm:grid-cols-2">
                         <div>
                             <label class="label">Bot token</label>
                             <input wire:model="telegramBotToken" type="password" class="input font-mono" placeholder="123456:ABC-DEF…" autocomplete="off">
@@ -232,7 +232,7 @@
                         @endif
                     </div>
 
-                    <p class="rounded-xl bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-500">
+                    <p class="rounded-xl bg-ink-50 p-3 text-[11px] leading-relaxed text-ink-500">
                         Create a bot with <span class="font-semibold">@BotFather</span>, add it to your private staff group, then use the group chat ID.
                         Alerts are queued, so run a queue worker in production (<span class="font-mono">php artisan queue:work</span>).
                     </p>
@@ -243,14 +243,14 @@
                 <div class="card-header"><h2 class="text-sm font-bold">SMS for customers</h2></div>
                 <div class="card-body space-y-4">
                     <label class="flex items-start gap-3">
-                        <input wire:model="smsEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500">
+                        <input wire:model="smsEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
                         <span>
                             <span class="block text-sm font-medium">Send SMS updates to customers</span>
-                            <span class="block text-xs text-slate-500">Ready, abandoned-order reminders and feedback requests.</span>
+                            <span class="block text-xs text-ink-500">Ready, abandoned-order reminders and feedback requests.</span>
                         </span>
                     </label>
 
-                    <div class="grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                    <div class="grid gap-4 border-t border-ink-100 pt-4 sm:grid-cols-2">
                         <div>
                             <label class="label">Gateway URL</label>
                             <input wire:model="smsGatewayUrl" type="url" placeholder="https://api.gateway.com/sms" class="input">
@@ -293,20 +293,20 @@
         </div>
 
         <div class="space-y-5">
-            <div class="card card-body space-y-2 text-sm text-slate-600">
-                <p class="font-semibold text-slate-800">Receipt preview</p>
+            <div class="card card-body space-y-2 text-sm text-ink-600">
+                <p class="font-semibold text-ink-800">Receipt preview</p>
                 <p class="text-xs">Changes apply to new receipts. Reopening an old receipt link re-renders with the current store details.</p>
-                <div class="mt-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 font-mono text-[11px] leading-relaxed">
+                <div class="mt-2 rounded-xl border border-dashed border-ink-300 bg-ink-50 p-3 font-mono text-[11px] leading-relaxed">
                     <p class="text-center font-bold">{{ $storeName }}</p>
                     @if ($storeAddress) <p class="text-center">{{ $storeAddress }}</p> @endif
                     @if ($storePhone) <p class="text-center">{{ $storePhone }}</p> @endif
-                    <p class="my-1 border-t border-dashed border-slate-300"></p>
+                    <p class="my-1 border-t border-dashed border-ink-300"></p>
                     <p>Ref: DMS-000123</p>
                     <p>Cashier: {{ auth()->user()->name }}</p>
-                    <p class="my-1 border-t border-dashed border-slate-300"></p>
+                    <p class="my-1 border-t border-dashed border-ink-300"></p>
                     <p class="flex justify-between"><span>2 x Chips</span><span>₱50.00</span></p>
                     <p class="flex justify-between font-bold"><span>TOTAL</span><span>₱50.00</span></p>
-                    <p class="my-1 border-t border-dashed border-slate-300"></p>
+                    <p class="my-1 border-t border-dashed border-ink-300"></p>
                     <p class="text-center">{{ $receiptFooter }}</p>
                 </div>
             </div>

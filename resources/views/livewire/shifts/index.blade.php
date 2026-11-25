@@ -35,16 +35,16 @@
                     @forelse ($shifts as $shift)
                         <tr wire:key="shift-{{ $shift->id }}">
                             <td class="font-semibold">{{ $shift->user?->name }}</td>
-                            <td class="text-xs whitespace-nowrap text-slate-600">{{ $shift->opened_at->format('M d, Y h:i A') }}</td>
-                            <td class="text-xs whitespace-nowrap text-slate-600">{{ $shift->closed_at?->format('M d, Y h:i A') ?? '—' }}</td>
+                            <td class="text-xs whitespace-nowrap text-ink-600">{{ $shift->opened_at->format('M d, Y h:i A') }}</td>
+                            <td class="text-xs whitespace-nowrap text-ink-600">{{ $shift->closed_at?->format('M d, Y h:i A') ?? '—' }}</td>
                             <td class="text-right">{{ \App\Support\Money::format($shift->opening_cash) }}</td>
                             <td class="text-right">{{ $shift->expected_cash !== null ? \App\Support\Money::format($shift->expected_cash) : '—' }}</td>
                             <td class="text-right">{{ $shift->closing_cash !== null ? \App\Support\Money::format($shift->closing_cash) : '—' }}</td>
                             <td class="text-right font-semibold">
                                 @if ($shift->variance === null)
-                                    <span class="text-slate-400">—</span>
+                                    <span class="text-ink-400">—</span>
                                 @elseif (\App\Support\Money::cents($shift->variance) === 0)
-                                    <span class="text-slate-500">Balanced</span>
+                                    <span class="text-ink-500">Balanced</span>
                                 @else
                                     <span class="{{ \App\Support\Money::cents($shift->variance) < 0 ? 'text-rose-600' : 'text-emerald-600' }}">
                                         {{ \App\Support\Money::format($shift->variance) }}
@@ -67,7 +67,7 @@
         </div>
 
         @if ($shifts->hasPages())
-            <div class="border-t border-slate-100 px-4 py-3">{{ $shifts->links() }}</div>
+            <div class="border-t border-ink-100 px-4 py-3">{{ $shifts->links() }}</div>
         @endif
     </div>
 </div>

@@ -10,9 +10,9 @@
     </div>
 
     <div class="card">
-        <div class="card-body flex flex-wrap gap-3 border-b border-slate-100">
+        <div class="card-body flex flex-wrap gap-3 border-b border-ink-100">
             <div class="relative min-w-56 flex-1">
-                <x-icon name="search" class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <x-icon name="search" class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <input wire:model.live.debounce.300ms="search" type="search" placeholder="Search name, SKU or barcode"
                     class="input pl-9">
             </div>
@@ -47,13 +47,13 @@
                     @forelse ($products as $product)
                         <tr wire:key="product-{{ $product->id }}">
                             <td>
-                                <p class="font-semibold text-slate-900">{{ $product->name }}</p>
-                                <p class="font-mono text-[11px] text-slate-500">
+                                <p class="font-semibold text-ink-900">{{ $product->name }}</p>
+                                <p class="font-mono text-[11px] text-ink-500">
                                     {{ $product->sku }}@if ($product->barcode) · {{ $product->barcode }}@endif
                                 </p>
                             </td>
-                            <td class="text-slate-600">{{ $product->category?->name ?? '—' }}</td>
-                            <td class="text-right text-slate-600">{{ \App\Support\Money::format($product->cost_price) }}</td>
+                            <td class="text-ink-600">{{ $product->category?->name ?? '—' }}</td>
+                            <td class="text-right text-ink-600">{{ \App\Support\Money::format($product->cost_price) }}</td>
                             <td class="text-right font-semibold">{{ \App\Support\Money::format($product->selling_price) }}</td>
                             <td class="text-xs">
                                 @php
@@ -62,9 +62,9 @@
                                     $margin = $cost > 0 && $price > 0 ? (($price - $cost) / $price) * 100 : null;
                                 @endphp
                                 @if ($margin === null)
-                                    <span class="text-slate-400">—</span>
+                                    <span class="text-ink-400">—</span>
                                 @else
-                                    <span class="{{ $margin >= 20 ? 'text-emerald-600' : 'text-slate-500' }}">{{ number_format($margin, 1) }}%</span>
+                                    <span class="{{ $margin >= 20 ? 'text-emerald-600' : 'text-ink-500' }}">{{ number_format($margin, 1) }}%</span>
                                 @endif
                             </td>
                             <td>
@@ -103,7 +103,7 @@
                         <tr>
                             <td colspan="8" class="empty-state">
                                 No products found.
-                                <a href="{{ route('products.create') }}" class="font-semibold text-amber-600">Add your first product →</a>
+                                <a href="{{ route('products.create') }}" class="font-semibold text-brand-700">Add your first product →</a>
                             </td>
                         </tr>
                     @endforelse
@@ -112,7 +112,7 @@
         </div>
 
         @if ($products->hasPages())
-            <div class="border-t border-slate-100 px-4 py-3">{{ $products->links() }}</div>
+            <div class="border-t border-ink-100 px-4 py-3">{{ $products->links() }}</div>
         @endif
     </div>
 </div>

@@ -19,7 +19,7 @@
             <span class="badge badge-slate">{{ $categories->count() }}</span>
         </div>
 
-        <div class="divide-y divide-slate-100">
+        <div class="divide-y divide-ink-100">
             @forelse ($categories as $category)
                 <div wire:key="category-{{ $category->id }}" class="flex items-center gap-3 px-5 py-3.5">
                     @if ($editingId === $category->id)
@@ -29,14 +29,14 @@
                         <button wire:click="update" class="btn btn-sm btn-primary">Save</button>
                         <button wire:click="cancelEdit" class="btn btn-sm btn-ghost">Cancel</button>
                     @else
-                        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
                             <x-icon name="tag" class="h-4 w-4" />
                         </div>
                         <div class="min-w-0 flex-1">
-                            <p class="truncate text-sm font-semibold {{ $category->is_active ? '' : 'text-slate-400 line-through' }}">
+                            <p class="truncate text-sm font-semibold {{ $category->is_active ? '' : 'text-ink-400 line-through' }}">
                                 {{ $category->name }}
                             </p>
-                            <p class="text-xs text-slate-500">{{ $category->products_count }} product{{ $category->products_count === 1 ? '' : 's' }}</p>
+                            <p class="text-xs text-ink-500">{{ $category->products_count }} product{{ $category->products_count === 1 ? '' : 's' }}</p>
                         </div>
                         @unless ($category->is_active)
                             <span class="badge badge-slate">Hidden</span>

@@ -2,24 +2,44 @@
     {{-- Stat cards --}}
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div class="card card-body">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Sales today</p>
-            <p class="mt-1 text-3xl font-black text-slate-900">{{ $todayTotal }}</p>
-            <p class="mt-1 text-xs text-slate-500">{{ $todayCount }} transaction{{ $todayCount === 1 ? '' : 's' }}</p>
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Sales today</p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
+                    <x-icon name="banknote" class="h-4 w-4" />
+                </span>
+            </div>
+            <p class="mt-1 text-3xl font-black text-ink-950">{{ $todayTotal }}</p>
+            <p class="mt-1 text-xs text-ink-500">{{ $todayCount }} transaction{{ $todayCount === 1 ? '' : 's' }}</p>
         </div>
         <div class="card card-body">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Items sold</p>
-            <p class="mt-1 text-3xl font-black text-slate-900">{{ number_format($itemsSold) }}</p>
-            <p class="mt-1 text-xs text-slate-500">Across all completed sales</p>
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Items sold</p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-ink-600">
+                    <x-icon name="cube" class="h-4 w-4" />
+                </span>
+            </div>
+            <p class="mt-1 text-3xl font-black text-ink-950">{{ number_format($itemsSold) }}</p>
+            <p class="mt-1 text-xs text-ink-500">Across all completed sales</p>
         </div>
         <div class="card card-body">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Discounts given</p>
-            <p class="mt-1 text-3xl font-black text-slate-900">{{ $todayDiscounts }}</p>
-            <p class="mt-1 text-xs text-slate-500">Senior &amp; PWD</p>
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Discounts given</p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-700">
+                    <x-icon name="tag" class="h-4 w-4" />
+                </span>
+            </div>
+            <p class="mt-1 text-3xl font-black text-ink-950">{{ $todayDiscounts }}</p>
+            <p class="mt-1 text-xs text-ink-500">Senior &amp; PWD</p>
         </div>
-        <a href="{{ route('inventory.index') }}" class="card card-body transition hover:border-amber-300 hover:shadow">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Low stock</p>
-            <p class="mt-1 text-3xl font-black {{ $lowStockCount > 0 ? 'text-rose-600' : 'text-slate-900' }}">{{ $lowStockCount }}</p>
-            <p class="mt-1 text-xs text-slate-500">Ingredients at or below reorder level</p>
+        <a href="{{ route('inventory.index') }}" class="card card-body transition hover:border-brand-300 hover:shadow-lift">
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Low stock</p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg {{ $lowStockCount > 0 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-700' }}">
+                    <x-icon name="alert" class="h-4 w-4" />
+                </span>
+            </div>
+            <p class="mt-1 text-3xl font-black {{ $lowStockCount > 0 ? 'text-rose-600' : 'text-ink-950' }}">{{ $lowStockCount }}</p>
+            <p class="mt-1 text-xs text-ink-500">Ingredients at or below reorder level</p>
         </a>
     </div>
 
@@ -28,7 +48,7 @@
         <div class="card xl:col-span-2">
             <div class="card-header">
                 <h2 class="text-sm font-bold">Recent sales</h2>
-                <a href="{{ route('sales.index') }}" class="text-xs font-semibold text-amber-600 hover:text-amber-700">View all →</a>
+                <a href="{{ route('sales.index') }}" class="text-xs font-semibold text-brand-700 hover:text-brand-900">View all →</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="data-table">
@@ -56,7 +76,7 @@
                                         <span class="badge badge-green">Completed</span>
                                     @endif
                                 </td>
-                                <td class="text-xs text-slate-500">{{ $sale->created_at->format('M d, h:i A') }}</td>
+                                <td class="text-xs text-ink-500">{{ $sale->created_at->format('M d, h:i A') }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="6" class="empty-state">No sales yet. Open the till to start.</td></tr>
@@ -71,13 +91,13 @@
             <div class="card-header">
                 <h2 class="text-sm font-bold">Top sellers today</h2>
             </div>
-            <ul class="divide-y divide-slate-100">
+            <ul class="divide-y divide-ink-100">
                 @forelse ($topProducts as $index => $product)
                     <li class="flex items-center gap-3 px-5 py-3">
-                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500">{{ $index + 1 }}</span>
+                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ink-100 text-xs font-bold text-ink-500">{{ $index + 1 }}</span>
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-sm font-medium">{{ $product->name_snapshot }}</p>
-                            <p class="text-xs text-slate-500">{{ (int) $product->qty }} sold</p>
+                            <p class="text-xs text-ink-500">{{ (int) $product->qty }} sold</p>
                         </div>
                         <span class="text-sm font-semibold">{{ \App\Support\Money::format($product->total) }}</span>
                     </li>
@@ -92,7 +112,7 @@
     <div class="card">
         <div class="card-header">
             <h2 class="text-sm font-bold">Needs restocking</h2>
-            <a href="{{ route('inventory.index') }}" class="text-xs font-semibold text-amber-600 hover:text-amber-700">Manage inventory →</a>
+            <a href="{{ route('inventory.index') }}" class="text-xs font-semibold text-brand-700 hover:text-brand-900">Manage inventory →</a>
         </div>
         <div class="overflow-x-auto">
             <table class="data-table">
@@ -103,11 +123,11 @@
                     @forelse ($lowStock as $inventory)
                         <tr>
                             <td class="font-medium">{{ $inventory->name }}</td>
-                            <td class="text-slate-500">{{ $inventory->category }}</td>
+                            <td class="text-ink-500">{{ $inventory->category }}</td>
                             <td>
                                 <span class="badge {{ $inventory->isOutOfStock() ? 'badge-red' : 'badge-amber' }}">{{ $inventory->quantityLabel() }} {{ $inventory->unit }}</span>
                             </td>
-                            <td class="text-slate-500">{{ $inventory->reorderLabel() }} {{ $inventory->unit }}</td>
+                            <td class="text-ink-500">{{ $inventory->reorderLabel() }} {{ $inventory->unit }}</td>
                             <td>{{ \App\Support\Money::formatCents($inventory->stockValueCents()) }}</td>
                         </tr>
                     @empty

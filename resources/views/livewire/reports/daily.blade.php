@@ -16,23 +16,23 @@
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <div class="card card-body">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Net sales</p>
+            <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Net sales</p>
             <p class="mt-1 text-2xl font-black">{{ $total }}</p>
         </div>
         <div class="card card-body">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Transactions</p>
+            <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Transactions</p>
             <p class="mt-1 text-2xl font-black">{{ number_format($transactions) }}</p>
         </div>
         <div class="card card-body">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Items sold</p>
+            <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Items sold</p>
             <p class="mt-1 text-2xl font-black">{{ number_format($itemsSold) }}</p>
         </div>
         <div class="card card-body">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Discounts</p>
+            <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Discounts</p>
             <p class="mt-1 text-2xl font-black">{{ $discounts }}</p>
         </div>
         <div class="card card-body">
-            <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Cash collected</p>
+            <p class="text-xs font-semibold tracking-wider text-ink-500 uppercase">Cash collected</p>
             <p class="mt-1 text-2xl font-black">{{ $cashSales }}</p>
         </div>
     </div>
@@ -61,7 +61,7 @@
                     @endforelse
                 </tbody>
                 @if ($payments->isNotEmpty())
-                    <tfoot class="bg-slate-50 text-sm font-bold">
+                    <tfoot class="bg-ink-50 text-sm font-bold">
                         <tr>
                             <td class="px-4 py-3">Total</td>
                             <td class="px-4 py-3 text-right">{{ number_format($transactions) }}</td>
@@ -75,7 +75,7 @@
         <div class="card">
             <div class="card-header">
                 <h2 class="text-sm font-bold">Top products</h2>
-                <span class="text-xs text-slate-500">Gross before discounts: {{ $subtotal }}</span>
+                <span class="text-xs text-ink-500">Gross before discounts: {{ $subtotal }}</span>
             </div>
             <div class="max-h-96 overflow-y-auto">
                 <table class="data-table">
@@ -108,8 +108,8 @@
                 @forelse ($shifts as $shift)
                     <tr>
                         <td class="font-medium">{{ $shift->user?->name }}</td>
-                        <td class="text-xs text-slate-600">{{ $shift->opened_at->format('h:i A') }}</td>
-                        <td class="text-xs text-slate-600">{{ $shift->closed_at?->format('h:i A') ?? 'Open' }}</td>
+                        <td class="text-xs text-ink-600">{{ $shift->opened_at->format('h:i A') }}</td>
+                        <td class="text-xs text-ink-600">{{ $shift->closed_at?->format('h:i A') ?? 'Open' }}</td>
                         <td class="text-right">{{ \App\Support\Money::format($shift->opening_cash) }}</td>
                         <td class="text-right">{{ $shift->expected_cash !== null ? \App\Support\Money::format($shift->expected_cash) : '—' }}</td>
                         <td class="text-right">{{ $shift->closing_cash !== null ? \App\Support\Money::format($shift->closing_cash) : '—' }}</td>

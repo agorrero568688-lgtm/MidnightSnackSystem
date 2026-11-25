@@ -37,11 +37,11 @@
                     @error('password') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                 </div>
                 <label class="flex items-center gap-2 sm:col-span-2">
-                    <input wire:model="isActive" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-amber-500">
+                    <input wire:model="isActive" type="checkbox" class="h-4 w-4 rounded border-ink-300 text-brand-500">
                     <span class="text-sm">Account is active</span>
                 </label>
             </div>
-            <div class="flex justify-end gap-2 border-t border-slate-100 px-5 py-3">
+            <div class="flex justify-end gap-2 border-t border-ink-100 px-5 py-3">
                 <button type="button" wire:click="cancel" class="btn btn-secondary">Cancel</button>
                 <button type="submit" class="btn btn-primary">{{ $editingId ? 'Save changes' : 'Create user' }}</button>
             </div>
@@ -66,13 +66,13 @@
                         <tr wire:key="user-{{ $user->id }}">
                             <td>
                                 <div class="flex items-center gap-3">
-                                    <div class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
+                                    <div class="flex h-9 w-9 items-center justify-center rounded-full bg-ink-100 text-sm font-bold text-ink-600">
                                         {{ strtoupper(substr($user->name, 0, 1)) }}
                                     </div>
                                     <div>
                                         <p class="font-semibold">{{ $user->name }}</p>
                                         @if ($user->id === auth()->id())
-                                            <p class="text-[11px] text-amber-600">That's you</p>
+                                            <p class="text-[11px] text-brand-700">That's you</p>
                                         @endif
                                     </div>
                                 </div>
@@ -81,7 +81,7 @@
                             <td>
                                 <span class="badge {{ $user->isAdmin() ? 'badge-violet' : 'badge-sky' }}">{{ $user->role->label() }}</span>
                             </td>
-                            <td class="text-right text-slate-600">{{ $user->sales_count }}</td>
+                            <td class="text-right text-ink-600">{{ $user->sales_count }}</td>
                             <td>
                                 @if ($user->is_active)
                                     <span class="badge badge-green">Active</span>
@@ -105,7 +105,7 @@
         </div>
     </div>
 
-    <p class="text-xs text-slate-500">
+    <p class="text-xs text-ink-500">
         Users are never deleted — deactivating keeps their sales history intact. Admins can manage products,
         stock and reports; cashiers only see the till and their own receipts.
     </p>

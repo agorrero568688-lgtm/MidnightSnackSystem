@@ -33,10 +33,10 @@
             <button wire:click="today" class="btn btn-secondary">Today</button>
         </div>
 
-        <div class="mt-4 flex flex-wrap gap-x-8 gap-y-2 border-t border-slate-100 pt-4 text-sm">
-            <div><span class="text-slate-500">Net sales:</span> <span class="font-bold text-slate-900">{{ $summaryTotal }}</span></div>
-            <div><span class="text-slate-500">Transactions:</span> <span class="font-bold">{{ number_format($summaryCount) }}</span></div>
-            <div><span class="text-slate-500">Discounts:</span> <span class="font-bold">{{ $summaryDiscounts }}</span></div>
+        <div class="mt-4 flex flex-wrap gap-x-8 gap-y-2 border-t border-ink-100 pt-4 text-sm">
+            <div><span class="text-ink-500">Net sales:</span> <span class="font-bold text-ink-900">{{ $summaryTotal }}</span></div>
+            <div><span class="text-ink-500">Transactions:</span> <span class="font-bold">{{ number_format($summaryCount) }}</span></div>
+            <div><span class="text-ink-500">Discounts:</span> <span class="font-bold">{{ $summaryDiscounts }}</span></div>
         </div>
     </div>
 
@@ -61,8 +61,8 @@
                     @forelse ($sales as $sale)
                         <tr wire:key="sale-{{ $sale->id }}" class="{{ $sale->isVoided() ? 'bg-rose-50/40' : '' }}">
                             <td class="font-mono text-xs font-semibold">{{ $sale->reference_no }}</td>
-                            <td class="text-xs whitespace-nowrap text-slate-600">{{ $sale->created_at->format('M d, Y h:i A') }}</td>
-                            <td class="text-slate-600">{{ $sale->user?->name }}</td>
+                            <td class="text-xs whitespace-nowrap text-ink-600">{{ $sale->created_at->format('M d, Y h:i A') }}</td>
+                            <td class="text-ink-600">{{ $sale->user?->name }}</td>
                             <td class="text-right">{{ (int) $sale->items_sum_qty }}</td>
                             <td><span class="badge badge-slate">{{ $sale->payment_method->label() }}</span></td>
                             <td><span class="badge badge-{{ $sale->channel->color() }}">{{ $sale->channel->label() }}</span></td>
@@ -70,7 +70,7 @@
                                 @if ($sale->discount_amount > 0)
                                     <span class="badge badge-violet">{{ $sale->discount_type->label() }}</span>
                                 @else
-                                    <span class="text-slate-400">—</span>
+                                    <span class="text-ink-400">—</span>
                                 @endif
                             </td>
                             <td class="text-right font-semibold">{{ \App\Support\Money::format($sale->total) }}</td>
@@ -100,16 +100,16 @@
         </div>
 
         @if ($sales->hasPages())
-            <div class="border-t border-slate-100 px-4 py-3">{{ $sales->links() }}</div>
+            <div class="border-t border-ink-100 px-4 py-3">{{ $sales->links() }}</div>
         @endif
     </div>
 
     {{-- Void modal --}}
     @if ($voidingSale)
-        <div class="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+        <div class="fixed inset-0 z-40 flex items-center justify-center bg-ink-950/60 p-4 backdrop-blur-sm">
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
                 <h3 class="text-lg font-bold">Void {{ $voidingSale->reference_no }}?</h3>
-                <p class="mt-1 text-sm text-slate-500">
+                <p class="mt-1 text-sm text-ink-500">
                     This returns {{ $voidingSale->itemCount() }} item(s) to stock and keeps the record marked as voided.
                     This cannot be undone.
                 </p>
