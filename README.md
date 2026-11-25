@@ -108,6 +108,18 @@ php artisan migrate:fresh --seed
 
 The production deployment should still point at Supabase.
 
+## Clearing transactional data
+
+To reset the dashboard to zero sales while keeping users, products, categories,
+and settings:
+
+```bash
+php artisan db:clear-transactions
+```
+
+This permanently deletes sales, sale items, online orders, order items, customer
+feedback, and shifts. Add `--force` when running it non-interactively.
+
 ## How the cashier screen works
 
 - The catalogue is loaded once into an Alpine store, so scanning a barcode and
