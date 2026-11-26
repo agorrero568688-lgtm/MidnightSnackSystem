@@ -5,11 +5,13 @@ namespace Tests\Feature;
 use App\Livewire\Settings\Edit;
 use App\Models\Setting;
 use App\Models\User;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Mockery;
 use Tests\TestCase;
 
 class OnlineSettingsTest extends TestCase
@@ -149,6 +151,28 @@ class OnlineSettingsTest extends TestCase
         Storage::disk('public')->assertExists($path);
     }
 
+    public function test_a_failed_qr_upload_does_not_replace_the_stored_image(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('store-settings/old-qr.png', base64_decode(self::PNG));
+        Setting::set('gcash_qr_path', 'store-settings/old-qr.png');
+
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldIgnoreMissing();
+        $disk->shouldReceive('put')->once()->andReturn(false);
+        Storage::set('public', $disk);
+
+        $admin = User::factory()->admin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Edit::class)
+            ->set('gcashQr', UploadedFile::fake()->createWithContent('qr.png', base64_decode(self::PNG)))
+            ->call('save')
+            ->assertHasErrors('gcashQr');
+
+        $this->assertSame('store-settings/old-qr.png', Setting::get('gcash_qr_path'));
+    }
+
     public function test_an_admin_can_remove_the_gcash_qr_image(): void
     {
         Storage::fake('public');
@@ -166,10 +190,13 @@ class OnlineSettingsTest extends TestCase
         Storage::disk('public')->assertMissing('store-settings/qr.png');
     }
 
-    public function test_an_admin_upload_uses_the_s3_disk_in_production(): void
+    public function test_an_admin_upload_uses_the_configured_public_disk_when_it_is_s3(): void
     {
-        config(['app.env' => 'production']);
-        Storage::fake('s3');
+        config([
+            'filesystems.disks.public.driver' => 's3',
+            'filesystems.disks.public.url' => 'https://media.example.com/products',
+        ]);
+        Storage::fake('public');
 
         $admin = User::factory()->admin()->create();
 
@@ -182,14 +209,18 @@ class OnlineSettingsTest extends TestCase
         $path = Setting::get('gcash_qr_path');
 
         $this->assertNotEmpty($path);
-        Storage::disk('s3')->assertExists($path);
+        $this->assertStringStartsWith('store-settings/', $path);
+        Storage::disk('public')->assertExists($path);
     }
 
-    public function test_an_admin_can_remove_the_gcash_qr_image_from_s3_in_production(): void
+    public function test_an_admin_can_remove_the_gcash_qr_image_from_the_configured_public_disk(): void
     {
-        config(['app.env' => 'production']);
-        Storage::fake('s3');
-        Storage::disk('s3')->put('store-settings/qr.png', base64_decode(self::PNG));
+        config([
+            'filesystems.disks.public.driver' => 's3',
+            'filesystems.disks.public.url' => 'https://media.example.com/products',
+        ]);
+        Storage::fake('public');
+        Storage::disk('public')->put('store-settings/qr.png', base64_decode(self::PNG));
         Setting::set('gcash_qr_path', 'store-settings/qr.png');
 
         $admin = User::factory()->admin()->create();
@@ -200,6 +231,6 @@ class OnlineSettingsTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertSame('', Setting::get('gcash_qr_path'));
-        Storage::disk('s3')->assertMissing('store-settings/qr.png');
+        Storage::disk('public')->assertMissing('store-settings/qr.png');
     }
 }

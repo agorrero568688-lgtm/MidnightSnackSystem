@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -51,17 +52,18 @@ class PublicMediaUrl
      * No exists()/lastModified() call is made here. The public disk URL is
      * AWS_MEDIA_URL in production; the disk's own URL is a test/fallback.
      */
-    public static function remote(string $path, string $diskName = 'public'): string
+    public static function remote(string $path, string $diskName = 'public'): ?string
     {
-        $base = config('filesystems.disks.public.url')
-            ?: config("filesystems.disks.{$diskName}.url");
+        // The browser URL must come from AWS_MEDIA_URL. Falling back to the
+        // S3 endpoint would produce an address the browser cannot load.
+        $base = config('filesystems.disks.public.url');
 
         if (blank($base)) {
-            try {
-                return (string) Storage::disk($diskName)->url($path);
-            } catch (Throwable) {
-                return '/'.ltrim($path, '/');
-            }
+            Log::error('Public media URL is not configured; set AWS_MEDIA_URL.', [
+                'disk' => $diskName,
+            ]);
+
+            return null;
         }
 
         return rtrim((string) $base, '/').'/'.ltrim($path, '/');

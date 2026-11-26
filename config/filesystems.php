@@ -1,5 +1,28 @@
 <?php
 
+use App\Support\S3NoAcl;
+
+// Supabase rejects ACL headers, and the adapter otherwise sends one on every
+// write. Keep small uploads on PutObject so `before_upload` can strip it.
+$s3Options = [
+    'before_upload' => [S3NoAcl::class, 'stripAcl'],
+    'mup_threshold' => 100 * 1024 * 1024,
+];
+
+// AWS_MEDIA_URL is the public bucket's browser URL. Deriving the bucket from
+// it keeps uploads and URLs pointed at the same place even when only one of
+// the two media variables is set in the deployment environment.
+$mediaUrl = env('AWS_MEDIA_URL');
+$legacyMediaUrl = env('AWS_URL');
+$mediaBucket = env('AWS_MEDIA_BUCKET');
+$bucketUrl = $mediaUrl ?: $legacyMediaUrl;
+
+if (is_string($bucketUrl) && preg_match('#/object/public/([^/?#]+)#', $bucketUrl, $matches) === 1) {
+    $mediaBucket = $matches[1];
+}
+
+$mediaBucket ??= env('AWS_BUCKET', 'media');
+
 return [
 
     /*
@@ -32,10 +55,9 @@ return [
 
         /*
          * On Vercel the container filesystem is ephemeral, so the "local"
-         * (private receipts) and "public" (local media) disks switch to
-         * Supabase Storage's S3 API when the drivers below are set to "s3".
-         * Product photos and the GCash QR use the dedicated "s3" disk in
-         * production; locally and in tests they keep using the filesystem.
+         * (private receipts) and "public" (product photos and GCash QR) disks
+         * switch to Supabase Storage's S3 API when the drivers below are set
+         * to "s3". The legacy "s3" disk remains for older stored URLs.
          */
         'local' => env('PROOF_DISK_DRIVER', 'local') === 's3'
             ? [
@@ -45,10 +67,11 @@ return [
                 'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
                 'bucket' => env('AWS_PROOFS_BUCKET', 'proofs'),
                 'endpoint' => env('AWS_ENDPOINT'),
-                'use_path_style_endpoint' => true,
+                'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true),
                 'directory_visibility' => 'private',
                 'throw' => true,
                 'report' => false,
+                'options' => $s3Options,
                 'http' => [
                     'connect_timeout' => 3,
                     'timeout' => 5,
@@ -69,13 +92,14 @@ return [
                 'key' => env('AWS_ACCESS_KEY_ID'),
                 'secret' => env('AWS_SECRET_ACCESS_KEY'),
                 'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
-                'bucket' => env('AWS_MEDIA_BUCKET', 'media'),
+                'bucket' => $mediaBucket,
                 'endpoint' => env('AWS_ENDPOINT'),
-                'use_path_style_endpoint' => true,
-                'url' => env('AWS_MEDIA_URL'),
+                'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true),
+                'url' => $mediaUrl,
                 'directory_visibility' => 'private',
-                'throw' => false,
+                'throw' => true,
                 'report' => false,
+                'options' => $s3Options,
                 'http' => [
                     'connect_timeout' => 3,
                     'timeout' => 5,
@@ -96,12 +120,13 @@ return [
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_MEDIA_BUCKET', env('AWS_BUCKET')),
-            'url' => env('AWS_MEDIA_URL', env('AWS_URL')),
+            'bucket' => $mediaBucket,
+            'url' => $mediaUrl ?: $legacyMediaUrl,
             'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => true,
-            'throw' => false,
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true),
+            'throw' => true,
             'report' => false,
+            'options' => $s3Options,
             'http' => [
                 'connect_timeout' => 3,
                 'timeout' => 5,

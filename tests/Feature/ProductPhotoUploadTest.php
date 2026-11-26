@@ -5,10 +5,12 @@ namespace Tests\Feature;
 use App\Livewire\Products\Form;
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Testing\File;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Mockery;
 use Tests\TestCase;
 
 class ProductPhotoUploadTest extends TestCase
@@ -40,6 +42,31 @@ class ProductPhotoUploadTest extends TestCase
         Storage::disk('public')->assertExists($product->image_path);
     }
 
+    public function test_a_failed_menu_photo_upload_does_not_create_a_product(): void
+    {
+        Storage::fake('public');
+
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldIgnoreMissing();
+        $disk->shouldReceive('put')->once()->andReturn(false);
+        Storage::set('public', $disk);
+
+        $admin = User::factory()->admin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Form::class)
+            ->set('name', 'Failed menu photo')
+            ->set('sku', 'PHOTO-FAILED')
+            ->set('unit', 'serving')
+            ->set('cost_price', '10.00')
+            ->set('selling_price', '20.00')
+            ->set('image', $this->fakePhoto(1024))
+            ->call('save')
+            ->assertHasErrors('image');
+
+        $this->assertDatabaseMissing('products', ['sku' => 'PHOTO-FAILED']);
+    }
+
     public function test_a_menu_photo_larger_than_10_mb_is_rejected(): void
     {
         Storage::fake('public');
@@ -60,10 +87,12 @@ class ProductPhotoUploadTest extends TestCase
         $this->assertDatabaseMissing('products', ['sku' => 'PHOTO-TOO-BIG']);
     }
 
-    public function test_a_menu_photo_upload_goes_to_the_s3_disk_in_production(): void
+    public function test_a_menu_photo_upload_goes_to_the_configured_public_disk_when_it_is_s3(): void
     {
-        config()->set('app.env', 'production');
-        Storage::fake('s3');
+        config([
+            'filesystems.disks.public.driver' => 's3',
+            'filesystems.disks.public.url' => 'https://media.example.com/products',
+        ]);
         Storage::fake('public');
 
         $admin = User::factory()->admin()->create();
@@ -83,7 +112,7 @@ class ProductPhotoUploadTest extends TestCase
 
         $this->assertNotNull($product);
         $this->assertStringStartsWith('products/', $product?->image_path);
-        Storage::disk('s3')->assertExists($product?->image_path);
+        Storage::disk('public')->assertExists($product?->image_path);
     }
 
     /** Build a valid PNG padded to the requested byte size. */

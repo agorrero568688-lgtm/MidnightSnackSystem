@@ -19,6 +19,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Support\Money;
 use App\Support\PosCatalog;
+use App\Support\VerifiedUpload;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class OrderService
 {
@@ -95,7 +97,13 @@ class OrderService
         $proofPath = null;
 
         if ($method->isGcash() && $proof instanceof UploadedFile) {
-            $proofPath = $proof->store('order-proofs', 'local');
+            try {
+                $proofPath = VerifiedUpload::store($proof, 'order-proofs', 'local');
+            } catch (Throwable) {
+                throw ValidationException::withMessages([
+                    'payment_proof' => 'Could not upload the receipt screenshot. Please try again.',
+                ]);
+            }
         }
 
         try {
@@ -205,10 +213,8 @@ class OrderService
 
                 return $order->load('items');
             }, 3);
-        } catch (\Throwable $e) {
-            if ($proofPath !== null) {
-                Storage::disk('local')->delete($proofPath);
-            }
+        } catch (Throwable $e) {
+            $this->deleteQuietly($proofPath);
 
             throw $e;
         }
@@ -219,7 +225,7 @@ class OrderService
         // outage must never turn a successfully placed order into a 500.
         try {
             $this->notifier->newOrder($order);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('New-order alert failed', [
                 'order' => $order->id,
                 'message' => $e->getMessage(),
@@ -469,7 +475,14 @@ class OrderService
     public function submitPayment(Order $order, UploadedFile $proof): Order
     {
         $previousPath = $order->payment_proof_path;
-        $proofPath = $proof->store('order-proofs', 'local');
+
+        try {
+            $proofPath = VerifiedUpload::store($proof, 'order-proofs', 'local');
+        } catch (Throwable) {
+            throw ValidationException::withMessages([
+                'proof' => 'Could not upload the receipt screenshot. Please try again.',
+            ]);
+        }
 
         try {
             $updated = DB::transaction(function () use ($order, $proofPath) {
@@ -494,14 +507,14 @@ class OrderService
 
                 return $locked;
             }, 3);
-        } catch (\Throwable $e) {
-            Storage::disk('local')->delete($proofPath);
+        } catch (Throwable $e) {
+            $this->deleteQuietly($proofPath);
 
             throw $e;
         }
 
         if ($previousPath && $previousPath !== $proofPath) {
-            Storage::disk('local')->delete($previousPath);
+            $this->deleteQuietly($previousPath);
         }
 
         return $updated;
@@ -576,6 +589,20 @@ class OrderService
             ->filter()
             ->values()
             ->take(4);
+    }
+
+    /** Best-effort cleanup that never masks the original failure. */
+    private function deleteQuietly(?string $path): void
+    {
+        if ($path === null || $path === '') {
+            return;
+        }
+
+        try {
+            Storage::disk('local')->delete($path);
+        } catch (Throwable) {
+            // Cleanup is best-effort.
+        }
     }
 
     /**

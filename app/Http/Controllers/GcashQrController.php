@@ -31,7 +31,7 @@ class GcashQrController extends Controller
             if (PublicMediaUrl::isRemote(GcashQr::diskName())) {
                 $url = PublicMediaUrl::remote($path, GcashQr::diskName());
 
-                abort_if($url === '', 404);
+                abort_if(blank($url), 404);
 
                 return redirect()->away($url);
             }

@@ -21,7 +21,7 @@ class GcashQr
 
     public static function diskName(): string
     {
-        return config('app.env') === 'production' ? 's3' : 'public';
+        return 'public';
     }
 
     public static function disk(): Filesystem
@@ -84,9 +84,7 @@ class GcashQr
     /** Store an uploaded QR image on the active media disk. */
     public static function store(UploadedFile $file): string
     {
-        $path = $file->store(self::DIRECTORY, static::diskName());
-
-        return is_string($path) ? $path : '';
+        return VerifiedUpload::store($file, self::DIRECTORY, static::diskName());
     }
 
     /** Best-effort removal of a previously stored QR image. */

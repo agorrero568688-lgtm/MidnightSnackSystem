@@ -58,26 +58,27 @@ class ProductImageTest extends TestCase
         $this->assertNull($product->image_src);
     }
 
-    public function test_photo_disk_is_s3_in_production(): void
+    public function test_photo_disk_is_always_the_configured_public_disk(): void
     {
-        config()->set('app.env', 'production');
+        $this->assertSame('public', (new Product)->photoDisk());
 
-        $this->assertSame('s3', (new Product)->photoDisk());
-
-        config()->set('app.env', 'testing');
+        config()->set('filesystems.disks.public.driver', 's3');
 
         $this->assertSame('public', (new Product)->photoDisk());
     }
 
-    public function test_production_images_are_resolved_from_the_s3_disk(): void
+    public function test_images_are_resolved_from_the_configured_public_disk(): void
     {
-        config()->set('app.env', 'production');
-        Storage::fake('s3');
-        Storage::disk('s3')->put('products/photo.jpg', 'photo');
+        config([
+            'filesystems.disks.public.driver' => 's3',
+            'filesystems.disks.public.url' => 'https://media.example.com/products',
+        ]);
+        Storage::fake('public');
+        Storage::disk('public')->put('products/photo.jpg', 'photo');
 
         $product = new Product(['image_path' => 'products/photo.jpg']);
 
-        $this->assertSame(Storage::disk('s3')->url('products/photo.jpg'), $product->image_src);
+        $this->assertSame('https://media.example.com/products/products/photo.jpg', $product->image_src);
     }
 
     public function test_blank_values_resolve_to_null(): void

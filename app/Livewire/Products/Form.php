@@ -5,11 +5,12 @@ namespace App\Livewire\Products;
 use App\Models\Category;
 use App\Models\Product;
 use App\Support\PosCatalog;
+use App\Support\VerifiedUpload;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
-use Throwable;
 use Livewire\WithFileUploads;
+use Throwable;
 
 class Form extends Component
 {
@@ -98,19 +99,20 @@ class Form extends Component
         ]);
 
         $imagePath = $this->existingImagePath;
+        $previousImagePath = $imagePath;
+        $newImagePath = null;
         $photoDisk = (new Product)->photoDisk();
 
         if ($this->image) {
-            if ($imagePath && ! str_starts_with($imagePath, 'images/')) {
-                try {
-                    Storage::disk($photoDisk)->delete($imagePath);
-                } catch (Throwable) {
-                    // Cleanup is best-effort; do not block saving when the
-                    // remote delete is flaky.
-                }
+            try {
+                $newImagePath = VerifiedUpload::store($this->image, 'products', $photoDisk);
+            } catch (Throwable) {
+                $this->addError('image', 'Could not upload the menu photo. Please try again.');
+
+                return;
             }
 
-            $imagePath = $this->image->store('products', $photoDisk);
+            $imagePath = $newImagePath;
         }
 
         $payload = [
@@ -136,6 +138,18 @@ class Form extends Component
             $product = Product::create($payload);
 
             $message = "\"{$product->name}\" was added to the catalogue.";
+        }
+
+        if ($newImagePath !== null && $previousImagePath && $previousImagePath !== $newImagePath
+            && ! str_starts_with($previousImagePath, 'images/')) {
+            // Delete only after the database points at the replacement.
+            try {
+                Storage::disk($photoDisk)->delete($previousImagePath);
+            } catch (Throwable) {
+                // Cleanup is best-effort; the old object is harmless.
+            }
+
+            $this->existingImagePath = $newImagePath;
         }
 
         PosCatalog::flush();

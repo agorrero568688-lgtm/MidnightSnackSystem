@@ -42,18 +42,22 @@ usable by hiding the broken image and showing the gradient fallback.
 
 Create two buckets in Supabase Storage:
 
-| Bucket   | Public | Holds                                      |
-| -------- | ------ | ------------------------------------------ |
-| `media`  | yes    | product photos, GCash QR, store settings   |
-| `proofs` | no     | customer GCash receipt screenshots         |
+| Bucket     | Public | Holds                                    |
+| ---------- | ------ | ---------------------------------------- |
+| `products` | yes    | product photos, GCash QR, store settings |
+| `proofs`   | no     | customer GCash receipt screenshots       |
+
+`AWS_MEDIA_BUCKET` and `AWS_MEDIA_URL` should name the same public bucket. If
+they disagree, the bucket is derived from `AWS_MEDIA_URL` so uploads and public
+URLs cannot drift apart. The live deployment uses `products`.
 
 Then generate S3 access keys (**Storage â†’ S3 Connection**) and copy the
 endpoint, region, access key, and secret.
 
 Upload the existing files that are not in Git:
 
-- `storage/app/public/store-settings/*` â†’ `media/store-settings/`
-- product images referenced by the seeded menu â†’ `media/products/`
+- `storage/app/public/store-settings/*` â†’ `products/store-settings/`
+- product images referenced by the seeded menu â†’ `products/products/`
 - `storage/app/private/order-proofs/*` â†’ `proofs/order-proofs/`
 
 ## 4. Environment variables
@@ -89,21 +93,21 @@ AWS_SECRET_ACCESS_KEY=...
 AWS_DEFAULT_REGION=<region>
 AWS_ENDPOINT=https://<project-ref>.storage.supabase.co/storage/v1/s3
 AWS_PROOFS_BUCKET=proofs
-AWS_MEDIA_BUCKET=media
-AWS_MEDIA_URL=https://<project-ref>.storage.supabase.co/storage/v1/object/public/media
+AWS_MEDIA_BUCKET=products
+AWS_MEDIA_URL=https://<project-ref>.storage.supabase.co/storage/v1/object/public/products
 
 CRON_SECRET=<long random string>
 ```
 
-Do **not** set `AWS_USE_PATH_STYLE_ENDPOINT`; the disks always use path-style
-because Supabase rejects virtual-hosted requests.
+`AWS_USE_PATH_STYLE_ENDPOINT` defaults to `true` because Supabase rejects
+virtual-hosted requests. ACLs are stripped before every S3 write; public access
+comes from the bucket policy, not `x-amz-acl`.
 
-In production, staff photo uploads (Product form, `app/Livewire/Products/Form`)
-and the GCash QR (`app/Support/GcashQr`) always write to the S3 (`media`) disk,
-so `PUBLIC_DISK_DRIVER` does not need to be set — set the values above on the
-**Production** environment and redeploy before uploading photos or the QR.
-After deploying the QR fix, re-upload the QR once from Settings so the file
-lands in the `media` bucket.
+In production, staff photo uploads (Product form) and the GCash QR write to the
+configured `public` disk. Set `PUBLIC_DISK_DRIVER=s3`, `AWS_MEDIA_BUCKET`, and
+`AWS_MEDIA_URL` on the **Production** environment and redeploy before uploading
+photos or the QR. After deploying, re-upload the QR once from Settings so the
+file lands in the public `products` bucket.
 
 ### Region and timeouts
 

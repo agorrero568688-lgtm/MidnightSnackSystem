@@ -9,6 +9,7 @@ use App\Support\GcashQr;
 use App\Support\Money;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Throwable;
 
 class Edit extends Component
 {
@@ -133,9 +134,17 @@ class Edit extends Component
             'smsFeedbackEveryN' => ['required', 'integer', 'min:1,max:10'],
         ]);
 
+        $previousQrPath = $this->existingGcashQrPath;
+        $newQrPath = null;
+
         if ($this->gcashQr) {
-            GcashQr::delete($this->existingGcashQrPath);
-            $this->existingGcashQrPath = GcashQr::store($this->gcashQr);
+            try {
+                $newQrPath = GcashQr::store($this->gcashQr);
+            } catch (Throwable) {
+                $this->addError('gcashQr', 'Could not upload the QR image. Please try again.');
+
+                return;
+            }
         }
 
         Setting::setMany([
@@ -157,7 +166,7 @@ class Edit extends Component
             'minimum_order_total' => Money::decimal(Money::cents($validated['minimumOrderTotal'])),
             'gcash_name' => $validated['gcashName'] ?? '',
             'gcash_number' => $validated['gcashNumber'] ?? '',
-            'gcash_qr_path' => $this->existingGcashQrPath ?? '',
+            'gcash_qr_path' => $newQrPath ?? $previousQrPath ?? '',
             'order_alerts_enabled' => $this->orderAlertsEnabled ? '1' : '0',
             'telegram_bot_token' => trim((string) ($validated['telegramBotToken'] ?? '')),
             'telegram_chat_id' => trim((string) ($validated['telegramChatId'] ?? '')),
@@ -168,6 +177,13 @@ class Edit extends Component
             'sms_reminder_minutes' => $validated['smsReminderMinutes'],
             'sms_feedback_every_n' => $validated['smsFeedbackEveryN'],
         ]);
+
+        if ($newQrPath !== null && $newQrPath !== $previousQrPath) {
+            // Only remove the old image once the new one is safely stored and
+            // the database now points at the replacement.
+            GcashQr::delete($previousQrPath);
+            $this->existingGcashQrPath = $newQrPath;
+        }
 
         $this->gcashQr = null;
         $this->notice = 'Store settings saved.';

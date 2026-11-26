@@ -10,11 +10,13 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Services\OrderService;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Mockery;
 use Tests\TestCase;
 
 class OrderPlacementTest extends TestCase
@@ -109,15 +111,18 @@ class OrderPlacementTest extends TestCase
             ->assertDontSee('GCash QR not set');
     }
 
-    public function test_checkout_page_shows_the_s3_qr_in_production(): void
+    public function test_checkout_page_shows_the_public_disk_media_url(): void
     {
-        config(['app.env' => 'production']);
-        Storage::fake('s3');
+        config([
+            'filesystems.disks.public.driver' => 's3',
+            'filesystems.disks.public.url' => 'https://media.example.com/products',
+        ]);
+        Storage::fake('public');
         Setting::set('gcash_qr_path', 'store-settings/qr.png');
 
         $this->get('/order')
             ->assertOk()
-            ->assertSee(Storage::disk('s3')->url('store-settings/qr.png'), false)
+            ->assertSee('https://media.example.com/products/store-settings/qr.png', false)
             ->assertDontSee('GCash QR not set');
     }
 
@@ -314,6 +319,25 @@ class OrderPlacementTest extends TestCase
         }
 
         $this->assertSame([], Storage::disk('local')->allFiles('order-proofs'));
+    }
+
+    public function test_a_failed_receipt_upload_is_reported_as_a_validation_error(): void
+    {
+        $product = $this->product();
+
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldIgnoreMissing();
+        $disk->shouldReceive('put')->once()->andReturn(false);
+        Storage::set('local', $disk);
+
+        $this->postJson('/orders', $this->deliveryPayload($product, 1, [
+            'payment_method' => 'gcash',
+            'payment_proof' => $this->fakeImageUpload('receipt.png'),
+        ]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payment_proof');
+
+        $this->assertDatabaseCount('orders', 0);
     }
 
     public function test_gcash_screenshot_puts_the_order_awaiting_verification(): void
