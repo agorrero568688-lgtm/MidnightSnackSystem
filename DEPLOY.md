@@ -46,7 +46,10 @@ Create two Blob stores in the Vercel dashboard and connect both to the project:
 
 Copy each store's `BLOB_READ_WRITE_TOKEN` into `BLOB_PUBLIC_TOKEN` and
 `BLOB_PRIVATE_TOKEN`. Static tokens are used instead of OIDC so no token refresh
-is needed inside a request. The store ID is derived from the token; only set
+is needed inside a request. Vercel's generated env vars
+`BLOB_PUBLIC_READ_WRITE_TOKEN` / `BLOB_PRIVATE_READ_WRITE_TOKEN` (from a custom
+environment variable prefix) are accepted as fallbacks when the custom names are
+empty. The store ID is derived from the token; only set
 `BLOB_PUBLIC_STORE_ID` / `BLOB_PRIVATE_STORE_ID` if you want to override it.
 
 Re-upload the QR and staff-uploaded product photos once after deploying so the

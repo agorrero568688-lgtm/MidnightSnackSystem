@@ -59,7 +59,7 @@ return [
 
         'media' => [
             'driver' => env('MEDIA_DRIVER', 'local'),
-            'token' => env('BLOB_PUBLIC_TOKEN'),
+            'token' => env('BLOB_PUBLIC_TOKEN') ?: env('BLOB_PUBLIC_READ_WRITE_TOKEN'),
             'store_id' => env('BLOB_PUBLIC_STORE_ID'),
             'base_url' => env('BLOB_PUBLIC_BASE_URL'),
             'cache_control' => env('BLOB_MEDIA_CACHE_SECONDS', 86400),
@@ -67,7 +67,7 @@ return [
 
         'proofs' => [
             'driver' => env('PROOF_DRIVER', 'local'),
-            'token' => env('BLOB_PRIVATE_TOKEN'),
+            'token' => env('BLOB_PRIVATE_TOKEN') ?: env('BLOB_PRIVATE_READ_WRITE_TOKEN'),
             'store_id' => env('BLOB_PRIVATE_STORE_ID'),
             'base_url' => env('BLOB_PRIVATE_BASE_URL'),
             'cache_control' => env('BLOB_PROOF_CACHE_SECONDS', 60),
