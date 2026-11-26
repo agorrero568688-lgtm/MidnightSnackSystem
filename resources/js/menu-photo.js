@@ -1,12 +1,12 @@
 /**
  * Menu photo upload helper.
  *
- * Laravel accepts up to 10 MB, but hosting platforms such as Vercel cap the
- * whole request body below that. Large images are resized in the browser
- * before being handed to Livewire so the upload stays small and fast.
+ * Laravel accepts up to 4 MB so the whole Livewire request stays under the
+ * Vercel function body limit. Large images are resized in the browser before
+ * being handed to Livewire so the upload stays small and fast.
  */
 window.menuPhotoUpload = function () {
-    const MAX_BYTES = 10 * 1024 * 1024;
+    const MAX_BYTES = 4 * 1024 * 1024;
     const SAFE_BYTES = 3.5 * 1024 * 1024;
     const PLATFORM_BYTES = 4 * 1024 * 1024;
     const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -35,7 +35,7 @@ window.menuPhotoUpload = function () {
             }
 
             if (file.size > MAX_BYTES) {
-                this.fail(input, 'That photo is larger than 10 MB. Choose a smaller one.');
+                this.fail(input, 'That photo is larger than 4 MB. Choose a smaller one.');
                 return;
             }
 

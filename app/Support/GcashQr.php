@@ -11,8 +11,8 @@ use Throwable;
 /**
  * Resolves the store's GCash QR image on the right disk.
  *
- * Vercel's local filesystem is ephemeral, so production uploads live on the
- * S3/Supabase "media" bucket (the same place product photos use). Local
+ * Vercel's local filesystem is ephemeral, so production uploads live in the
+ * public Vercel Blob store (the same place product photos use). Local
  * development and tests keep using the "public" disk.
  */
 class GcashQr
@@ -63,10 +63,10 @@ class GcashQr
             return null;
         }
 
-        // Remote media never gets an exists()/lastModified() call: that HEAD
-        // request is what made the storefront time out on Supabase S3.
+        // Remote media never gets an exists()/lastModified() call. Blob URLs
+        // are stored absolutely; legacy relative paths use the old media URL.
         if (PublicMediaUrl::isRemote(static::diskName())) {
-            return PublicMediaUrl::remote($path, static::diskName());
+            return BlobStorage::url($value, BlobStorage::MEDIA, static::diskName());
         }
 
         try {
@@ -81,26 +81,16 @@ class GcashQr
         }
     }
 
-    /** Store an uploaded QR image on the active media disk. */
+    /** Store an uploaded QR image on the active media storage. */
     public static function store(UploadedFile $file): string
     {
-        return VerifiedUpload::store($file, self::DIRECTORY, static::diskName());
+        return BlobStorage::store($file, self::DIRECTORY, BlobStorage::MEDIA, static::diskName());
     }
 
     /** Best-effort removal of a previously stored QR image. */
     public static function delete(?string $value): void
     {
-        $path = static::pathFor($value);
-
-        if ($path === null) {
-            return;
-        }
-
-        try {
-            static::disk()->delete($path);
-        } catch (Throwable) {
-            // Cleanup is best-effort; saving settings must not fail.
-        }
+        BlobStorage::delete($value, BlobStorage::MEDIA, static::diskName());
     }
 
     /** Normalise a stored value into a disk path, or null when it is not one. */

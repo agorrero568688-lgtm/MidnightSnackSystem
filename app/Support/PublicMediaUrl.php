@@ -49,17 +49,23 @@ class PublicMediaUrl
     /**
      * Build a remote URL directly from configuration.
      *
-     * No exists()/lastModified() call is made here. The public disk URL is
-     * AWS_MEDIA_URL in production; the disk's own URL is a test/fallback.
+     * No exists()/lastModified() call is made here. New Blob uploads store an
+     * absolute URL; relative values are legacy paths, so prefer the old public
+     * media URL and fall back to the disk URL (or Blob public base).
      */
     public static function remote(string $path, string $diskName = 'public'): ?string
     {
-        // The browser URL must come from AWS_MEDIA_URL. Falling back to the
-        // S3 endpoint would produce an address the browser cannot load.
-        $base = config('filesystems.disks.public.url');
+        $base = config('services.blob.legacy_media_url')
+            ?: config('filesystems.disks.public.url');
 
         if (blank($base)) {
-            Log::error('Public media URL is not configured; set AWS_MEDIA_URL.', [
+            $base = BlobStorage::url('/'.ltrim($path, '/'), BlobStorage::MEDIA, $diskName);
+
+            if ($base !== null) {
+                return $base;
+            }
+
+            Log::error('Public media URL is not configured; set LEGACY_MEDIA_URL.', [
                 'disk' => $diskName,
             ]);
 
@@ -69,10 +75,11 @@ class PublicMediaUrl
         return rtrim((string) $base, '/').'/'.ltrim($path, '/');
     }
 
-    /** True when either the requested disk or the public disk is on S3. */
+    /** True when public media is remote (Blob, legacy S3, or a legacy URL). */
     public static function isRemote(string $diskName = 'public'): bool
     {
-        return config("filesystems.disks.{$diskName}.driver") === 's3'
+        return BlobStorage::usesBlob(BlobStorage::MEDIA)
+            || config("filesystems.disks.{$diskName}.driver") === 's3'
             || config('filesystems.disks.public.driver') === 's3';
     }
 

@@ -17,14 +17,13 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\BlobStorage;
 use App\Support\Money;
 use App\Support\PosCatalog;
-use App\Support\VerifiedUpload;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -98,7 +97,7 @@ class OrderService
 
         if ($method->isGcash() && $proof instanceof UploadedFile) {
             try {
-                $proofPath = VerifiedUpload::store($proof, 'order-proofs', 'local');
+                $proofPath = BlobStorage::store($proof, 'order-proofs', BlobStorage::PROOFS, 'local');
             } catch (Throwable) {
                 throw ValidationException::withMessages([
                     'payment_proof' => 'Could not upload the receipt screenshot. Please try again.',
@@ -477,7 +476,7 @@ class OrderService
         $previousPath = $order->payment_proof_path;
 
         try {
-            $proofPath = VerifiedUpload::store($proof, 'order-proofs', 'local');
+            $proofPath = BlobStorage::store($proof, 'order-proofs', BlobStorage::PROOFS, 'local');
         } catch (Throwable) {
             throw ValidationException::withMessages([
                 'proof' => 'Could not upload the receipt screenshot. Please try again.',
@@ -598,11 +597,7 @@ class OrderService
             return;
         }
 
-        try {
-            Storage::disk('local')->delete($path);
-        } catch (Throwable) {
-            // Cleanup is best-effort.
-        }
+        BlobStorage::delete($path, BlobStorage::PROOFS, 'local');
     }
 
     /**

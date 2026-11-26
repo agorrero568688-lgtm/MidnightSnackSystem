@@ -17,7 +17,7 @@ class ProductPhotoUploadTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_menu_photo_up_to_10_mb_is_accepted(): void
+    public function test_a_menu_photo_up_to_4_mb_is_accepted(): void
     {
         Storage::fake('public');
 
@@ -25,18 +25,18 @@ class ProductPhotoUploadTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(Form::class)
-            ->assertSee('up to 10 MB')
+            ->assertSee('up to 4 MB')
             ->set('name', 'Large menu photo')
-            ->set('sku', 'PHOTO-10MB')
+            ->set('sku', 'PHOTO-4MB')
             ->set('unit', 'serving')
             ->set('cost_price', '10.00')
             ->set('selling_price', '20.00')
-            ->set('image', $this->fakePhoto(10 * 1024 * 1024))
+            ->set('image', $this->fakePhoto(4 * 1024 * 1024))
             ->call('save')
             ->assertHasNoErrors()
             ->assertRedirect(route('products.index'));
 
-        $product = Product::query()->where('sku', 'PHOTO-10MB')->sole();
+        $product = Product::query()->where('sku', 'PHOTO-4MB')->sole();
 
         $this->assertNotEmpty($product->image_path);
         Storage::disk('public')->assertExists($product->image_path);
@@ -67,7 +67,7 @@ class ProductPhotoUploadTest extends TestCase
         $this->assertDatabaseMissing('products', ['sku' => 'PHOTO-FAILED']);
     }
 
-    public function test_a_menu_photo_larger_than_10_mb_is_rejected(): void
+    public function test_a_menu_photo_larger_than_4_mb_is_rejected(): void
     {
         Storage::fake('public');
 
@@ -80,7 +80,7 @@ class ProductPhotoUploadTest extends TestCase
             ->set('unit', 'serving')
             ->set('cost_price', '10.00')
             ->set('selling_price', '20.00')
-            ->set('image', $this->fakePhoto(10 * 1024 * 1024 + 1))
+            ->set('image', $this->fakePhoto(4 * 1024 * 1024 + 1))
             ->call('save')
             ->assertHasErrors(['image' => 'max']);
 

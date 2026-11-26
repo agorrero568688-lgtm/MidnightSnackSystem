@@ -4,9 +4,8 @@ namespace App\Livewire\Products;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\BlobStorage;
 use App\Support\PosCatalog;
-use App\Support\VerifiedUpload;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -91,11 +90,11 @@ class Form extends Component
             'is_active' => ['boolean'],
             'is_online' => ['boolean'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:9999'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ], [
             'image.image' => 'The menu photo must be a valid image.',
             'image.mimes' => 'The menu photo must be a JPG, PNG or WebP image.',
-            'image.max' => 'The menu photo must be 10 MB or smaller.',
+            'image.max' => 'The menu photo must be 4 MB or smaller.',
         ]);
 
         $imagePath = $this->existingImagePath;
@@ -105,7 +104,7 @@ class Form extends Component
 
         if ($this->image) {
             try {
-                $newImagePath = VerifiedUpload::store($this->image, 'products', $photoDisk);
+                $newImagePath = BlobStorage::store($this->image, 'products', BlobStorage::MEDIA, $photoDisk);
             } catch (Throwable) {
                 $this->addError('image', 'Could not upload the menu photo. Please try again.');
 
@@ -143,11 +142,7 @@ class Form extends Component
         if ($newImagePath !== null && $previousImagePath && $previousImagePath !== $newImagePath
             && ! str_starts_with($previousImagePath, 'images/')) {
             // Delete only after the database points at the replacement.
-            try {
-                Storage::disk($photoDisk)->delete($previousImagePath);
-            } catch (Throwable) {
-                // Cleanup is best-effort; the old object is harmless.
-            }
+            BlobStorage::delete($previousImagePath, BlobStorage::MEDIA, $photoDisk);
 
             $this->existingImagePath = $newImagePath;
         }

@@ -130,7 +130,7 @@
 
                     <input type="file" accept="image/jpeg,image/png,image/webp" @change="selectPhoto($event)"
                         class="block w-full text-xs text-ink-600 file:mr-3 file:rounded-lg file:border-0 file:bg-ink-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700">
-                    <p class="text-[11px] text-ink-500">PNG, JPG or WebP, up to 10 MB. Large photos are resized automatically.</p>
+                    <p class="text-[11px] text-ink-500">PNG, JPG or WebP, up to 4 MB. Large photos are resized automatically.</p>
 
                     <p x-show="preparing" x-cloak class="text-xs text-ink-500">Preparing photo…</p>
                     <p x-show="uploading" x-cloak class="text-xs text-ink-500">Uploading… <span x-text="progress"></span>%</p>

@@ -27,9 +27,9 @@ class GcashQrController extends Controller
         abort_if($path === null, 404);
 
         try {
-            // Remote media is addressed directly; no HEAD request is made.
+            // Blob/legacy media is addressed directly; no HEAD request is made.
             if (PublicMediaUrl::isRemote(GcashQr::diskName())) {
-                $url = PublicMediaUrl::remote($path, GcashQr::diskName());
+                $url = GcashQr::urlFor($value);
 
                 abort_if(blank($url), 404);
 

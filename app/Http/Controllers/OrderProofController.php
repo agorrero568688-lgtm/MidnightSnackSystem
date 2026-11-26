@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use Illuminate\Support\Facades\Storage;
+use App\Support\BlobStorage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
@@ -30,10 +30,11 @@ class OrderProofController extends Controller
         $path = (string) $order->payment_proof_path;
 
         try {
-            // Neither exists() nor response() is safe here: both issue extra
-            // HEAD requests on S3, which can turn a valid receipt into a 500.
-            // readStream() opens the object once and throws if it is missing.
-            $stream = Storage::disk('local')->readStream($path);
+            // Local receipts use a single readStream(). Blob receipts are
+            // fetched with the private token and streamed from a temp handle.
+            // No HEAD request is made in either case.
+            $receipt = BlobStorage::read($path, BlobStorage::PROOFS, 'local');
+            $stream = $receipt['stream'];
         } catch (Throwable) {
             abort(404);
         }
@@ -42,9 +43,10 @@ class OrderProofController extends Controller
             abort(404);
         }
 
-        $filename = basename($path);
+        $filename = BlobStorage::filename($path);
         $extension = strtolower((string) pathinfo($filename, PATHINFO_EXTENSION));
-        $contentType = (new MimeTypes)->getMimeTypes($extension)[0] ?? 'application/octet-stream';
+        $contentType = $receipt['content_type']
+            ?: ((new MimeTypes)->getMimeTypes($extension)[0] ?? 'application/octet-stream');
 
         $response = new StreamedResponse(function () use ($stream): void {
             try {

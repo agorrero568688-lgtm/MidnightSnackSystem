@@ -44,4 +44,44 @@ return [
         'secret' => env('CRON_SECRET'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Vercel Blob
+    |--------------------------------------------------------------------------
+    |
+    | Public menu art and the GCash QR use one Blob store; private receipts use
+    | another. Values default to local Laravel disks so development and tests
+    | never need network access.
+    |
+    */
+    'blob' => [
+        'api_url' => env('BLOB_API_URL', 'https://vercel.com/api/blob'),
+
+        'media' => [
+            'driver' => env('MEDIA_DRIVER', 'local'),
+            'token' => env('BLOB_PUBLIC_TOKEN'),
+            'store_id' => env('BLOB_PUBLIC_STORE_ID'),
+            'base_url' => env('BLOB_PUBLIC_BASE_URL'),
+            'cache_control' => env('BLOB_MEDIA_CACHE_SECONDS', 86400),
+        ],
+
+        'proofs' => [
+            'driver' => env('PROOF_DRIVER', 'local'),
+            'token' => env('BLOB_PRIVATE_TOKEN'),
+            'store_id' => env('BLOB_PRIVATE_STORE_ID'),
+            'base_url' => env('BLOB_PRIVATE_BASE_URL'),
+            'cache_control' => env('BLOB_PROOF_CACHE_SECONDS', 60),
+        ],
+
+        // Old Supabase public URLs stay readable until media is re-uploaded.
+        'legacy_media_url' => env('LEGACY_MEDIA_URL', env('AWS_MEDIA_URL')),
+
+        // Read-only fallback for receipts still stored in Supabase.
+        'legacy_proofs' => [
+            'url' => env('LEGACY_SUPABASE_URL'),
+            'bucket' => env('LEGACY_PROOFS_BUCKET', 'proofs'),
+            'key' => env('LEGACY_SUPABASE_SERVICE_ROLE_KEY'),
+        ],
+    ],
+
 ];
