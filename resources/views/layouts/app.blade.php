@@ -71,6 +71,13 @@
                         <x-icon name="logout" class="h-5 w-5" /> Sign out
                     </button>
                 </form>
+                <form method="POST" action="{{ route('logout.all') }}">
+                    @csrf
+                    <button class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-ink-500 transition hover:bg-white/5 hover:text-rose-300"
+                        onclick="return confirm('Sign out of every device, including this one?')">
+                        <x-icon name="logout" class="h-4 w-4" /> Sign out everywhere
+                    </button>
+                </form>
             </div>
         </aside>
 

@@ -78,7 +78,12 @@ DB_PASSWORD=...
 DB_SSLMODE=require
 
 SESSION_DRIVER=database
+SESSION_LIFETIME=60
 SESSION_SECURE_COOKIE=true
+SESSION_HTTP_ONLY=true
+SESSION_SAME_SITE=lax
+# Leave SESSION_DOMAIN unset/blank so the cookie stays host-only.
+# Never set it to a shared suffix such as .vercel.app.
 CACHE_STORE=database
 QUEUE_CONNECTION=sync
 LOG_CHANNEL=stderr
@@ -140,6 +145,7 @@ Check:
 7. Staff can open the receipt through `/orders/{order}/proof`; the Blob URL is
    never exposed to the browser.
 8. `GET /cron/abandoned-reminders` returns 403 without the bearer token.
+9. "Sign out everywhere" ends all sessions; sign-ins appear on the Users page.
 
 ## 7. Reminders
 

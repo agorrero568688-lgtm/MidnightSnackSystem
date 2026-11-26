@@ -5,15 +5,17 @@ namespace App\Livewire\Settings;
 use App\Models\Setting;
 use App\Services\OrderNotifier;
 use App\Services\SmsGateway;
+use App\Support\Concerns\ConfirmsWithPassword;
 use App\Support\GcashQr;
 use App\Support\Money;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Throwable;
 
 class Edit extends Component
 {
-    use WithFileUploads;
+    use ConfirmsWithPassword, WithFileUploads;
 
     public string $storeName = '';
 
@@ -77,6 +79,15 @@ class Edit extends Component
 
     public string $telegramStatus = '';
 
+    #[Locked]
+    public ?string $originalGcashName = null;
+
+    #[Locked]
+    public ?string $originalGcashNumber = null;
+
+    #[Locked]
+    public ?string $originalQrPath = null;
+
     public function mount(): void
     {
         $this->storeName = (string) Setting::get('store_name');
@@ -98,6 +109,9 @@ class Edit extends Component
         $this->gcashName = (string) Setting::get('gcash_name');
         $this->gcashNumber = (string) Setting::get('gcash_number');
         $this->existingGcashQrPath = Setting::get('gcash_qr_path') ?: null;
+        $this->originalGcashName = $this->gcashName;
+        $this->originalGcashNumber = $this->gcashNumber;
+        $this->originalQrPath = $this->existingGcashQrPath;
         $this->orderAlertsEnabled = Setting::bool('order_alerts_enabled');
         $this->telegramBotToken = (string) Setting::get('telegram_bot_token');
         $this->telegramChatId = (string) Setting::get('telegram_chat_id');
@@ -133,6 +147,14 @@ class Edit extends Component
             'smsReminderMinutes' => ['required', 'integer', 'min:5,max:120'],
             'smsFeedbackEveryN' => ['required', 'integer', 'min:1,max:10'],
         ]);
+
+        $paymentDetailsChanged = ($validated['gcashName'] ?? '') !== $this->originalGcashName
+            || ($validated['gcashNumber'] ?? '') !== $this->originalGcashNumber
+            || $this->gcashQr !== null;
+
+        if ($paymentDetailsChanged && ! $this->confirmPasswordOrFail()) {
+            return;
+        }
 
         $previousQrPath = $this->existingGcashQrPath;
         $newQrPath = null;
@@ -195,6 +217,10 @@ class Edit extends Component
 
     public function removeGcashQr(): void
     {
+        if (! $this->confirmPasswordOrFail()) {
+            return;
+        }
+
         GcashQr::delete($this->existingGcashQrPath);
 
         $this->existingGcashQrPath = null;

@@ -3,12 +3,17 @@
 namespace App\Livewire\Users;
 
 use App\Enums\Role;
+use App\Models\LoginLog;
 use App\Models\User;
+use App\Support\Concerns\ConfirmsWithPassword;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Index extends Component
 {
+    use ConfirmsWithPassword;
+
     public bool $showForm = false;
 
     public ?int $editingId = null;
@@ -23,11 +28,19 @@ class Index extends Component
 
     public bool $isActive = true;
 
+    #[Locked]
+    public ?string $originalRole = null;
+
+    #[Locked]
+    public bool $originalIsActive = true;
+
     public function startCreate(): void
     {
         $this->reset('name', 'username', 'password', 'editingId');
         $this->role = Role::Cashier->value;
         $this->isActive = true;
+        $this->originalRole = null;
+        $this->originalIsActive = true;
         $this->showForm = true;
         $this->resetErrorBag();
     }
@@ -40,6 +53,8 @@ class Index extends Component
         $this->username = $user->username;
         $this->role = $user->role->value;
         $this->isActive = $user->is_active;
+        $this->originalRole = $this->role;
+        $this->originalIsActive = $this->isActive;
         $this->password = '';
         $this->showForm = true;
         $this->resetErrorBag();
@@ -70,6 +85,15 @@ class Index extends Component
         if ($this->editingId === auth()->id() && ($validated['role'] !== Role::Admin->value || ! $this->isActive)) {
             $this->addError('role', 'You cannot demote or deactivate your own account.');
 
+            return;
+        }
+
+        $sensitiveChange = $this->editingId === null
+            || $validated['role'] !== $this->originalRole
+            || filled($validated['password'])
+            || $this->isActive !== $this->originalIsActive;
+
+        if ($sensitiveChange && ! $this->confirmPasswordOrFail()) {
             return;
         }
 
@@ -111,6 +135,10 @@ class Index extends Component
             return;
         }
 
+        if (! $this->confirmPasswordOrFail()) {
+            return;
+        }
+
         $user = User::findOrFail($id);
         $user->update(['is_active' => ! $user->is_active]);
 
@@ -124,6 +152,7 @@ class Index extends Component
         return view('livewire.users.index', [
             'users' => User::query()->withCount('sales')->orderBy('name')->get(),
             'roles' => Role::options(),
+            'loginLogs' => LoginLog::with('user')->latest('created_at')->limit(20)->get(),
         ])->layout('layouts.app', ['title' => 'Users', 'subtitle' => 'Admins and cashiers']);
     }
 }

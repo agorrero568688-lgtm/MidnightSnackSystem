@@ -65,6 +65,10 @@ Route::post('logout', [LoginController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
+Route::post('logout-all', [LoginController::class, 'destroyAll'])
+    ->middleware('auth')
+    ->name('logout.all');
+
 /*
 |--------------------------------------------------------------------------
 | Cashier terminal — admins and cashiers

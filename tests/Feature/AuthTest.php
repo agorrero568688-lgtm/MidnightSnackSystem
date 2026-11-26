@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\LoginLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -75,5 +77,56 @@ class AuthTest extends TestCase
 
         $this->actingAs(User::factory()->admin()->create())->get('/')->assertOk();
         $this->actingAs(User::factory()->create())->get('/')->assertOk();
+    }
+
+    public function test_a_successful_sign_in_is_logged(): void
+    {
+        $user = User::factory()->create(['username' => 'cashier', 'password' => 'secret123']);
+
+        $this->post('/login', ['username' => 'cashier', 'password' => 'secret123'])
+            ->assertRedirect('/pos');
+
+        $this->assertDatabaseHas('login_logs', [
+            'user_id' => $user->id,
+            'username' => 'cashier',
+            'event' => LoginLog::SUCCESS,
+        ]);
+    }
+
+    public function test_a_failed_sign_in_is_logged_without_a_password(): void
+    {
+        User::factory()->create(['username' => 'cashier', 'password' => 'secret123']);
+
+        $this->post('/login', ['username' => 'cashier', 'password' => 'nope'])
+            ->assertSessionHasErrors('username');
+
+        $this->assertDatabaseHas('login_logs', [
+            'user_id' => null,
+            'username' => 'cashier',
+            'event' => LoginLog::FAILED,
+        ]);
+    }
+
+    public function test_signing_out_everywhere_deletes_sessions_and_rotates_the_remember_token(): void
+    {
+        $user = User::factory()->create(['password' => 'secret123']);
+
+        DB::table('sessions')->insert([
+            ['id' => 'session-a', 'user_id' => $user->id, 'payload' => 'a', 'last_activity' => time()],
+            ['id' => 'session-b', 'user_id' => $user->id, 'payload' => 'b', 'last_activity' => time()],
+        ]);
+
+        $rememberToken = $user->remember_token;
+
+        $this->actingAs($user)->post('/logout-all')->assertRedirect('/login');
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('sessions', ['user_id' => $user->id]);
+        $this->assertNotSame($rememberToken, $user->fresh()->remember_token);
+    }
+
+    public function test_a_guest_cannot_sign_out_everywhere(): void
+    {
+        $this->post('/logout-all')->assertRedirect('/login');
     }
 }

@@ -193,10 +193,11 @@ class VercelBlobStorageTest extends TestCase
             ]),
         ]);
 
-        $admin = User::factory()->admin()->create();
+        $admin = User::factory()->admin()->create(['password' => 'secret123']);
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
+            ->set('confirmPassword', 'secret123')
             ->set('gcashQr', UploadedFile::fake()->createWithContent('qr.png', base64_decode(self::PNG)))
             ->call('save')
             ->assertHasNoErrors();

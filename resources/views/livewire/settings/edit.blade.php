@@ -189,6 +189,12 @@
                                 <p class="text-[11px] text-ink-500">PNG or JPG, up to 2 MB. Shown at checkout and on the tracking page — customers can tap it to enlarge.</p>
                                 @error('gcashQr') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
 
+                                <div class="border-t border-ink-100 pt-2">
+                                    <label class="label">Your password <span class="text-ink-400 normal-case">(required for GCash changes)</span></label>
+                                    <input wire:model="confirmPassword" type="password" class="input" autocomplete="current-password" placeholder="Enter your password to save payment changes">
+                                    @error('confirmPassword') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                </div>
+
                                 @if ($existingGcashQrPath)
                                     <button type="button" wire:click="removeGcashQr" class="btn btn-sm text-rose-600 hover:bg-rose-50">Remove QR</button>
                                 @endif

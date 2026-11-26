@@ -8,6 +8,12 @@
             </div>
         @endif
 
+        @if (session('status'))
+            <div class="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+                {{ session('status') }}
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('login.store') }}" class="space-y-4">
             @csrf
             <div>

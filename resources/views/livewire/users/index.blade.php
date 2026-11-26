@@ -1,4 +1,14 @@
 <div class="space-y-5">
+    <div class="card card-body flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm font-semibold">Confirm your password</p>
+            <p class="text-xs text-ink-500">Required to create users, change roles or passwords, and deactivate accounts.</p>
+            @error('confirmPassword') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+        </div>
+        <input wire:model="confirmPassword" type="password" class="input sm:w-72" autocomplete="current-password"
+            placeholder="Your account password">
+    </div>
+
     <div class="flex justify-end">
         <button wire:click="startCreate" class="btn btn-primary">
             <x-icon name="plus" class="h-4 w-4" /> New user
@@ -100,6 +110,40 @@
                             </td>
                         </tr>
                     @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h2 class="text-sm font-bold">Recent sign-ins</h2></div>
+        <div class="overflow-x-auto">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Result</th>
+                        <th>IP address</th>
+                        <th>Device</th>
+                        <th class="text-right">When</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($loginLogs as $log)
+                        <tr wire:key="login-{{ $log->id }}">
+                            <td class="font-mono text-xs">{{ $log->user?->name ?? $log->username }}</td>
+                            <td>
+                                <span class="badge {{ $log->isFailed() ? 'badge-red' : 'badge-green' }}">
+                                    {{ $log->isFailed() ? 'Failed' : 'Signed in' }}
+                                </span>
+                            </td>
+                            <td class="font-mono text-xs">{{ $log->ip_address ?? '—' }}</td>
+                            <td class="max-w-64 truncate text-xs text-ink-600" title="{{ $log->user_agent }}">{{ $log->user_agent ?? '—' }}</td>
+                            <td class="text-right text-xs text-ink-600">{{ $log->created_at?->format('M j, Y g:i A') }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="5" class="py-6 text-center text-xs text-ink-500">No sign-ins recorded yet.</td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

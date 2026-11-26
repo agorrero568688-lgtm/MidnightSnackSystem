@@ -64,6 +64,12 @@ class User extends Authenticatable
         return $this->hasMany(Shift::class);
     }
 
+    /** @return HasMany<LoginLog, $this> */
+    public function loginLogs(): HasMany
+    {
+        return $this->hasMany(LoginLog::class);
+    }
+
     /** @return HasMany<Shift, $this> */
     public function openShifts(): HasMany
     {

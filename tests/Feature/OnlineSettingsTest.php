@@ -23,10 +23,11 @@ class OnlineSettingsTest extends TestCase
 
     public function test_an_admin_can_save_the_online_ordering_settings(): void
     {
-        $admin = User::factory()->admin()->create();
+        $admin = User::factory()->admin()->create(['password' => 'secret123']);
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
+            ->set('confirmPassword', 'secret123')
             ->set('deliveryFee', '49.50')
             ->set('freeDeliveryThreshold', '500')
             ->set('minimumOrderTotal', '150')
@@ -137,10 +138,11 @@ class OnlineSettingsTest extends TestCase
     {
         Storage::fake('public');
 
-        $admin = User::factory()->admin()->create();
+        $admin = User::factory()->admin()->create(['password' => 'secret123']);
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
+            ->set('confirmPassword', 'secret123')
             ->set('gcashQr', UploadedFile::fake()->createWithContent('qr.png', base64_decode(self::PNG)))
             ->call('save')
             ->assertHasNoErrors();
@@ -162,10 +164,11 @@ class OnlineSettingsTest extends TestCase
         $disk->shouldReceive('put')->once()->andReturn(false);
         Storage::set('public', $disk);
 
-        $admin = User::factory()->admin()->create();
+        $admin = User::factory()->admin()->create(['password' => 'secret123']);
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
+            ->set('confirmPassword', 'secret123')
             ->set('gcashQr', UploadedFile::fake()->createWithContent('qr.png', base64_decode(self::PNG)))
             ->call('save')
             ->assertHasErrors('gcashQr');
@@ -179,10 +182,11 @@ class OnlineSettingsTest extends TestCase
         Storage::disk('public')->put('store-settings/qr.png', base64_decode(self::PNG));
         Setting::set('gcash_qr_path', 'store-settings/qr.png');
 
-        $admin = User::factory()->admin()->create();
+        $admin = User::factory()->admin()->create(['password' => 'secret123']);
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
+            ->set('confirmPassword', 'secret123')
             ->call('removeGcashQr')
             ->assertHasNoErrors();
 
@@ -198,10 +202,11 @@ class OnlineSettingsTest extends TestCase
         ]);
         Storage::fake('public');
 
-        $admin = User::factory()->admin()->create();
+        $admin = User::factory()->admin()->create(['password' => 'secret123']);
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
+            ->set('confirmPassword', 'secret123')
             ->set('gcashQr', UploadedFile::fake()->createWithContent('qr.png', base64_decode(self::PNG)))
             ->call('save')
             ->assertHasNoErrors();
@@ -223,10 +228,11 @@ class OnlineSettingsTest extends TestCase
         Storage::disk('public')->put('store-settings/qr.png', base64_decode(self::PNG));
         Setting::set('gcash_qr_path', 'store-settings/qr.png');
 
-        $admin = User::factory()->admin()->create();
+        $admin = User::factory()->admin()->create(['password' => 'secret123']);
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
+            ->set('confirmPassword', 'secret123')
             ->call('removeGcashQr')
             ->assertHasNoErrors();
 
