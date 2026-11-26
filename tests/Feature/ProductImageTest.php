@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Product;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
 use Tests\TestCase;
 
 class ProductImageTest extends TestCase
@@ -84,5 +86,45 @@ class ProductImageTest extends TestCase
 
         $this->assertNull((new Product(['image_path' => '']))->image_src);
         $this->assertNull((new Product(['image_path' => '   ']))->image_src);
+    }
+
+    public function test_an_s3_public_disk_builds_urls_without_touching_the_disk(): void
+    {
+        config([
+            'filesystems.disks.public.driver' => 's3',
+            'filesystems.disks.public.url' => 'https://media.example.com/media',
+        ]);
+
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldNotReceive('exists');
+        $disk->shouldNotReceive('lastModified');
+        Storage::set('public', $disk);
+
+        $product = new Product(['image_path' => 'products/photo.jpg']);
+
+        $this->assertSame(
+            'https://media.example.com/media/products/photo.jpg',
+            $product->image_src,
+        );
+    }
+
+    public function test_bundled_art_uses_asset_url_even_when_public_disk_is_s3(): void
+    {
+        config([
+            'filesystems.disks.public.driver' => 's3',
+            'filesystems.disks.public.url' => 'https://media.example.com/media',
+        ]);
+
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldNotReceive('exists');
+        $disk->shouldNotReceive('lastModified');
+        Storage::set('public', $disk);
+
+        $product = new Product(['image_path' => 'public/images/products/chicken-lomi.jpg']);
+
+        $this->assertSame(
+            asset('images/products/chicken-lomi.jpg'),
+            $product->image_src,
+        );
     }
 }

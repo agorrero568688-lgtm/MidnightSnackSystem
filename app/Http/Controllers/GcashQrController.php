@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Setting;
 use App\Support\GcashQr;
+use App\Support\PublicMediaUrl;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
@@ -26,10 +27,9 @@ class GcashQrController extends Controller
         abort_if($path === null, 404);
 
         try {
-            // Production serves the QR straight from the media bucket so the
-            // image survives Vercel's ephemeral filesystem.
-            if (GcashQr::diskName() === 's3') {
-                $url = GcashQr::disk()->url($path);
+            // Remote media is addressed directly; no HEAD request is made.
+            if (PublicMediaUrl::isRemote(GcashQr::diskName())) {
+                $url = PublicMediaUrl::remote($path, GcashQr::diskName());
 
                 abort_if($url === '', 404);
 

@@ -44,6 +44,20 @@ class OnlineSettingsTest extends TestCase
         $this->assertSame('0917 123 4567', Setting::get('gcash_number'));
     }
 
+    public function test_saving_settings_redirects_with_a_flash_message(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Edit::class)
+            ->set('storeName', "Diding's Midnight Snack")
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertRedirectToRoute('settings.edit');
+
+        $this->assertSame('Store settings saved.', session('status'));
+    }
+
     public function test_the_telegram_test_message_reports_success(): void
     {
         Http::fake([

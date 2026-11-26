@@ -49,6 +49,11 @@ return [
                 'directory_visibility' => 'private',
                 'throw' => true,
                 'report' => false,
+                'http' => [
+                    'connect_timeout' => 3,
+                    'timeout' => 5,
+                ],
+                'retries' => 1,
             ]
             : [
                 'driver' => 'local',
@@ -71,6 +76,11 @@ return [
                 'directory_visibility' => 'private',
                 'throw' => false,
                 'report' => false,
+                'http' => [
+                    'connect_timeout' => 3,
+                    'timeout' => 5,
+                ],
+                'retries' => 1,
             ]
             : [
                 'driver' => 'local',
@@ -92,6 +102,11 @@ return [
             'use_path_style_endpoint' => true,
             'throw' => false,
             'report' => false,
+            'http' => [
+                'connect_timeout' => 3,
+                'timeout' => 5,
+            ],
+            'retries' => 1,
         ],
 
     ],

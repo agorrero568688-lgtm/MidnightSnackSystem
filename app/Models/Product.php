@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
+use App\Support\PublicMediaUrl;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
-use Throwable;
 
 class Product extends Model
 {
@@ -90,54 +89,16 @@ class Product extends Model
      * Resolve the stored photo into a URL the browser can actually load.
      *
      * Uploaded photos live on the public disk (local in development, Supabase
-     * S3 in production). Menu art committed under public/images ships with the
-     * container, so it keeps working even when the serverless filesystem is
-     * read-only and /storage symlinks do not exist.
+     * S3 in production). Remote URLs are built from configuration without any
+     * network call; missing files are hidden by the browser fallback. Menu art
+     * committed under public/images ships with the container.
      */
     public function getImageSrcAttribute(): ?string
     {
-        $path = trim((string) ($this->image_path ?: $this->getAttribute('image_url')));
-
-        if ($path === '') {
-            return null;
-        }
-
-        if (str_starts_with($path, 'data:') || preg_match('#^(?:https?:)?//#i', $path) === 1) {
-            return $path;
-        }
-
-        // Normalise legacy values such as "storage/products/photo.jpg".
-        $path = ltrim((string) preg_replace('#^/?storage/#', '', $path), '/');
-
-        if ($path === '') {
-            return null;
-        }
-
-        if (str_starts_with($path, 'images/') && is_file(public_path($path))) {
-            return asset($path);
-        }
-
-        $diskName = $this->photoDisk();
-
-        try {
-            if ($diskName === 's3') {
-                // Remote existence checks (HEAD requests) are unreliable on
-                // Supabase and can throw. For the storefront we can safely
-                // build the public URL and let the browser fallback hide any
-                // 404 with the menu gradient + food icon.
-                $url = Storage::disk($diskName)->url($path);
-
-                return $url !== '' ? $url : null;
-            }
-
-            if (! Storage::disk($diskName)->exists($path)) {
-                return null;
-            }
-
-            return Storage::disk($diskName)->url($path);
-        } catch (Throwable) {
-            return null;
-        }
+        return PublicMediaUrl::resolve(
+            $this->image_path ?: $this->getAttribute('image_url'),
+            $this->photoDisk(),
+        );
     }
 
     public function isAvailable(): bool

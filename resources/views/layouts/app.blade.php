@@ -8,6 +8,7 @@
     @include('partials.favicon')
     <title>{{ $title ?? 'Dashboard' }} · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 <body class="h-full font-sans text-ink-900 antialiased">
     @php
@@ -96,7 +97,7 @@
 
             <main class="p-4 sm:p-6">
                 @if (session('status'))
-                    <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                    <div id="flash-status" role="status" class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
                         {{ session('status') }}
                     </div>
                 @endif
@@ -111,5 +112,6 @@
             </main>
         </div>
     </div>
+    @livewireScripts
 </body>
 </html>

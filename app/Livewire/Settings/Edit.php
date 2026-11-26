@@ -174,6 +174,7 @@ class Edit extends Component
         $this->telegramStatus = '';
 
         session()->flash('status', 'Store settings saved.');
+        $this->redirectRoute('settings.edit');
     }
 
     public function removeGcashQr(): void

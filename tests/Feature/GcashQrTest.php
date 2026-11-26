@@ -2,10 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Product;
 use App\Models\Setting;
 use App\Services\StorefrontService;
+use App\Support\GcashQr;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
 use Tests\TestCase;
 
 class GcashQrTest extends TestCase
@@ -123,5 +127,46 @@ class GcashQrTest extends TestCase
 
         $this->get(route('gcash.qr'))
             ->assertRedirect('https://media.example/qr.png');
+    }
+
+    public function test_qr_url_builds_directly_when_public_disk_uses_s3_without_disk_checks(): void
+    {
+        config([
+            'filesystems.disks.public.driver' => 's3',
+            'filesystems.disks.public.url' => 'https://media.example.com/media',
+        ]);
+
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldNotReceive('exists');
+        $disk->shouldNotReceive('lastModified');
+        Storage::set('public', $disk);
+
+        Setting::set('gcash_qr_path', 'store-settings/qr.png');
+
+        $url = 'https://media.example.com/media/store-settings/qr.png';
+
+        $this->assertSame($url, GcashQr::url());
+        $this->assertSame($url, app(StorefrontService::class)->gcashQrUrl());
+    }
+
+    public function test_storefront_renders_with_s3_public_disk_without_remote_checks(): void
+    {
+        config([
+            'filesystems.disks.public.driver' => 's3',
+            'filesystems.disks.public.url' => 'https://media.example.com/media',
+        ]);
+
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldNotReceive('exists');
+        $disk->shouldNotReceive('lastModified');
+        Storage::set('public', $disk);
+
+        Product::factory()->create(['image_path' => 'products/photo.jpg']);
+        Setting::set('gcash_qr_path', 'store-settings/qr.png');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('https://media.example.com/media/products/photo.jpg', false)
+            ->assertSee(addcslashes('https://media.example.com/media/store-settings/qr.png', '/'), false);
     }
 }

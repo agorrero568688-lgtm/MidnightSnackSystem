@@ -52,8 +52,8 @@ class GcashQr
             return null;
         }
 
-        // Settings may store a full public/media URL instead of a disk path.
-        if (static::isAbsolute($value)) {
+        // Settings may store a full public/media URL or a data URI.
+        if (PublicMediaUrl::isAbsolute($value)) {
             return $value;
         }
 
@@ -63,15 +63,13 @@ class GcashQr
             return null;
         }
 
+        // Remote media never gets an exists()/lastModified() call: that HEAD
+        // request is what made the storefront time out on Supabase S3.
+        if (PublicMediaUrl::isRemote(static::diskName())) {
+            return PublicMediaUrl::remote($path, static::diskName());
+        }
+
         try {
-            if (static::diskName() === 's3') {
-                // Remote existence checks (HEAD requests) are unreliable on
-                // Supabase and can throw. Build the public URL directly.
-                $url = static::disk()->url($path);
-
-                return $url !== '' ? $url : null;
-            }
-
             if (! static::disk()->exists($path)) {
                 return null;
             }

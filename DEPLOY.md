@@ -105,6 +105,22 @@ so `PUBLIC_DISK_DRIVER` does not need to be set — set the values above on the
 After deploying the QR fix, re-upload the QR once from Settings so the file
 lands in the `media` bucket.
 
+### Region and timeouts
+
+Set the Vercel project/function region to the same region as Supabase (for the
+current project, Tokyo / `hnd1`). Cross-region database calls cost ~450 ms each
+and make settings saves time out.
+
+`Dockerfile.vercel` now sets `max_execution_time=120` so slow S3 uploads can
+finish. Settings are cached as a single map and saved with one upsert, so a
+settings save no longer performs one query per key.
+
+Storefront rendering never performs S3 `exists()` or `lastModified()` calls.
+Product photos and the GCash QR URL are built directly from `AWS_MEDIA_URL`, and
+the `<img>` fallback hides anything missing. All S3 disks also use short HTTP
+timeouts (3 s connect / 5 s total) and a single retry so a storage call cannot
+hang for 30 seconds.
+
 ## 5. Migrate the database
 
 Run once from a machine that has the production env values:

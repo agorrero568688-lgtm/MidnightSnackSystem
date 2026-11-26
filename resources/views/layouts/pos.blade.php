@@ -8,8 +8,10 @@
     @include('partials.favicon')
     <title>{{ $title ?? 'Cashier' }} · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 <body class="h-full bg-ink-950 font-sans text-ink-100 antialiased">
     {{ $slot }}
+    @livewireScripts
 </body>
 </html>

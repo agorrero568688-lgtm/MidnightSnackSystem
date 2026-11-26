@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
+    private const CACHE_KEY = 'settings.all';
+
+    /** @var array<string, string|null>|null */
+    private static ?array $cached = null;
+
     protected $fillable = [
         'key',
         'value',
@@ -48,11 +53,27 @@ class Setting extends Model
 
     public static function get(string $key, ?string $default = null): ?string
     {
-        $value = Cache::rememberForever('setting.'.$key, function () use ($key) {
-            return static::query()->where('key', $key)->value('value');
-        });
+        $value = static::values()[$key] ?? null;
 
         return $value ?? $default ?? self::DEFAULTS[$key] ?? null;
+    }
+
+    /**
+     * All stored settings, loaded once and cached as a single map.
+     *
+     * @return array<string, string|null>
+     */
+    public static function values(): array
+    {
+        if (static::$cached !== null) {
+            return static::$cached;
+        }
+
+        $values = Cache::rememberForever(self::CACHE_KEY, function (): array {
+            return static::query()->pluck('value', 'key')->all();
+        });
+
+        return static::$cached = is_array($values) ? $values : [];
     }
 
     public static function bool(string $key): bool
@@ -69,14 +90,33 @@ class Setting extends Model
     {
         static::query()->updateOrCreate(['key' => $key], ['value' => $value]);
 
-        Cache::forget('setting.'.$key);
+        static::flushCache();
     }
 
     /** @param array<string, string|null> $values */
     public static function setMany(array $values): void
     {
-        foreach ($values as $key => $value) {
-            static::set($key, $value);
+        if ($values === []) {
+            return;
         }
+
+        $rows = [];
+
+        foreach ($values as $key => $value) {
+            $rows[] = ['key' => $key, 'value' => $value];
+        }
+
+        // One upsert instead of one round trip per setting. Eloquent adds
+        // the created_at/updated_at values automatically.
+        static::query()->upsert($rows, ['key'], ['value']);
+
+        static::flushCache();
+    }
+
+    public static function flushCache(): void
+    {
+        static::$cached = null;
+
+        Cache::forget(self::CACHE_KEY);
     }
 }
