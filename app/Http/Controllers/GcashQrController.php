@@ -3,27 +3,43 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
-use Illuminate\Support\Facades\Storage;
+use App\Support\GcashQr;
+use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class GcashQrController extends Controller
 {
-    public function show(): StreamedResponse
+    public function show(): StreamedResponse|RedirectResponse
     {
-        $path = Setting::get('gcash_qr_path');
+        $value = trim((string) Setting::get('gcash_qr_path'));
 
-        abort_if(blank($path), 404);
+        abort_if($value === '', 404);
 
-        $disk = Storage::disk('public');
-
-        try {
-            abort_unless($disk->exists($path), 404);
-        } catch (Throwable) {
-            abort(404);
+        // Settings may store a full public/media URL instead of a disk path.
+        if (GcashQr::isAbsolute($value)) {
+            return redirect()->away($value);
         }
 
+        $path = GcashQr::pathFor($value);
+
+        abort_if($path === null, 404);
+
         try {
+            // Production serves the QR straight from the media bucket so the
+            // image survives Vercel's ephemeral filesystem.
+            if (GcashQr::diskName() === 's3') {
+                $url = GcashQr::disk()->url($path);
+
+                abort_if($url === '', 404);
+
+                return redirect()->away($url);
+            }
+
+            $disk = GcashQr::disk();
+
+            abort_unless($disk->exists($path), 404);
+
             return $disk->response($path, null, [
                 'Cache-Control' => 'public, max-age=86400',
             ]);

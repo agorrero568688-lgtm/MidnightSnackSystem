@@ -166,10 +166,7 @@
                     <div>
                         <label class="label">GCash QR image <span class="text-ink-400 normal-case">(optional)</span></label>
                         @php
-                            $existingQrUrl = null;
-                            if ($existingGcashQrPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($existingGcashQrPath)) {
-                                $existingQrUrl = route('gcash.qr', ['v' => \Illuminate\Support\Facades\Storage::disk('public')->lastModified($existingGcashQrPath)], false);
-                            }
+                            $existingQrUrl = \App\Support\GcashQr::urlFor($existingGcashQrPath);
                         @endphp
                         <div class="flex flex-wrap items-start gap-4">
                             @if ($gcashQr)

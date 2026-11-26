@@ -32,9 +32,10 @@ return [
 
         /*
          * On Vercel the container filesystem is ephemeral, so the "local"
-         * (private receipts) and "public" (product photos, GCash QR) disks
-         * switch to Supabase Storage's S3 API when the drivers below are set
-         * to "s3". Locally and in tests they keep using the filesystem.
+         * (private receipts) and "public" (local media) disks switch to
+         * Supabase Storage's S3 API when the drivers below are set to "s3".
+         * Product photos and the GCash QR use the dedicated "s3" disk in
+         * production; locally and in tests they keep using the filesystem.
          */
         'local' => env('PROOF_DISK_DRIVER', 'local') === 's3'
             ? [

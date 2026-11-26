@@ -1,0 +1,129 @@
+<?php
+
+namespace App\Support;
+
+use App\Models\Setting;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
+
+/**
+ * Resolves the store's GCash QR image on the right disk.
+ *
+ * Vercel's local filesystem is ephemeral, so production uploads live on the
+ * S3/Supabase "media" bucket (the same place product photos use). Local
+ * development and tests keep using the "public" disk.
+ */
+class GcashQr
+{
+    public const DIRECTORY = 'store-settings';
+
+    public static function diskName(): string
+    {
+        return config('app.env') === 'production' ? 's3' : 'public';
+    }
+
+    public static function disk(): Filesystem
+    {
+        return Storage::disk(static::diskName());
+    }
+
+    /** The configured QR path, normalised for disk operations. */
+    public static function path(): ?string
+    {
+        return static::pathFor(Setting::get('gcash_qr_path'));
+    }
+
+    /** A browser URL for the configured QR, or null when it cannot be resolved. */
+    public static function url(): ?string
+    {
+        return static::urlFor(Setting::get('gcash_qr_path'));
+    }
+
+    /**
+     * Resolve a stored value (disk path or absolute URL) to a browser URL.
+     */
+    public static function urlFor(?string $value): ?string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        // Settings may store a full public/media URL instead of a disk path.
+        if (static::isAbsolute($value)) {
+            return $value;
+        }
+
+        $path = static::pathFor($value);
+
+        if ($path === null) {
+            return null;
+        }
+
+        try {
+            if (static::diskName() === 's3') {
+                // Remote existence checks (HEAD requests) are unreliable on
+                // Supabase and can throw. Build the public URL directly.
+                $url = static::disk()->url($path);
+
+                return $url !== '' ? $url : null;
+            }
+
+            if (! static::disk()->exists($path)) {
+                return null;
+            }
+
+            return route('gcash.qr', ['v' => static::disk()->lastModified($path)], false);
+        } catch (Throwable) {
+            // A missing/unreachable QR asset must never crash the storefront.
+            return null;
+        }
+    }
+
+    /** Store an uploaded QR image on the active media disk. */
+    public static function store(UploadedFile $file): string
+    {
+        $path = $file->store(self::DIRECTORY, static::diskName());
+
+        return is_string($path) ? $path : '';
+    }
+
+    /** Best-effort removal of a previously stored QR image. */
+    public static function delete(?string $value): void
+    {
+        $path = static::pathFor($value);
+
+        if ($path === null) {
+            return;
+        }
+
+        try {
+            static::disk()->delete($path);
+        } catch (Throwable) {
+            // Cleanup is best-effort; saving settings must not fail.
+        }
+    }
+
+    /** Normalise a stored value into a disk path, or null when it is not one. */
+    public static function pathFor(?string $value): ?string
+    {
+        $path = trim((string) $value);
+
+        if ($path === '' || static::isAbsolute($path)) {
+            return null;
+        }
+
+        // Legacy values such as "storage/store-settings/qr.png".
+        $path = ltrim((string) preg_replace('#^/?storage/#', '', $path), '/');
+
+        return $path !== '' ? $path : null;
+    }
+
+    public static function isAbsolute(string $value): bool
+    {
+        return preg_match('#^(?:https?:)?//#i', $value) === 1;
+    }
+}

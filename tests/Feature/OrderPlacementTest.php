@@ -21,6 +21,9 @@ class OrderPlacementTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** A real 1x1 PNG so MIME sniffing returns image/png. */
+    private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -88,6 +91,34 @@ class OrderPlacementTest extends TestCase
             ->assertSee('Upload receipt screenshot')
             ->assertSee('accept="image/jpeg,image/png,image/webp"', false)
             ->assertDontSee('GCash reference number');
+    }
+
+    public function test_checkout_page_shows_the_configured_gcash_qr(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('store-settings/qr.png', base64_decode(self::PNG));
+        Setting::set('gcash_qr_path', 'store-settings/qr.png');
+
+        $url = route('gcash.qr', [
+            'v' => Storage::disk('public')->lastModified('store-settings/qr.png'),
+        ], false);
+
+        $this->get('/order')
+            ->assertOk()
+            ->assertSee($url, false)
+            ->assertDontSee('GCash QR not set');
+    }
+
+    public function test_checkout_page_shows_the_s3_qr_in_production(): void
+    {
+        config(['app.env' => 'production']);
+        Storage::fake('s3');
+        Setting::set('gcash_qr_path', 'store-settings/qr.png');
+
+        $this->get('/order')
+            ->assertOk()
+            ->assertSee(Storage::disk('s3')->url('store-settings/qr.png'), false)
+            ->assertDontSee('GCash QR not set');
     }
 
     public function test_guest_can_place_a_delivery_order(): void

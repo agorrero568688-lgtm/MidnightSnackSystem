@@ -99,9 +99,11 @@ Do **not** set `AWS_USE_PATH_STYLE_ENDPOINT`; the disks always use path-style
 because Supabase rejects virtual-hosted requests.
 
 In production, staff photo uploads (Product form, `app/Livewire/Products/Form`)
-always write to the S3 (`media`) disk, so `PUBLIC_DISK_DRIVER` does not need to
-be set — set the values above on the **Production** environment and redeploy
-before uploading photos.
+and the GCash QR (`app/Support/GcashQr`) always write to the S3 (`media`) disk,
+so `PUBLIC_DISK_DRIVER` does not need to be set — set the values above on the
+**Production** environment and redeploy before uploading photos or the QR.
+After deploying the QR fix, re-upload the QR once from Settings so the file
+lands in the `media` bucket.
 
 ## 5. Migrate the database
 
