@@ -109,7 +109,7 @@
                     <ul class="divide-y divide-ink-100">
                         @foreach ($order->items as $item)
                             <li class="flex items-start justify-between gap-3 px-5 py-3.5">
-                                <div class="min-w-0">
+                                <div class="min-w-0 break-words">
                                     <p class="text-sm font-semibold"><span class="text-ink-500">{{ $item->qty }}×</span> {{ $item->name_snapshot }}</p>
                                     @if ($item->note)
                                         <p class="mt-0.5 text-[11px] text-brand-700">“{{ $item->note }}”</p>

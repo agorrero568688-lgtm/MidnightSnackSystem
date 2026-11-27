@@ -58,7 +58,7 @@
                 </div>
             </div>
 
-            <div class="mt-5 flex gap-2 overflow-x-auto pb-2">
+            <div class="mt-5 flex flex-wrap gap-2 pb-2 sm:flex-nowrap sm:overflow-x-auto">
                 <button type="button" @click="activeCategory = 'all'"
                     :class="activeCategory === 'all' ? 'bg-brand-400 text-ink-950 shadow-sm shadow-brand-500/25' : 'bg-white text-ink-600 ring-1 ring-ink-200 hover:bg-ink-50'"
                     class="rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition">All</button>
@@ -110,10 +110,10 @@
 
                                 <div class="flex flex-1 flex-col p-4">
                                     <div class="flex items-start justify-between gap-3">
-                                        <h4 class="font-bold leading-snug">{{ $product->name }}</h4>
+                                        <h4 class="min-w-0 font-bold leading-snug break-words">{{ $product->name }}</h4>
                                         <span class="shrink-0 text-base font-black text-brand-700">{{ \App\Support\Money::format($product->selling_price) }}</span>
                                     </div>
-                                    <p class="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-500">
+                                    <p class="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-500 break-words">
                                         {{ $product->description ?: 'Cooked to order and packed warm.' }}
                                     </p>
 
@@ -233,7 +233,7 @@
 
                 <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-7">
                     <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div>
+                        <div class="min-w-0 break-words">
                             <h2 id="product-modal-title" class="text-2xl font-black tracking-tight" x-text="activeProduct?.name"></h2>
                             <p class="mt-1 text-xs font-semibold"
                                 :class="activeProduct?.available ? 'text-emerald-700' : 'text-rose-600'"

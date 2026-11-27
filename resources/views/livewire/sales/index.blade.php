@@ -42,7 +42,7 @@
 
     <div class="card">
         <div class="overflow-x-auto">
-            <table class="data-table">
+            <table class="data-table responsive-table">
                 <thead>
                     <tr>
                         <th>Reference</th>
@@ -50,8 +50,8 @@
                         <th>Cashier</th>
                         <th class="text-right">Items</th>
                         <th>Payment</th>
-                        <th>Channel</th>
-                        <th>Discount</th>
+                        <th class="hidden sm:table-cell">Channel</th>
+                        <th class="hidden sm:table-cell">Discount</th>
                         <th class="text-right">Total</th>
                         <th>Status</th>
                         <th class="text-right">Actions</th>
@@ -60,28 +60,28 @@
                 <tbody>
                     @forelse ($sales as $sale)
                         <tr wire:key="sale-{{ $sale->id }}" class="{{ $sale->isVoided() ? 'bg-rose-50/40' : '' }}">
-                            <td class="font-mono text-xs font-semibold">{{ $sale->reference_no }}</td>
-                            <td class="text-xs whitespace-nowrap text-ink-600">{{ $sale->created_at->format('M d, Y h:i A') }}</td>
-                            <td class="text-ink-600">{{ $sale->user?->name }}</td>
-                            <td class="text-right">{{ (int) $sale->items_sum_qty }}</td>
-                            <td><span class="badge badge-slate">{{ $sale->payment_method->label() }}</span></td>
-                            <td><span class="badge badge-{{ $sale->channel->color() }}">{{ $sale->channel->label() }}</span></td>
-                            <td class="text-xs">
+                            <td data-label="Reference" class="font-mono text-xs font-semibold">{{ $sale->reference_no }}</td>
+                            <td data-label="Date &amp; time" class="text-xs whitespace-nowrap text-ink-600">{{ $sale->created_at->format('M d, Y h:i A') }}</td>
+                            <td data-label="Cashier" class="text-ink-600">{{ $sale->user?->name }}</td>
+                            <td data-label="Items" class="text-right">{{ (int) $sale->items_sum_qty }}</td>
+                            <td data-label="Payment"><span class="badge badge-slate">{{ $sale->payment_method->label() }}</span></td>
+                            <td data-label="Channel" class="hidden sm:table-cell"><span class="badge badge-{{ $sale->channel->color() }}">{{ $sale->channel->label() }}</span></td>
+                            <td data-label="Discount" class="hidden text-xs sm:table-cell">
                                 @if ($sale->discount_amount > 0)
                                     <span class="badge badge-violet">{{ $sale->discount_type->label() }}</span>
                                 @else
                                     <span class="text-ink-400">—</span>
                                 @endif
                             </td>
-                            <td class="text-right font-semibold">{{ \App\Support\Money::format($sale->total) }}</td>
-                            <td>
+                            <td data-label="Total" class="text-right font-semibold">{{ \App\Support\Money::format($sale->total) }}</td>
+                            <td data-label="Status">
                                 @if ($sale->isVoided())
                                     <span class="badge badge-red">Voided</span>
                                 @else
                                     <span class="badge badge-green">Completed</span>
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="Actions">
                                 <div class="flex items-center justify-end gap-1">
                                     <a href="{{ route('sales.receipt', $sale) }}" target="_blank" class="btn btn-sm btn-ghost">
                                         <x-icon name="print" class="h-4 w-4" /> Receipt

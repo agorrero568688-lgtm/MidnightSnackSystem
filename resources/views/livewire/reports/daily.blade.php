@@ -45,16 +45,16 @@
                     <span class="badge badge-red">{{ $voidedCount }} voided</span>
                 @endif
             </div>
-            <table class="data-table">
+            <table class="data-table responsive-table">
                 <thead>
                     <tr><th>Method</th><th class="text-right">Transactions</th><th class="text-right">Amount</th></tr>
                 </thead>
                 <tbody>
                     @forelse ($payments as $payment)
                         <tr>
-                            <td class="font-medium">{{ $payment->payment_method->label() }}</td>
-                            <td class="text-right">{{ (int) $payment->count }}</td>
-                            <td class="text-right font-semibold">{{ \App\Support\Money::format($payment->total) }}</td>
+                            <td data-label="Method" class="font-medium">{{ $payment->payment_method->label() }}</td>
+                            <td data-label="Transactions" class="text-right">{{ (int) $payment->count }}</td>
+                            <td data-label="Amount" class="text-right font-semibold">{{ \App\Support\Money::format($payment->total) }}</td>
                         </tr>
                     @empty
                         <tr><td colspan="3" class="empty-state">No completed sales on this day.</td></tr>
@@ -63,9 +63,9 @@
                 @if ($payments->isNotEmpty())
                     <tfoot class="bg-ink-50 text-sm font-bold">
                         <tr>
-                            <td class="px-4 py-3">Total</td>
-                            <td class="px-4 py-3 text-right">{{ number_format($transactions) }}</td>
-                            <td class="px-4 py-3 text-right">{{ $total }}</td>
+                            <td data-label="Total" class="px-4 py-3">Total</td>
+                            <td data-label="Transactions" class="px-4 py-3 text-right">{{ number_format($transactions) }}</td>
+                            <td data-label="Amount" class="px-4 py-3 text-right">{{ $total }}</td>
                         </tr>
                     </tfoot>
                 @endif
@@ -78,16 +78,16 @@
                 <span class="text-xs text-ink-500">Gross before discounts: {{ $subtotal }}</span>
             </div>
             <div class="max-h-96 overflow-y-auto">
-                <table class="data-table">
+                <table class="data-table responsive-table">
                     <thead>
                         <tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Sales</th></tr>
                     </thead>
                     <tbody>
                         @forelse ($topProducts as $product)
                             <tr>
-                                <td class="font-medium">{{ $product->name_snapshot }}</td>
-                                <td class="text-right">{{ (int) $product->qty }}</td>
-                                <td class="text-right">{{ \App\Support\Money::format($product->total) }}</td>
+                                <td data-label="Product" class="font-medium">{{ $product->name_snapshot }}</td>
+                                <td data-label="Qty" class="text-right">{{ (int) $product->qty }}</td>
+                                <td data-label="Sales" class="text-right">{{ \App\Support\Money::format($product->total) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="3" class="empty-state">Nothing sold on this day.</td></tr>
@@ -100,20 +100,20 @@
 
     <div class="card">
         <div class="card-header"><h2 class="text-sm font-bold">Shifts opened this day</h2></div>
-        <table class="data-table">
+        <table class="data-table responsive-table">
             <thead>
-                <tr><th>Cashier</th><th>Opened</th><th>Closed</th><th class="text-right">Opening</th><th class="text-right">Expected</th><th class="text-right">Counted</th><th class="text-right">Variance</th></tr>
+                <tr><th>Cashier</th><th class="hidden sm:table-cell">Opened</th><th class="hidden sm:table-cell">Closed</th><th class="text-right">Opening</th><th class="text-right">Expected</th><th class="text-right">Counted</th><th class="text-right">Variance</th></tr>
             </thead>
             <tbody>
                 @forelse ($shifts as $shift)
                     <tr>
-                        <td class="font-medium">{{ $shift->user?->name }}</td>
-                        <td class="text-xs text-ink-600">{{ $shift->opened_at->format('h:i A') }}</td>
-                        <td class="text-xs text-ink-600">{{ $shift->closed_at?->format('h:i A') ?? 'Open' }}</td>
-                        <td class="text-right">{{ \App\Support\Money::format($shift->opening_cash) }}</td>
-                        <td class="text-right">{{ $shift->expected_cash !== null ? \App\Support\Money::format($shift->expected_cash) : '—' }}</td>
-                        <td class="text-right">{{ $shift->closing_cash !== null ? \App\Support\Money::format($shift->closing_cash) : '—' }}</td>
-                        <td class="text-right font-semibold {{ $shift->variance !== null && \App\Support\Money::cents($shift->variance) < 0 ? 'text-rose-600' : '' }}">
+                        <td data-label="Cashier" class="font-medium">{{ $shift->user?->name }}</td>
+                        <td data-label="Opened" class="hidden text-xs text-ink-600 sm:table-cell">{{ $shift->opened_at->format('h:i A') }}</td>
+                        <td data-label="Closed" class="hidden text-xs text-ink-600 sm:table-cell">{{ $shift->closed_at?->format('h:i A') ?? 'Open' }}</td>
+                        <td data-label="Opening" class="text-right">{{ \App\Support\Money::format($shift->opening_cash) }}</td>
+                        <td data-label="Expected" class="text-right">{{ $shift->expected_cash !== null ? \App\Support\Money::format($shift->expected_cash) : '—' }}</td>
+                        <td data-label="Counted" class="text-right">{{ $shift->closing_cash !== null ? \App\Support\Money::format($shift->closing_cash) : '—' }}</td>
+                        <td data-label="Variance" class="text-right font-semibold {{ $shift->variance !== null && \App\Support\Money::cents($shift->variance) < 0 ? 'text-rose-600' : '' }}">
                             {{ $shift->variance !== null ? \App\Support\Money::format($shift->variance) : '—' }}
                         </td>
                     </tr>

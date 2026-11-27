@@ -163,7 +163,7 @@
 
                     <div x-show="paymentMethod === 'gcash'" x-cloak class="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-4">
                         <div class="flex flex-wrap items-start justify-between gap-4">
-                            <div class="min-w-0">
+                            <div class="min-w-0 break-words">
                                 <p class="text-sm font-bold text-violet-900">Send your GCash payment</p>
                                 @if ($config['gcash_name'] || $config['gcash_number'])
                                     <p class="mt-1 text-sm text-violet-800">
@@ -247,7 +247,7 @@
                     <div class="mt-4 space-y-3">
                         <template x-for="item in items" :key="item.id">
                             <div class="flex items-start justify-between gap-3 text-sm">
-                                <div class="min-w-0">
+                                <div class="min-w-0 break-words">
                                     <p class="font-medium"><span x-text="item.qty"></span>× <span x-text="item.name"></span></p>
                                     <p x-show="item.note" class="mt-0.5 text-[11px] text-brand-700" x-text="'“' + item.note + '”'"></p>
                                 </div>

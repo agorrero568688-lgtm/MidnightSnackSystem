@@ -41,7 +41,7 @@
                 <a href="{{ route('sales.index') }}" class="text-xs font-semibold text-brand-700 hover:text-brand-900">View all →</a>
             </div>
             <div class="overflow-x-auto">
-                <table class="data-table">
+                <table class="data-table responsive-table">
                     <thead>
                         <tr>
                             <th>Reference</th>
@@ -55,18 +55,18 @@
                     <tbody>
                         @forelse ($recentSales as $sale)
                             <tr>
-                                <td class="font-mono text-xs font-semibold">{{ $sale->reference_no }}</td>
-                                <td>{{ $sale->user?->name }}</td>
-                                <td>{{ (int) $sale->items_sum_qty }}</td>
-                                <td class="font-semibold">{{ \App\Support\Money::format($sale->total) }}</td>
-                                <td>
+                                <td data-label="Reference" class="font-mono text-xs font-semibold">{{ $sale->reference_no }}</td>
+                                <td data-label="Cashier">{{ $sale->user?->name }}</td>
+                                <td data-label="Items">{{ (int) $sale->items_sum_qty }}</td>
+                                <td data-label="Total" class="font-semibold">{{ \App\Support\Money::format($sale->total) }}</td>
+                                <td data-label="Status">
                                     @if ($sale->isVoided())
                                         <span class="badge badge-red">Voided</span>
                                     @else
                                         <span class="badge badge-green">Completed</span>
                                     @endif
                                 </td>
-                                <td class="text-xs text-ink-500">{{ $sale->created_at->format('M d, h:i A') }}</td>
+                                <td data-label="Time" class="text-xs text-ink-500">{{ $sale->created_at->format('M d, h:i A') }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="6" class="empty-state">No sales yet. Open Cashier to start.</td></tr>

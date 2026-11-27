@@ -60,7 +60,7 @@
 
     <div class="card">
         <div class="overflow-x-auto">
-            <table class="data-table">
+            <table class="data-table responsive-table">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -74,9 +74,9 @@
                 <tbody>
                     @foreach ($users as $user)
                         <tr wire:key="user-{{ $user->id }}">
-                            <td>
+                            <td data-label="Name">
                                 <div class="flex items-center gap-3">
-                                    <div class="flex h-9 w-9 items-center justify-center rounded-full bg-ink-100 text-sm font-bold text-ink-600">
+                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-100 text-sm font-bold text-ink-600">
                                         {{ strtoupper(substr($user->name, 0, 1)) }}
                                     </div>
                                     <div>
@@ -87,19 +87,19 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="font-mono text-xs">{{ $user->username }}</td>
-                            <td>
+                            <td data-label="Username" class="font-mono text-xs">{{ $user->username }}</td>
+                            <td data-label="Role">
                                 <span class="badge {{ $user->isAdmin() ? 'badge-violet' : 'badge-sky' }}">{{ $user->role->label() }}</span>
                             </td>
-                            <td class="text-right text-ink-600">{{ $user->sales_count }}</td>
-                            <td>
+                            <td data-label="Sales" class="text-right text-ink-600">{{ $user->sales_count }}</td>
+                            <td data-label="Status">
                                 @if ($user->is_active)
                                     <span class="badge badge-green">Active</span>
                                 @else
                                     <span class="badge badge-slate">Inactive</span>
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="Actions">
                                 <div class="flex justify-end gap-1">
                                     <button wire:click="startEdit({{ $user->id }})" class="btn btn-sm btn-ghost">Edit</button>
                                     <button wire:click="toggleActive({{ $user->id }})"
@@ -118,28 +118,28 @@
     <div class="card">
         <div class="card-header"><h2 class="text-sm font-bold">Recent sign-ins</h2></div>
         <div class="overflow-x-auto">
-            <table class="data-table">
+            <table class="data-table responsive-table">
                 <thead>
                     <tr>
                         <th>User</th>
                         <th>Result</th>
-                        <th>IP address</th>
-                        <th>Device</th>
+                        <th class="hidden sm:table-cell">IP address</th>
+                        <th class="hidden sm:table-cell">Device</th>
                         <th class="text-right">When</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($loginLogs as $log)
                         <tr wire:key="login-{{ $log->id }}">
-                            <td class="font-mono text-xs">{{ $log->user?->name ?? $log->username }}</td>
-                            <td>
+                            <td data-label="User" class="font-mono text-xs">{{ $log->user?->name ?? $log->username }}</td>
+                            <td data-label="Result">
                                 <span class="badge {{ $log->isFailed() ? 'badge-red' : 'badge-green' }}">
                                     {{ $log->isFailed() ? 'Failed' : 'Signed in' }}
                                 </span>
                             </td>
-                            <td class="font-mono text-xs">{{ $log->ip_address ?? '—' }}</td>
-                            <td class="max-w-64 truncate text-xs text-ink-600" title="{{ $log->user_agent }}">{{ $log->user_agent ?? '—' }}</td>
-                            <td class="text-right text-xs text-ink-600">{{ $log->created_at?->format('M j, Y g:i A') }}</td>
+                            <td data-label="IP address" class="hidden font-mono text-xs sm:table-cell">{{ $log->ip_address ?? '—' }}</td>
+                            <td data-label="Device" class="hidden max-w-64 truncate text-xs text-ink-600 sm:table-cell" title="{{ $log->user_agent }}">{{ $log->user_agent ?? '—' }}</td>
+                            <td data-label="When" class="text-right text-xs text-ink-600">{{ $log->created_at?->format('M j, Y g:i A') }}</td>
                         </tr>
                     @empty
                         <tr><td colspan="5" class="py-6 text-center text-xs text-ink-500">No sign-ins recorded yet.</td></tr>

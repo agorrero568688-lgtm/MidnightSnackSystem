@@ -128,13 +128,13 @@
         {{-- List --}}
         <div class="card overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="data-table">
+                <table class="data-table responsive-table">
                     <thead>
                         <tr>
                             <th>Reference</th>
-                            <th>Placed</th>
+                            <th class="hidden sm:table-cell">Placed</th>
                             <th>Customer</th>
-                            <th>Type</th>
+                            <th class="hidden sm:table-cell">Type</th>
                             <th class="text-right">Items</th>
                             <th>Payment</th>
                             <th class="text-right">Total</th>
@@ -145,21 +145,21 @@
                     <tbody>
                         @forelse ($orders as $order)
                             <tr wire:key="list-order-{{ $order->id }}">
-                                <td class="font-mono text-xs font-semibold">{{ $order->reference_no }}</td>
-                                <td class="text-xs whitespace-nowrap text-ink-500">{{ $order->placedAtLabel() }}</td>
-                                <td>
+                                <td data-label="Reference" class="font-mono text-xs font-semibold">{{ $order->reference_no }}</td>
+                                <td data-label="Placed" class="hidden text-xs whitespace-nowrap text-ink-500 sm:table-cell">{{ $order->placedAtLabel() }}</td>
+                                <td data-label="Customer">
                                     <p class="font-medium">{{ $order->customer_name }}</p>
                                     <p class="text-[11px] text-ink-500">{{ $order->customer_phone }}</p>
                                 </td>
-                                <td><span class="badge badge-slate">{{ $order->order_type->label() }}</span></td>
-                                <td class="text-right">{{ $order->items_count }}</td>
-                                <td>
+                                <td data-label="Type" class="hidden sm:table-cell"><span class="badge badge-slate">{{ $order->order_type->label() }}</span></td>
+                                <td data-label="Items" class="text-right">{{ $order->items_count }}</td>
+                                <td data-label="Payment">
                                     <span class="badge badge-{{ $order->payment_status->color() }}">{{ $order->payment_status->label() }}</span>
                                     <p class="mt-0.5 text-[10px] text-ink-400">{{ $order->payment_method->shortLabel() }}</p>
                                 </td>
-                                <td class="text-right font-semibold">{{ \App\Support\Money::format($order->total) }}</td>
-                                <td><span class="badge badge-{{ $order->status->color() }}">{{ $order->status->label() }}</span></td>
-                                <td class="text-right">
+                                <td data-label="Total" class="text-right font-semibold">{{ \App\Support\Money::format($order->total) }}</td>
+                                <td data-label="Status"><span class="badge badge-{{ $order->status->color() }}">{{ $order->status->label() }}</span></td>
+                                <td data-label="Open" class="text-right">
                                     <button type="button" wire:click="openOrder({{ $order->id }})" class="btn btn-ghost btn-sm">Open</button>
                                 </td>
                             </tr>
@@ -220,22 +220,22 @@
 
                     {{-- Items --}}
                     <div class="overflow-hidden rounded-xl border border-ink-200">
-                        <table class="data-table">
+                        <table class="data-table responsive-table">
                             <thead>
                                 <tr><th>Item</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Total</th></tr>
                             </thead>
                             <tbody>
                                 @foreach ($selected->items as $item)
                                     <tr>
-                                        <td>
+                                        <td data-label="Item">
                                             <p class="font-medium">{{ $item->name_snapshot }}</p>
                                             @if ($item->note)
                                                 <p class="text-[11px] text-brand-700">“{{ $item->note }}”</p>
                                             @endif
                                         </td>
-                                        <td class="text-right">{{ $item->qty }}</td>
-                                        <td class="text-right text-ink-500">{{ \App\Support\Money::format($item->unit_price) }}</td>
-                                        <td class="text-right font-semibold">{{ \App\Support\Money::format($item->line_total) }}</td>
+                                        <td data-label="Qty" class="text-right">{{ $item->qty }}</td>
+                                        <td data-label="Price" class="text-right text-ink-500">{{ \App\Support\Money::format($item->unit_price) }}</td>
+                                        <td data-label="Total" class="text-right font-semibold">{{ \App\Support\Money::format($item->line_total) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

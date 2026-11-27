@@ -18,12 +18,12 @@
 
     <div class="card">
         <div class="overflow-x-auto">
-            <table class="data-table">
+            <table class="data-table responsive-table">
                 <thead>
                     <tr>
                         <th>Cashier</th>
                         <th>Opened</th>
-                        <th>Closed</th>
+                        <th class="hidden sm:table-cell">Closed</th>
                         <th class="text-right">Opening</th>
                         <th class="text-right">Expected</th>
                         <th class="text-right">Counted</th>
@@ -34,13 +34,13 @@
                 <tbody>
                     @forelse ($shifts as $shift)
                         <tr wire:key="shift-{{ $shift->id }}">
-                            <td class="font-semibold">{{ $shift->user?->name }}</td>
-                            <td class="text-xs whitespace-nowrap text-ink-600">{{ $shift->opened_at->format('M d, Y h:i A') }}</td>
-                            <td class="text-xs whitespace-nowrap text-ink-600">{{ $shift->closed_at?->format('M d, Y h:i A') ?? '—' }}</td>
-                            <td class="text-right">{{ \App\Support\Money::format($shift->opening_cash) }}</td>
-                            <td class="text-right">{{ $shift->expected_cash !== null ? \App\Support\Money::format($shift->expected_cash) : '—' }}</td>
-                            <td class="text-right">{{ $shift->closing_cash !== null ? \App\Support\Money::format($shift->closing_cash) : '—' }}</td>
-                            <td class="text-right font-semibold">
+                            <td data-label="Cashier" class="font-semibold">{{ $shift->user?->name }}</td>
+                            <td data-label="Opened" class="text-xs whitespace-nowrap text-ink-600">{{ $shift->opened_at->format('M d, Y h:i A') }}</td>
+                            <td data-label="Closed" class="hidden text-xs whitespace-nowrap text-ink-600 sm:table-cell">{{ $shift->closed_at?->format('M d, Y h:i A') ?? '—' }}</td>
+                            <td data-label="Opening" class="text-right">{{ \App\Support\Money::format($shift->opening_cash) }}</td>
+                            <td data-label="Expected" class="text-right">{{ $shift->expected_cash !== null ? \App\Support\Money::format($shift->expected_cash) : '—' }}</td>
+                            <td data-label="Counted" class="text-right">{{ $shift->closing_cash !== null ? \App\Support\Money::format($shift->closing_cash) : '—' }}</td>
+                            <td data-label="Variance" class="text-right font-semibold">
                                 @if ($shift->variance === null)
                                     <span class="text-ink-400">—</span>
                                 @elseif (\App\Support\Money::cents($shift->variance) === 0)
@@ -51,7 +51,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 @if ($shift->isOpen())
                                     <span class="badge badge-green">Open</span>
                                 @else

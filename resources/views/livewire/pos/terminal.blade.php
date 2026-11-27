@@ -2,7 +2,7 @@
     <script type="application/json" id="pos-bootstrap">{!! json_encode($bootstrap, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 
     {{-- Top bar --}}
-    <header class="flex items-center justify-between gap-4 border-b border-ink-800 bg-ink-900/70 px-4 py-2.5">
+    <header class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-800 bg-ink-900/70 px-4 py-2.5 sm:gap-4">
         <div class="flex min-w-0 items-center gap-3">
             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-400 text-base font-black text-ink-950">
                 D
@@ -19,7 +19,7 @@
             <span class="hidden text-xs text-ink-400 lg:block" x-text="shift ? shift.opened_at : ''"></span>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
             <span class="hidden font-mono text-sm text-ink-300 sm:block" x-text="now"></span>
 
             <button x-show="hasShift" x-cloak @click="showCloseShift = true" class="btn btn-sm border border-ink-700 text-ink-300 hover:bg-ink-800">
@@ -32,7 +32,7 @@
                     <span class="rounded-full bg-brand-400 px-1.5 text-[10px] font-bold text-ink-950" x-text="parked.length"></span>
                 </button>
                 <div x-cloak x-show="open" x-transition
-                    class="absolute right-0 z-30 mt-2 w-80 overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
+                    class="absolute right-0 z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
                     <p class="border-b border-ink-800 px-3 py-2 text-xs font-semibold tracking-wide text-ink-400 uppercase">Parked sales</p>
                     <template x-if="parked.length === 0">
                         <p class="px-3 py-4 text-center text-xs text-ink-500">Nothing parked.</p>
@@ -73,22 +73,22 @@
         {{-- Catalogue --}}
         <section class="flex min-h-0 flex-1 flex-col">
             <div class="space-y-3 border-b border-ink-800 bg-ink-900/40 p-4">
-                <div class="flex gap-3">
-                    <div class="relative flex-1">
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <div class="relative min-w-0 flex-1">
                         <x-icon name="cart" class="pointer-events-none absolute top-1/2 left-3.5 h-5 w-5 -translate-y-1/2 text-brand-400" />
                         <input x-ref="scan" x-model="scan" @keydown.enter.prevent="handleScan()"
                             type="text" inputmode="numeric" autocomplete="off"
                             placeholder="Scan barcode or type SKU, then press Enter"
                             class="w-full rounded-xl border border-ink-700 bg-ink-950 py-3 pr-4 pl-11 text-base font-medium text-white placeholder:text-ink-500 focus:border-violet-400 focus:ring-2 focus:ring-violet-400/30 focus:outline-none">
                     </div>
-                    <div class="relative">
+                    <div class="relative min-w-0 w-full sm:w-44 xl:w-64">
                         <x-icon name="search" class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-500" />
                         <input x-model="search" type="search" placeholder="Search name"
-                            class="h-full w-44 rounded-xl border border-ink-700 bg-ink-950 py-3 pr-3 pl-9 text-sm text-white placeholder:text-ink-500 focus:border-violet-400 focus:outline-none xl:w-64">
+                            class="w-full rounded-xl border border-ink-700 bg-ink-950 py-3 pr-3 pl-9 text-sm text-white placeholder:text-ink-500 focus:border-violet-400 focus:outline-none">
                     </div>
                 </div>
 
-                <div class="flex gap-2 overflow-x-auto pb-1">
+                <div class="flex flex-wrap gap-2 pb-1 sm:flex-nowrap sm:overflow-x-auto">
                     <button @click="activeCategory = 'all'"
                         class="rounded-full px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition"
                         :class="activeCategory === 'all' ? 'bg-brand-400 text-ink-950' : 'bg-ink-800 text-ink-300 hover:bg-ink-700'">

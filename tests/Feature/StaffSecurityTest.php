@@ -46,7 +46,7 @@ class StaffSecurityTest extends TestCase
     public function test_role_changes_require_password_confirmation(): void
     {
         $admin = User::factory()->admin()->create(['password' => 'secret123']);
-        $cashier = User::factory()->create(['role' => 'cashier']);
+        $cashier = User::factory()->create(['role' => 'cashier', 'username' => 'cashier']);
 
         Livewire::actingAs($admin)
             ->test(Index::class)

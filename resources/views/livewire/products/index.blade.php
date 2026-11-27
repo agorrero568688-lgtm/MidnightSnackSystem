@@ -30,14 +30,14 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="data-table">
+            <table class="data-table responsive-table">
                 <thead>
                     <tr>
                         <th>Product</th>
-                        <th>Category</th>
+                        <th class="hidden sm:table-cell">Category</th>
                         <th class="text-right">Cost</th>
                         <th class="text-right">Price</th>
-                        <th>Margin</th>
+                        <th class="hidden sm:table-cell">Margin</th>
                         <th>Availability</th>
                         <th>Status</th>
                         <th class="text-right">Actions</th>
@@ -46,16 +46,16 @@
                 <tbody>
                     @forelse ($products as $product)
                         <tr wire:key="product-{{ $product->id }}">
-                            <td>
+                            <td data-label="Product">
                                 <p class="font-semibold text-ink-900">{{ $product->name }}</p>
                                 <p class="font-mono text-[11px] text-ink-500">
                                     {{ $product->sku }}@if ($product->barcode) · {{ $product->barcode }}@endif
                                 </p>
                             </td>
-                            <td class="text-ink-600">{{ $product->category?->name ?? '—' }}</td>
-                            <td class="text-right text-ink-600">{{ \App\Support\Money::format($product->cost_price) }}</td>
-                            <td class="text-right font-semibold">{{ \App\Support\Money::format($product->selling_price) }}</td>
-                            <td class="text-xs">
+                            <td data-label="Category" class="hidden text-ink-600 sm:table-cell">{{ $product->category?->name ?? '—' }}</td>
+                            <td data-label="Cost" class="text-right text-ink-600">{{ \App\Support\Money::format($product->cost_price) }}</td>
+                            <td data-label="Price" class="text-right font-semibold">{{ \App\Support\Money::format($product->selling_price) }}</td>
+                            <td data-label="Margin" class="hidden text-xs sm:table-cell">
                                 @php
                                     $cost = \App\Support\Money::cents($product->cost_price);
                                     $price = \App\Support\Money::cents($product->selling_price);
@@ -67,14 +67,14 @@
                                     <span class="{{ $margin >= 20 ? 'text-emerald-600' : 'text-ink-500' }}">{{ number_format($margin, 1) }}%</span>
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="Availability">
                                 @if ($product->is_available)
                                     <span class="badge badge-green">Available</span>
                                 @else
                                     <span class="badge badge-red">Sold out</span>
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 @if ($product->is_active)
                                     <span class="badge badge-green">Active</span>
                                 @else
@@ -84,7 +84,7 @@
                                     <span class="badge badge-sky">Online</span>
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="Actions">
                                 <div class="flex items-center justify-end gap-1">
                                     <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-ghost">Edit</a>
                                     <button wire:click="toggleAvailable({{ $product->id }})" class="btn btn-sm btn-ghost">
