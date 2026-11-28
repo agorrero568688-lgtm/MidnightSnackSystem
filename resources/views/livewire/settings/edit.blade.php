@@ -210,40 +210,34 @@
                     <label class="flex items-start gap-3">
                         <input wire:model="orderAlertsEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
                         <span>
-                            <span class="block text-sm font-medium">Send new orders to the Telegram staff group</span>
+                            <span class="block text-sm font-medium">Send new orders via SMS to admin phone number(s)</span>
                             <span class="block text-xs text-ink-500">The board still beeps and shows browser notifications without this.</span>
                         </span>
                     </label>
 
-                    <div class="grid gap-4 border-t border-ink-100 pt-4 sm:grid-cols-2">
-                        <div>
-                            <label class="label">Bot token</label>
-                            <input wire:model="telegramBotToken" type="password" class="input font-mono" placeholder="123456:ABC-DEF…" autocomplete="off">
-                            @error('telegramBotToken') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="label">Group chat ID</label>
-                            <input wire:model="telegramChatId" type="text" class="input font-mono" placeholder="-1001234567890">
-                            @error('telegramChatId') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
-                        </div>
+                    <div class="border-t border-ink-100 pt-4">
+                        <label class="label">Admin phone number(s)</label>
+                        <textarea wire:model="orderAlertPhones" rows="2" class="input font-mono" placeholder="09171234567, 09181234567"></textarea>
+                        <p class="mt-1 text-[11px] text-ink-500">Separate multiple numbers with commas or new lines.</p>
+                        @error('orderAlertPhones') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
-                        <button type="button" wire:click="testTelegram" wire:loading.attr="disabled" class="btn btn-secondary btn-sm">Send test message</button>
-                        @if ($telegramStatus)
-                            <p class="text-xs font-semibold {{ str_contains($telegramStatus, 'sent') ? 'text-emerald-700' : 'text-rose-700' }}">{{ $telegramStatus }}</p>
+                        <button type="button" wire:click="testOrderAlert" wire:loading.attr="disabled" class="btn btn-secondary btn-sm">Send test alert SMS</button>
+                        @if ($orderAlertStatus)
+                            <p class="text-xs font-semibold {{ str_contains($orderAlertStatus, 'sent') ? 'text-emerald-700' : 'text-rose-700' }}">{{ $orderAlertStatus }}</p>
                         @endif
                     </div>
 
                     <p class="rounded-xl bg-ink-50 p-3 text-[11px] leading-relaxed text-ink-500">
-                        Create a bot with <span class="font-semibold">@BotFather</span>, add it to your private staff group, then use the group chat ID.
+                        Admin alerts use the SMS gateway configured below (even if customer SMS updates are turned off).
                         Alerts are queued, so run a queue worker in production (<span class="font-mono">php artisan queue:work</span>).
                     </p>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-header"><h2 class="text-sm font-bold">SMS for customers</h2></div>
+                <div class="card-header"><h2 class="text-sm font-bold">SMS gateway &amp; customer updates</h2></div>
                 <div class="card-body space-y-4">
                     <label class="flex items-start gap-3">
                         <input wire:model="smsEnabled" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-ink-300 text-brand-500">
@@ -291,6 +285,12 @@
                             <p class="text-xs font-semibold {{ str_contains($smsStatus, 'sent') ? 'text-emerald-700' : 'text-rose-700' }}">{{ $smsStatus }}</p>
                         @endif
                     </div>
+
+                    <p class="rounded-xl bg-ink-50 p-3 text-[11px] leading-relaxed text-ink-500">
+                        The gateway URL and API key are shared by admin order alerts and customer updates. The API key is
+                        sent as an <span class="font-mono">Authorization: Bearer</span> header when set. Customer SMS only
+                        sends while the checkbox above is ticked.
+                    </p>
                 </div>
             </div>
         </div>

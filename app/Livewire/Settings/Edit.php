@@ -57,9 +57,7 @@ class Edit extends Component
 
     public bool $orderAlertsEnabled = true;
 
-    public string $telegramBotToken = '';
-
-    public string $telegramChatId = '';
+    public string $orderAlertPhones = '';
 
     public bool $smsEnabled = false;
 
@@ -77,7 +75,7 @@ class Edit extends Component
 
     public string $notice = '';
 
-    public string $telegramStatus = '';
+    public string $orderAlertStatus = '';
 
     #[Locked]
     public ?string $originalGcashName = null;
@@ -113,8 +111,7 @@ class Edit extends Component
         $this->originalGcashNumber = $this->gcashNumber;
         $this->originalQrPath = $this->existingGcashQrPath;
         $this->orderAlertsEnabled = Setting::bool('order_alerts_enabled');
-        $this->telegramBotToken = (string) Setting::get('telegram_bot_token');
-        $this->telegramChatId = (string) Setting::get('telegram_chat_id');
+        $this->orderAlertPhones = (string) Setting::get('order_alert_phones');
         $this->smsEnabled = Setting::bool('sms_enabled');
         $this->smsGatewayUrl = (string) Setting::get('sms_gateway_url');
         $this->smsGatewayKey = (string) Setting::get('sms_gateway_key');
@@ -139,8 +136,7 @@ class Edit extends Component
             'gcashName' => ['nullable', 'string', 'max:100'],
             'gcashNumber' => ['nullable', 'string', 'max:30'],
             'gcashQr' => ['nullable', 'image', 'max:2048'],
-            'telegramBotToken' => ['nullable', 'string', 'max:200'],
-            'telegramChatId' => ['nullable', 'string', 'max:100'],
+            'orderAlertPhones' => ['nullable', 'string', 'max:500'],
             'smsGatewayUrl' => ['nullable', 'url', 'max:200'],
             'smsGatewayKey' => ['nullable', 'string', 'max:100'],
             'smsSenderName' => ['required', 'string', 'max:12'],
@@ -190,8 +186,7 @@ class Edit extends Component
             'gcash_number' => $validated['gcashNumber'] ?? '',
             'gcash_qr_path' => $newQrPath ?? $previousQrPath ?? '',
             'order_alerts_enabled' => $this->orderAlertsEnabled ? '1' : '0',
-            'telegram_bot_token' => trim((string) ($validated['telegramBotToken'] ?? '')),
-            'telegram_chat_id' => trim((string) ($validated['telegramChatId'] ?? '')),
+            'order_alert_phones' => trim((string) ($validated['orderAlertPhones'] ?? '')),
             'sms_enabled' => $this->smsEnabled ? '1' : '0',
             'sms_gateway_url' => trim((string) $validated['smsGatewayUrl']),
             'sms_gateway_key' => trim((string) ($validated['smsGatewayKey'] ?? '')),
@@ -209,7 +204,7 @@ class Edit extends Component
 
         $this->gcashQr = null;
         $this->notice = 'Store settings saved.';
-        $this->telegramStatus = '';
+        $this->orderAlertStatus = '';
 
         session()->flash('status', 'Store settings saved.');
         $this->redirectRoute('settings.edit');
@@ -230,13 +225,18 @@ class Edit extends Component
         $this->notice = 'GCash QR image removed.';
     }
 
-    public function testTelegram(OrderNotifier $notifier): void
+    public function testOrderAlert(OrderNotifier $notifier): void
     {
-        $sent = $notifier->sendTest(trim($this->telegramBotToken), trim($this->telegramChatId));
+        $sent = $notifier->sendTest(
+            trim($this->orderAlertPhones),
+            trim($this->smsGatewayUrl),
+            trim($this->smsGatewayKey),
+            trim($this->smsSenderName),
+        );
 
-        $this->telegramStatus = $sent
-            ? 'Test message sent. Check the staff group.'
-            : 'Could not send. Check the bot token and chat ID, and make sure the bot is in the group.';
+        $this->orderAlertStatus = $sent
+            ? 'Test alert sent. Check the admin phone number(s).'
+            : 'Could not send. Check the admin phone number(s), gateway URL and API key.';
     }
 
     public function testSms(SmsGateway $sms): void

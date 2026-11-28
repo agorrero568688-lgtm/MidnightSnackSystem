@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrderPaymentMethod;
+use App\Enums\OrderType;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Services\SmsGateway;
@@ -88,5 +90,73 @@ class SmsGatewayTest extends TestCase
         $this->assertStringContainsString('Saw you earlier', $feedback);
         $this->assertStringContainsString('upload your GCash receipt', $abandoned);
         $this->assertStringContainsString(route('orders.track', ['token' => $order->public_token]), $abandoned);
+    }
+
+    public function test_it_sends_the_api_key_as_a_bearer_token(): void
+    {
+        Http::fake();
+
+        Setting::setMany([
+            'sms_enabled' => '1',
+            'sms_gateway_url' => 'https://api.gateway.com/sms',
+            'sms_gateway_key' => 'secret-key',
+        ]);
+
+        app(SmsGateway::class)->send('09171234567', 'Hello');
+
+        Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer secret-key'));
+    }
+
+    public function test_it_parses_multiple_phone_numbers(): void
+    {
+        $phones = app(SmsGateway::class)->parsePhones("0917 123 4567, 09181234567\n0917-123-4567; ");
+
+        $this->assertSame(['09171234567', '09181234567'], $phones);
+    }
+
+    public function test_admin_alerts_ignore_the_customer_sms_toggle(): void
+    {
+        Http::fake();
+
+        Setting::setMany([
+            'sms_enabled' => '0',
+            'sms_gateway_url' => 'https://api.gateway.com/sms',
+        ]);
+
+        $sent = app(SmsGateway::class)->sendAlert('0917 123 4567', 'New order');
+
+        $this->assertTrue($sent);
+        Http::assertSent(fn ($request) => $request['to'] === '09171234567'
+            && $request['message'] === 'New order');
+    }
+
+    public function test_the_new_order_alert_message_contains_the_order_details(): void
+    {
+        $order = Order::factory()->awaitingVerification()->create([
+            'reference_no' => 'ORD-000123',
+            'order_type' => OrderType::Delivery,
+            'payment_method' => OrderPaymentMethod::GCash,
+            'total' => '250.00',
+        ]);
+
+        $message = app(SmsGateway::class)->newOrderAlertMessage($order);
+
+        $this->assertStringContainsString('New online order', $message);
+        $this->assertStringContainsString('ORD-000123', $message);
+        $this->assertStringContainsString('Delivery', $message);
+        $this->assertStringContainsString('GCash', $message);
+        $this->assertStringContainsString('₱250.00 total', $message);
+        $this->assertStringContainsString('waiting for verification', $message);
+        $this->assertStringContainsString(route('orders.index', ['order' => $order->id]), $message);
+    }
+
+    public function test_the_new_order_alert_message_omits_the_gcash_warning_for_cash_orders(): void
+    {
+        $order = Order::factory()->pickup()->create(['reference_no' => 'ORD-000124']);
+
+        $message = app(SmsGateway::class)->newOrderAlertMessage($order);
+
+        $this->assertStringNotContainsString('waiting for verification', $message);
+        $this->assertStringContainsString('ORD-000124', $message);
     }
 }

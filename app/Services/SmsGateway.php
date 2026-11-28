@@ -8,8 +8,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Thin wrapper around the store's SMS gateway. The configured URL must accept
- * JSON POSTs with a Bearer token and respond with a JSON body.
+ * Thin wrapper around the store's SMS gateway. The configured URL receives a
+ * JSON POST with `to`, `message` and `sender`; when an API key is set it is
+ * sent as an `Authorization: Bearer` header.
  */
 class SmsGateway
 {
@@ -38,33 +39,93 @@ class SmsGateway
         );
     }
 
+    /** Text sent to admin phones when a new online order is placed. */
+    public function newOrderAlertMessage(Order $order): string
+    {
+        $itemsCount = $order->items_count ?? $order->items()->count();
+
+        $lines = [
+            sprintf('[%s] New online order', $this->storeName()),
+            sprintf('%s · %s', $order->reference_no, $order->order_type->label()),
+            sprintf('%s · %s', $order->payment_method->label(), $order->payment_status->label()),
+            sprintf('%d %s · ₱%s total', $itemsCount, $itemsCount === 1 ? 'line' : 'lines', $order->total),
+            $order->placedAtLabel(),
+        ];
+
+        if ($order->payment_method->isGcash() && $order->payment_status->value === 'awaiting_verification') {
+            $lines[] = 'GCash payment screenshot is waiting for verification.';
+        }
+
+        $lines[] = 'Order board: '.route('orders.index', ['order' => $order->id]);
+
+        return implode("\n", $lines);
+    }
+
     /**
-     * Send one message. Returns false when SMS is not configured or the
-     * gateway fails, so callers can log and move on.
+     * Send one customer SMS message. Returns false when customer SMS is disabled,
+     * not configured, or the gateway fails.
      */
     public function send(string $phone, string $message): bool
     {
+        if (! Setting::bool('sms_enabled')) {
+            return false;
+        }
+
+        return $this->sendUsingConfig(
+            $phone,
+            $message,
+            (string) Setting::get('sms_gateway_url', ''),
+            (string) Setting::get('sms_gateway_key', ''),
+            $this->senderName(),
+        );
+    }
+
+    /**
+     * Send an internal admin/staff alert SMS using the configured gateway,
+     * regardless of whether customer SMS updates are enabled.
+     */
+    public function sendAlert(string $phone, string $message): bool
+    {
+        return $this->sendUsingConfig(
+            $phone,
+            $message,
+            (string) Setting::get('sms_gateway_url', ''),
+            (string) Setting::get('sms_gateway_key', ''),
+            $this->senderName(),
+        );
+    }
+
+    public function sendUsingConfig(
+        string $phone,
+        string $message,
+        string $gatewayUrl,
+        string $gatewayKey = '',
+        string $senderName = '',
+    ): bool {
         $phone = $this->normalizePhone($phone);
+        $url = trim($gatewayUrl);
 
-        if ($phone === '' || ! Setting::bool('sms_enabled')) {
+        if ($phone === '' || $url === '') {
             return false;
         }
 
-        $url = trim((string) Setting::get('sms_gateway_url', ''));
-
-        if ($url === '') {
-            return false;
-        }
+        $sender = trim($senderName) !== '' ? trim($senderName) : $this->senderName();
+        $key = trim($gatewayKey);
 
         $payload = [
             'to' => $phone,
             'message' => $message,
-            'sender' => $this->senderName(),
+            'sender' => $sender,
         ];
 
         try {
-            $response = Http::timeout(15)
-                ->post($url, $payload);
+            $request = Http::timeout(15);
+
+            if ($key !== '') {
+                $request = $request->withToken($key);
+            }
+
+            $response = $request->post($url, $payload);
         } catch (\Throwable $exception) {
             Log::warning('SMS send threw', [
                 'error' => $exception->getMessage(),
@@ -86,6 +147,28 @@ class SmsGateway
         Log::info('SMS sent', ['phone' => $phone, 'message' => $message]);
 
         return true;
+    }
+
+    /**
+     * Parse a comma- or newline-separated list of phone numbers into unique
+     * normalized digit strings.
+     *
+     * @return list<string>
+     */
+    public function parsePhones(string $raw): array
+    {
+        $parts = preg_split('/[\r\n,;]+/', $raw) ?: [];
+        $phones = [];
+
+        foreach ($parts as $part) {
+            $normalized = $this->normalizePhone($part);
+
+            if ($normalized !== '') {
+                $phones[] = $normalized;
+            }
+        }
+
+        return array_values(array_unique($phones));
     }
 
     public function normalizePhone(string $phone): string

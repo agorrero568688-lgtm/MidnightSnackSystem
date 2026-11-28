@@ -39,10 +39,9 @@ class Setting extends Model
         'gcash_number' => '',
         'gcash_qr_path' => '',
         'order_alerts_enabled' => '1',
-        'telegram_bot_token' => '',
-        'telegram_chat_id' => '',
+        'order_alert_phones' => '',
 
-        // SMS for customers
+        // SMS gateway & customer updates
         'sms_enabled' => '0',
         'sms_gateway_url' => '',
         'sms_gateway_key' => '',
