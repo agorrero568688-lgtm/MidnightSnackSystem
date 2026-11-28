@@ -220,7 +220,7 @@ class OrderService
 
         PosCatalog::flush();
 
-        // Alerts run inline on Vercel (QUEUE_CONNECTION=sync). An SMS gateway
+        // Alerts run inline on Vercel (QUEUE_CONNECTION=sync). A Telegram
         // outage must never turn a successfully placed order into a 500.
         try {
             $this->notifier->newOrder($order);

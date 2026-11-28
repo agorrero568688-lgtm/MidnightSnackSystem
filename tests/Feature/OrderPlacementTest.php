@@ -6,15 +6,15 @@ use App\Enums\OrderPaymentMethod;
 use App\Enums\OrderStatus;
 use App\Enums\OrderType;
 use App\Enums\PaymentStatus;
-use App\Jobs\SendOrderSmsAlert;
+use App\Jobs\SendOrderTelegramAlert;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Services\OrderService;
-use App\Services\SmsGateway;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Factory;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -152,10 +152,10 @@ class OrderPlacementTest extends TestCase
         $response->assertJsonPath('redirect', route('orders.track', ['token' => $order->public_token]));
     }
 
-    public function test_a_failed_sms_alert_does_not_break_checkout(): void
+    public function test_a_failed_telegram_alert_does_not_break_checkout(): void
     {
-        // setUp() installs a catch-all fake; start from a clean factory so the
-        // gateway really answers with an error.
+        // setUp() installs a catch-all fake; start from a clean factory so
+        // Telegram really answers with an error.
         Http::swap(new Factory);
         Http::fake(['*' => Http::response('nope', 500)]);
 
@@ -163,8 +163,8 @@ class OrderPlacementTest extends TestCase
 
         Setting::setMany([
             'order_alerts_enabled' => '1',
-            'order_alert_phones' => '09171234567',
-            'sms_gateway_url' => 'https://api.gateway.com/sms',
+            'telegram_bot_token' => 'test-token',
+            'telegram_chat_id' => '12345',
         ]);
 
         $this->postJson('/orders', $this->deliveryPayload($product, 1))
@@ -178,37 +178,9 @@ class OrderPlacementTest extends TestCase
 
         // The queued job fails so it is retried, but the order itself was
         // already saved and is never marked as alerted.
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RequestException::class);
 
-        app()->make(SendOrderSmsAlert::class, ['orderId' => $order->id])
-            ->handle(app(SmsGateway::class));
-    }
-
-    public function test_a_new_order_texts_every_admin_number(): void
-    {
-        $product = $this->product();
-
-        Setting::setMany([
-            'order_alerts_enabled' => '1',
-            'order_alert_phones' => '09171234567, 09181234567',
-            'sms_gateway_url' => 'https://api.gateway.com/sms',
-        ]);
-
-        Http::fake(['api.gateway.com/*' => Http::response(['ok' => true], 200)]);
-
-        $this->postJson('/orders', $this->deliveryPayload($product, 1))->assertOk();
-
-        $order = Order::query()->sole();
-
-        app()->make(SendOrderSmsAlert::class, ['orderId' => $order->id])
-            ->handle(app(SmsGateway::class));
-
-        Http::assertSentCount(2);
-        Http::assertSent(fn ($request) => $request['to'] === '09171234567'
-            && str_contains($request['message'], $order->reference_no));
-        Http::assertSent(fn ($request) => $request['to'] === '09181234567');
-
-        $this->assertNotNull($order->fresh()->alert_sent_at);
+        app()->make(SendOrderTelegramAlert::class, ['orderId' => $order->id])->handle();
     }
 
     public function test_prices_come_from_the_database_not_the_client(): void

@@ -11,8 +11,8 @@ store, built with Laravel 12, Livewire 4, Tailwind CSS 4 and PostgreSQL
   reference + phone.
 - **Order board** — staff see new orders on a live kanban at `/orders`, confirm
   them, move them through preparation, record payment, and close them into a
-  normal sale. New orders beep and raise a browser notification, and an SMS
-  alert is also texted to the admin phone number(s).
+  normal sale. New orders beep and raise a browser notification, and can also
+  reach a Telegram staff group.
 - **Customer SMS** — when SMS is configured, the customer gets one message when
   the snack is ready, feedback questions after completion, and a nudge when a
   GCash payment is still pending. Plus repeat-customer product suggestions on
@@ -59,7 +59,7 @@ npm run build
 php artisan serve
 ```
 
-Online ordering sends admin SMS alerts through the queue, so run a worker too:
+Online ordering sends Telegram alerts through the queue, so run a worker too:
 
 ```bash
 php artisan queue:work
@@ -179,11 +179,10 @@ shows the sold-out badge.
 ### Alerts
 
 The board polls every 15 seconds. When a new order appears it beeps and, if the
-browser has permission, shows a notification. Admin SMS alerts are optional: add
-one or more phone numbers (comma or newline separated) under Settings → *Order
-alerts*, configure the SMS gateway below, and run a queue worker. The alert text
-contains the reference, type, payment status and a link to the board — not the
-customer's address. Admin alerts work even when customer SMS updates are off.
+browser has permission, shows a notification. Telegram is optional: put a bot
+token and the staff group chat ID in Settings → *Order alerts* (or in `.env`) and
+run a queue worker. The Telegram message contains the reference, type, payment
+status and a link to the board — not the customer's address.
 
 ### SMS & feedback
 
@@ -199,9 +198,9 @@ When SMS is enabled, the customer gets:
 - **Feedback request** — after the order completes, a link to `/feedback/{token}`
   with 5 star ratings; replies are stored in `customer_feedbacks`.
 
-Configure it in Settings → *SMS gateway & customer updates* (gateway URL + API
-key, sender name, reminder wait, feedback rate). The gateway must be a POST
-endpoint that accepts `to`, `message`, `sender` JSON and an optional
+Configure it in Settings → *SMS for customers* (gateway URL + API key, sender
+name, reminder wait, feedback rate). The gateway must be a POST endpoint that
+accepts `to`, `message`, `sender` JSON and an optional
 `Authorization: Bearer <API key>` header. SMS is disabled by default; the admin
 phone can test it from the same page.
 
@@ -254,8 +253,8 @@ app/
                    Order, OrderItem
   Services/        CheckoutService, SaleService, ShiftService, OrderService,
                    StorefrontService, OrderNotifier
-  Jobs/            SendOrderSmsAlert, SendOrderReadySmsJob, SendFeedbackSmsJob,
-                   SendAbandonedOrderReminderJob
+  Jobs/            SendOrderTelegramAlert, SendOrderReadySmsJob,
+                   SendFeedbackSmsJob, SendAbandonedOrderReminderJob
   Support/         Money, PosCatalog
   Http/Middleware/ EnsureRole
 resources/views/   layouts, storefront, orders, livewire components, receipts

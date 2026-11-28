@@ -29,9 +29,10 @@ class SettingsSeeder extends Seeder
             'gcash_number' => '',
             'gcash_qr_path' => '',
             'order_alerts_enabled' => '1',
-            'order_alert_phones' => '',
+            'telegram_bot_token' => '',
+            'telegram_chat_id' => '',
 
-            // SMS gateway & customer updates
+            // SMS for customers
             'sms_enabled' => '0',
             'sms_gateway_url' => '',
             'sms_gateway_key' => '',

@@ -61,60 +61,39 @@ class OnlineSettingsTest extends TestCase
         $this->assertSame('Store settings saved.', session('status'));
     }
 
-    public function test_the_order_alert_test_sms_reports_success(): void
+    public function test_the_telegram_test_message_reports_success(): void
     {
         Http::fake([
-            'api.gateway.com/*' => Http::response(['ok' => true], 200),
+            'api.telegram.org/*' => Http::response(['ok' => true], 200),
         ]);
 
         $admin = User::factory()->admin()->create();
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
-            ->set('orderAlertPhones', '09171234567, 09181234567')
-            ->set('smsGatewayUrl', 'https://api.gateway.com/sms')
-            ->set('smsGatewayKey', 'secret-key')
-            ->set('smsSenderName', 'Diding SMS')
-            ->call('testOrderAlert')
-            ->assertSet('orderAlertStatus', 'Test alert sent. Check the admin phone number(s).');
+            ->set('telegramBotToken', '123456:ABC-DEF')
+            ->set('telegramChatId', '-1001234567890')
+            ->call('testTelegram')
+            ->assertSet('telegramStatus', 'Test message sent. Check the staff group.');
 
-        Http::assertSentCount(2);
-        Http::assertSent(fn ($request) => $request->url() === 'https://api.gateway.com/sms'
-            && $request['to'] === '09171234567'
-            && $request->hasHeader('Authorization', 'Bearer secret-key'));
-        Http::assertSent(fn ($request) => $request['to'] === '09181234567');
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && $request['chat_id'] === '-1001234567890');
     }
 
-    public function test_the_order_alert_test_sms_reports_failure(): void
+    public function test_the_telegram_test_message_reports_failure(): void
     {
         Http::fake([
-            'api.gateway.com/*' => Http::response(['ok' => false], 401),
+            'api.telegram.org/*' => Http::response(['ok' => false], 401),
         ]);
 
         $admin = User::factory()->admin()->create();
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
-            ->set('orderAlertPhones', '09171234567')
-            ->set('smsGatewayUrl', 'https://api.gateway.com/sms')
-            ->call('testOrderAlert')
-            ->assertSet('orderAlertStatus', 'Could not send. Check the admin phone number(s), gateway URL and API key.');
-    }
-
-    public function test_the_order_alert_test_sms_requires_a_phone_and_gateway(): void
-    {
-        Http::fake();
-
-        $admin = User::factory()->admin()->create();
-
-        Livewire::actingAs($admin)
-            ->test(Edit::class)
-            ->set('orderAlertPhones', '')
-            ->set('smsGatewayUrl', '')
-            ->call('testOrderAlert')
-            ->assertSet('orderAlertStatus', 'Could not send. Check the admin phone number(s), gateway URL and API key.');
-
-        Http::assertNothingSent();
+            ->set('telegramBotToken', 'bad-token')
+            ->set('telegramChatId', '-1001234567890')
+            ->call('testTelegram')
+            ->assertSet('telegramStatus', 'Could not send. Check the bot token and chat ID, and make sure the bot is in the group.');
     }
 
     public function test_admin_can_save_the_free_delivery_barangays(): void
@@ -130,19 +109,21 @@ class OnlineSettingsTest extends TestCase
         $this->assertSame("Magosilom\nLininti-an", Setting::get('delivery_free_barangays'));
     }
 
-    public function test_admin_can_save_the_order_alert_phones(): void
+    public function test_admin_can_save_the_telegram_alert_settings(): void
     {
         $admin = User::factory()->admin()->create();
 
         Livewire::actingAs($admin)
             ->test(Edit::class)
             ->set('orderAlertsEnabled', true)
-            ->set('orderAlertPhones', "09171234567\n09181234567")
+            ->set('telegramBotToken', '123456:ABC-DEF')
+            ->set('telegramChatId', '-1001234567890')
             ->call('save')
             ->assertHasNoErrors();
 
         $this->assertSame('1', Setting::get('order_alerts_enabled'));
-        $this->assertSame("09171234567\n09181234567", Setting::get('order_alert_phones'));
+        $this->assertSame('123456:ABC-DEF', Setting::get('telegram_bot_token'));
+        $this->assertSame('-1001234567890', Setting::get('telegram_chat_id'));
     }
 
     public function test_admin_can_save_the_sms_settings(): void

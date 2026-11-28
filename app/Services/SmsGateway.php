@@ -39,28 +39,6 @@ class SmsGateway
         );
     }
 
-    /** Text sent to admin phones when a new online order is placed. */
-    public function newOrderAlertMessage(Order $order): string
-    {
-        $itemsCount = $order->items_count ?? $order->items()->count();
-
-        $lines = [
-            sprintf('[%s] New online order', $this->storeName()),
-            sprintf('%s · %s', $order->reference_no, $order->order_type->label()),
-            sprintf('%s · %s', $order->payment_method->label(), $order->payment_status->label()),
-            sprintf('%d %s · ₱%s total', $itemsCount, $itemsCount === 1 ? 'line' : 'lines', $order->total),
-            $order->placedAtLabel(),
-        ];
-
-        if ($order->payment_method->isGcash() && $order->payment_status->value === 'awaiting_verification') {
-            $lines[] = 'GCash payment screenshot is waiting for verification.';
-        }
-
-        $lines[] = 'Order board: '.route('orders.index', ['order' => $order->id]);
-
-        return implode("\n", $lines);
-    }
-
     /**
      * Send one customer SMS message. Returns false when customer SMS is disabled,
      * not configured, or the gateway fails.
@@ -71,21 +49,6 @@ class SmsGateway
             return false;
         }
 
-        return $this->sendUsingConfig(
-            $phone,
-            $message,
-            (string) Setting::get('sms_gateway_url', ''),
-            (string) Setting::get('sms_gateway_key', ''),
-            $this->senderName(),
-        );
-    }
-
-    /**
-     * Send an internal admin/staff alert SMS using the configured gateway,
-     * regardless of whether customer SMS updates are enabled.
-     */
-    public function sendAlert(string $phone, string $message): bool
-    {
         return $this->sendUsingConfig(
             $phone,
             $message,
@@ -147,28 +110,6 @@ class SmsGateway
         Log::info('SMS sent', ['phone' => $phone, 'message' => $message]);
 
         return true;
-    }
-
-    /**
-     * Parse a comma- or newline-separated list of phone numbers into unique
-     * normalized digit strings.
-     *
-     * @return list<string>
-     */
-    public function parsePhones(string $raw): array
-    {
-        $parts = preg_split('/[\r\n,;]+/', $raw) ?: [];
-        $phones = [];
-
-        foreach ($parts as $part) {
-            $normalized = $this->normalizePhone($part);
-
-            if ($normalized !== '') {
-                $phones[] = $normalized;
-            }
-        }
-
-        return array_values(array_unique($phones));
     }
 
     public function normalizePhone(string $phone): string

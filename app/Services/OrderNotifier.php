@@ -2,15 +2,15 @@
 
 namespace App\Services;
 
-use App\Jobs\SendOrderSmsAlert;
+use App\Jobs\SendOrderTelegramAlert;
 use App\Models\Order;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class OrderNotifier
 {
-    public function __construct(private readonly SmsGateway $sms) {}
-
-    /** Queue a short SMS alert to the configured admin numbers. No customer PII is included. */
+    /** Queue a short Telegram alert. No customer PII is included. */
     public function newOrder(Order $order): void
     {
         if (! Setting::bool('order_alerts_enabled')) {
@@ -21,41 +21,34 @@ class OrderNotifier
             return;
         }
 
-        SendOrderSmsAlert::dispatch($order->id)->afterCommit();
+        SendOrderTelegramAlert::dispatch($order->id)->afterCommit();
     }
 
     public function configured(): bool
     {
-        return $this->sms->parsePhones((string) Setting::get('order_alert_phones', '')) !== []
-            && filled(Setting::get('sms_gateway_url'));
+        return filled(Setting::get('telegram_bot_token') ?: config('services.telegram.bot_token'))
+            && filled(Setting::get('telegram_chat_id') ?: config('services.telegram.chat_id'));
     }
 
-    /** Send a test SMS alert using the values currently in the settings form. */
-    public function sendTest(
-        string $phonesRaw,
-        string $gatewayUrl,
-        string $gatewayKey = '',
-        string $senderName = '',
-    ): bool {
-        $phones = $this->sms->parsePhones($phonesRaw);
-
-        if ($phones === [] || blank($gatewayUrl)) {
+    /** Send a test message with the values currently in the settings form. */
+    public function sendTest(string $token, string $chatId): bool
+    {
+        if (blank($token) || blank($chatId)) {
             return false;
         }
 
-        $sender = trim($senderName) !== ''
-            ? trim($senderName)
-            : (trim((string) Setting::get('sms_sender_name', 'Diding SMS')) ?: 'Diding SMS');
+        try {
+            return Http::timeout(10)
+                ->post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => 'Γ£à Diding\'s test alert ΓÇö online orders will show up here.',
+                    'disable_web_page_preview' => true,
+                ])
+                ->successful();
+        } catch (\Throwable $exception) {
+            Log::warning('Telegram test failed', ['message' => $exception->getMessage()]);
 
-        $message = "[{$sender}] — Test order alert. New online orders will be texted here.";
-        $allSent = true;
-
-        foreach ($phones as $phone) {
-            if (! $this->sms->sendUsingConfig($phone, $message, $gatewayUrl, $gatewayKey, $sender)) {
-                $allSent = false;
-            }
+            return false;
         }
-
-        return $allSent;
     }
 }
